@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SqlSpace.Api/SqlSpace.Api.csproj" />
+    <Project Path="src/SqlSpace.Application/SqlSpace.Application.csproj" />
+    <Project Path="src/SqlSpace.Domain/SqlSpace.Domain.csproj" />
+    <Project Path="src/SqlSpace.Infrastructure/SqlSpace.Infrastructure.csproj" />
+  </Folder>
+</Solution>
