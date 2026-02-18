@@ -17,6 +17,7 @@ public class ConnectedDatabase
 
     [Required]
     public string ConnectionName { get; set; }  = string.Empty;
+    public string DatabaseName { get; set; } = string.Empty;
     public string? Host { get; set; }
     public int? PortNumber { get; set; }
     public DbProviders DatabaseProvider { get; set; }   //builder.Property(x => x.DatabaseProvider).HasConversion<string>();

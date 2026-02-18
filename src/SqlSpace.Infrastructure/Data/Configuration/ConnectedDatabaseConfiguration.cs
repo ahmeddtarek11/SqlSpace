@@ -27,6 +27,10 @@ public class ConnectedDatabaseConfiguration : IEntityTypeConfiguration<Connected
             .IsRequired()
             .HasMaxLength(200);
 
+        builder.Property(c => c.DatabaseName)
+            .IsRequired()
+            .HasMaxLength(200);
+
         builder.Property(c => c.Host)
             .HasMaxLength(255);
 
