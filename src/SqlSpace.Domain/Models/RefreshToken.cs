@@ -12,5 +12,5 @@ public class RefreshToken
     public string UserId { get; set; } = string.Empty;
     public DateTimeOffset ExpiresOnUtc { get; set; }
     public DateTimeOffset CreatedOnUtc { get; set; } = DateTimeOffset.UtcNow;
-    public DateTimeOffset? RevokedOnUtc { get; set; }
+    
 }

@@ -5,8 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using SqlSpace.Application.Abstractions.Auth;
+using SqlSpace.Application.Abstractions.Data;
+using SqlSpace.Application.Abstractions.Security;
 using SqlSpace.Infrastructure.Data;
 using SqlSpace.Infrastructure.Identity;
+using SqlSpace.Infrastructure.Security;
 
 namespace SqlSpace.Infrastructure;
 
@@ -22,30 +26,29 @@ public static class DependencyInjection
                 connectionString,
                 npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
 
-                services.AddDataProtection();
-                services.AddHttpContextAccessor();
-                services.AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                }).AddJwtBearer(options =>
-                {
-                    var JwtSettings = configuration.GetSection("JwtSettings");
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateAudience = true,
-                        ValidateIssuer = true,
-                        ValidAudience = JwtSettings["Audience"],
-                        ValidIssuer = JwtSettings["Issuer"],
-                        ValidateLifetime = true,
-                        ClockSkew = TimeSpan.Zero,
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSettings["Secret"]!))
+        services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+        services.AddHttpContextAccessor();
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
+        {
+            var JwtSettings = configuration.GetSection("JwtSettings");
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = true,
+                ValidateIssuer = true,
+                ValidAudience = JwtSettings["Audience"],
+                ValidIssuer = JwtSettings["Issuer"],
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSettings["Secret"]!))
 
-                    };
-                });
-                services.AddAuthorization();
-
+            };
+        });
+        services.AddAuthorization();
         services.AddIdentityCore<ApplicationUser>(options =>
             {
                 options.User.RequireUniqueEmail = true;
@@ -54,6 +57,8 @@ public static class DependencyInjection
                 options.Password.RequiredUniqueChars = 0;
                 options.Password.RequireUppercase =false;
                 options.SignIn.RequireConfirmedAccount =false;
+                options.Password.RequireNonAlphanumeric =false;
+                options.Password.RequireLowercase = false;
 
             })
             .AddRoles<IdentityRole>()
@@ -62,7 +67,11 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();
 
         
-
+            services.AddDataProtection();
+            services.AddScoped<IEncryptionService,EncryptionService>();
+            services.AddScoped<IJwtTokenProvider,JwtTokenProvider>();
+            services.AddScoped<IAuthProvider, AuthProvider>();
+            services.AddScoped<IRefreshTokenProvider, RefreshTokenProvider>();
 
 
         return services;

@@ -29,12 +29,12 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         builder.Property(r => r.CreatedOnUtc)
             .IsRequired();
 
-        builder.Property(r => r.RevokedOnUtc);
+       
 
         builder.HasIndex(r => r.Token)
             .IsUnique();
 
-        builder.HasIndex(r => new { r.UserId, r.RevokedOnUtc });
+       
         builder.HasIndex(r =>r.UserId);
     }
 }
