@@ -19,6 +19,7 @@ public class DatabaseSchemaSnapshotConfiguration : IEntityTypeConfiguration<Data
             .IsRequired();
 
         builder.Property(s => s.SchemaText)
+        .HasColumnType("jsonb")
             .IsRequired();
 
         builder.Property(s => s.IsLatest)
@@ -34,6 +35,7 @@ public class DatabaseSchemaSnapshotConfiguration : IEntityTypeConfiguration<Data
         builder.HasIndex(s => new { s.DatabaseConnectionId, s.CapturedAt });
         builder.HasIndex(s => new { s.DatabaseConnectionId, s.IsLatest });
         builder.HasIndex(s => new { s.DatabaseConnectionId, s.SchemaHash });
+        builder.HasIndex(s=>s.SchemaText).HasMethod("gin");
 
         builder.HasOne(s => s.DatabaseConnection)
             .WithMany(c => c.SchemaSnapshots)

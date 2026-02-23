@@ -31,8 +31,9 @@ public class AccessAuditLogConfiguration : IEntityTypeConfiguration<AccessAuditL
             .HasConversion<string>()
             .HasMaxLength(64);
 
-        builder.Property(al => al.Details)
-            .HasMaxLength(2000);
+       
+            builder.Property(a => a.Details)
+            .HasColumnType("jsonb");
 
         builder.Property(al => al.PerformedAt)
             .IsRequired();

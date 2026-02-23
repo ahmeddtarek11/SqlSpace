@@ -38,7 +38,7 @@ public class QueryHistoryConfiguration : IEntityTypeConfiguration<QueryHistory>
         builder.Property(q => q.ErrorMessage)
             .HasMaxLength(4000);
 
-        builder.Property(q => q.ResultsJson);
+        builder.Property(q => q.ResultsJson).HasColumnType("jsonb");
 
         builder.Property(q => q.RowsReturned);
 
@@ -47,9 +47,9 @@ public class QueryHistoryConfiguration : IEntityTypeConfiguration<QueryHistory>
         builder.Property(q => q.ExecutedAt)
             .IsRequired();
 
-        builder.Property(q => q.AccessibleTablesSnapshot);
+        builder.Property(q => q.AccessibleTablesSnapshot).HasColumnType("jsonb");
 
-        builder.Property(q => q.RestrictedTablesSnapshot);
+        builder.Property(q => q.RestrictedTablesSnapshot).HasColumnType("jsonb");
 
         builder.Property(q => q.WasAdminAtExecution)
             .IsRequired();
@@ -57,6 +57,8 @@ public class QueryHistoryConfiguration : IEntityTypeConfiguration<QueryHistory>
         builder.HasIndex(q => new { q.DatabaseConnectionId, q.ExecutedAt });
         builder.HasIndex(q => new { q.UserId, q.ExecutedAt });
         builder.HasIndex(q => q.Status);
+        builder.HasIndex(q => q.ResultsJson)
+        .HasMethod("gin");
 
         builder.HasOne(q => q.DatabaseConnection)
             .WithMany(c => c.Queries)

@@ -1,3 +1,4 @@
+using SqlSpace.Domain.Common.Results;
 using SqlSpace.Domain.Enums;
 
 namespace SqlSpace.Application.Abstractions.Audit;
@@ -29,7 +30,7 @@ namespace SqlSpace.Application.Abstractions.Audit;
 /// - Capture actor, target, action type, timestamp, and details.
 /// - Never delete audit logs (immutable trail).
 /// </remarks>
-public interface IAuditLogService
+public interface IAuditLogRepository
 {
     /// <summary>
     /// Logs a user being granted access to a database connection.
@@ -50,7 +51,7 @@ public interface IAuditLogService
     /// 5. Persist log record.
     /// 6. Complete operation.
     /// </remarks>
-    Task LogAccessGrantedAsync(
+    Task<Result> LogAccessGrantedAsync(
         Guid connectionId,
         string actorUserId,
         string targetUserId,
@@ -79,7 +80,7 @@ public interface IAuditLogService
     /// 5. Persist log record.
     /// 6. Complete operation.
     /// </remarks>
-    Task LogRestrictionsUpdatedAsync(
+    Task<Result> LogRestrictionsUpdatedAsync(
         Guid connectionId,
         string actorUserId,
         string targetUserId,
@@ -105,7 +106,7 @@ public interface IAuditLogService
     /// 4. Persist log record.
     /// 5. Complete operation.
     /// </remarks>
-    Task LogAccessRevokedAsync(
+    Task<Result> LogAccessRevokedAsync(
         Guid connectionId,
         string actorUserId,
         string targetUserId,
@@ -128,7 +129,7 @@ public interface IAuditLogService
     /// 5. Persist log record.
     /// 6. Complete operation.
     /// </remarks>
-    Task LogOwnershipTransferAsync(
+    Task<Result> LogOwnershipTransferAsync(
         Guid connectionId,
         string previousAdminUserId,
         string newAdminUserId,
@@ -150,7 +151,7 @@ public interface IAuditLogService
     /// 4. Include actor and target user details.
     /// 5. Return page result with total count.
     /// </remarks>
-    Task<PaginatedAuditLogs> GetConnectionAuditLogsAsync(
+    Task<Result<PaginatedAuditLogs>> GetConnectionAuditLogsAsync(
         Guid connectionId,
         int pageNumber,
         int pageSize,
