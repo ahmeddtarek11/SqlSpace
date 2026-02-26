@@ -12,8 +12,8 @@ public sealed class Result<T> : Result
         Value = value;
     }
 
-    private Result(IReadOnlyList<Error> errors)
-        : base(false, errors)
+    private Result(IReadOnlyList<Error> errors, string? message = null)
+        : base(false, errors, message)
     {
         Value = default;
     }
@@ -26,7 +26,15 @@ public sealed class Result<T> : Result
         return new Result<T>(value);
     }
 
-    public static new Result<T> Failure(Error error) => new(ToErrorList(error));
+    public static new Result<T> Failure(Error error, string? message = null) => new(ToErrorList(error), message);
 
-    public static new Result<T> Failure(IEnumerable<Error> errors) => new(ToErrorList(errors));
+    public static new Result<T> Failure(IEnumerable<Error> errors, string? message = null) => new(ToErrorList(errors), message);
+
+    public static implicit operator Result<T>(T value) => Success(value);
+
+    public static implicit operator Result<T>(Error error) => Failure(error);
+
+    public static implicit operator Result<T>(Error[] errors) => Failure(errors);
+
+    public static implicit operator Result<T>(List<Error> errors) => Failure(errors);
 }

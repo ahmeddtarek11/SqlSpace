@@ -1,3 +1,4 @@
+using SqlSpace.Domain.Common.Results;
 using SqlSpace.Domain.Models;
 
 namespace SqlSpace.Application.Abstractions.Access;
@@ -53,7 +54,7 @@ public interface IAccessControlService
     /// 8. (Optional) Send notification email to target user.
     /// 9. Return created access entity.
     /// </remarks>
-    Task<UserDatabaseAccess> GrantAccessAsync(
+    Task<Result<UserAccessSummary>> GrantAccessAsync(
         Guid connectionId,
         string adminUserId,
         string targetUserEmail,
@@ -81,7 +82,7 @@ public interface IAccessControlService
     /// 6. Log restriction update to audit trail.
     /// 7. Complete operation.
     /// </remarks>
-    Task UpdateAccessRestrictionsAsync(
+    Task<Result> UpdateAccessRestrictionsAsync(
         Guid connectionId,
         string adminUserId,
         string targetUserId,
@@ -107,7 +108,7 @@ public interface IAccessControlService
     /// 6. Log access revocation to audit trail.
     /// 7. Return success indicator.
     /// </remarks>
-    Task<bool> RevokeAccessAsync(
+    Task<Result<bool>> RevokeAccessAsync(
         Guid connectionId,
         string adminUserId,
         string targetUserId,
@@ -127,7 +128,7 @@ public interface IAccessControlService
     /// 3. If not admin, query for active UserDatabaseAccess grant.
     /// 4. Return true if admin or active grant exists.
     /// </remarks>
-    Task<bool> HasAccessToConnectionAsync(
+    Task<Result<bool>> HasAccessToConnectionAsync(
         Guid connectionId,
         string userId,
         CancellationToken cancellationToken);
@@ -150,7 +151,7 @@ public interface IAccessControlService
     /// 5. If restricted access, check TableRestriction records.
     /// 6. Return false if table is in restriction list, true otherwise.
     /// </remarks>
-    Task<bool> CanAccessTableAsync(
+    Task<Result<bool>> CanAccessTableAsync(
         Guid connectionId,
         string userId,
         string tableName,
@@ -175,7 +176,7 @@ public interface IAccessControlService
     /// 7. Filter out restricted tables from full list.
     /// 8. Return filtered accessible table list.
     /// </remarks>
-    Task<IReadOnlyList<string>> GetAccessibleTableNamesAsync(
+    Task<Result<ICollection<string>>> GetAccessibleTableNamesAsync(
         Guid connectionId,
         string userId,
         CancellationToken cancellationToken);
@@ -195,7 +196,7 @@ public interface IAccessControlService
     /// 4. For each restricted access, load associated TableRestrictions.
     /// 5. Return list of access grants with user and restriction info.
     /// </remarks>
-    Task<IReadOnlyList<UserAccessSummary>> ListConnectionUsersAsync(
+    Task<Result<ICollection<UserAccessSummary>>> ListConnectionUsersAsync(
         Guid connectionId,
         string adminUserId,
         CancellationToken cancellationToken);

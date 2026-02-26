@@ -13,6 +13,8 @@ public class AccessAuditLog
    public  string ActorUserId {get;set;} = string.Empty; 
    public  string TargetUserId {get;set;} = string.Empty; 
    public  AccessAuditLogActions Action {get;set;} 
+
+   //holds restricted tables and HasFullAccess? as jsonb
    public  string? Details {get;set;} = string.Empty;
    public  DateTime PerformedAt {get;set;} 
    public ConnectedDatabase DatabaseConnection { get; set; } = null!;

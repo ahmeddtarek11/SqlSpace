@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace SqlSpace.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class intialCreate : Migration
+    public partial class ChangeAccessIdToGuidwithintialcreateafterdroppingtheoldmigrationforinttoguidmismatch : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -59,8 +59,7 @@ namespace SqlSpace.Infrastructure.Migrations
                     Token = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: false),
                     UserId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
                     ExpiresOnUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    CreatedOnUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    RevokedOnUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                    CreatedOnUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -181,6 +180,7 @@ namespace SqlSpace.Infrastructure.Migrations
                     CreatedByUserId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
                     DbAdminId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
                     ConnectionName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    DatabaseName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Host = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     PortNumber = table.Column<int>(type: "integer", nullable: true),
                     DatabaseProvider = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
@@ -217,7 +217,7 @@ namespace SqlSpace.Infrastructure.Migrations
                     ActorUserId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
                     TargetUserId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
                     Action = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    Details = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    Details = table.Column<string>(type: "jsonb", nullable: true),
                     PerformedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -249,7 +249,7 @@ namespace SqlSpace.Infrastructure.Migrations
                 {
                     SnapshotId = table.Column<Guid>(type: "uuid", nullable: false),
                     DatabaseConnectionId = table.Column<Guid>(type: "uuid", nullable: false),
-                    SchemaText = table.Column<string>(type: "text", nullable: false),
+                    SchemaText = table.Column<string>(type: "jsonb", nullable: false),
                     IsLatest = table.Column<bool>(type: "boolean", nullable: false),
                     CapturedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     SchemaHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false)
@@ -277,12 +277,12 @@ namespace SqlSpace.Infrastructure.Migrations
                     LlmResponse = table.Column<string>(type: "text", nullable: true),
                     Status = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
                     ErrorMessage = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: true),
-                    ResultsJson = table.Column<string>(type: "text", nullable: true),
+                    ResultsJson = table.Column<string>(type: "jsonb", nullable: true),
                     RowsReturned = table.Column<int>(type: "integer", nullable: true),
                     ExecutionTimeMs = table.Column<long>(type: "bigint", nullable: true),
                     ExecutedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    AccessibleTablesSnapshot = table.Column<string>(type: "text", nullable: true),
-                    RestrictedTablesSnapshot = table.Column<string>(type: "text", nullable: true),
+                    AccessibleTablesSnapshot = table.Column<string>(type: "jsonb", nullable: true),
+                    RestrictedTablesSnapshot = table.Column<string>(type: "jsonb", nullable: true),
                     WasAdminAtExecution = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
@@ -306,11 +306,11 @@ namespace SqlSpace.Infrastructure.Migrations
                 name: "UserDatabaseAccesses",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
                     DatabaseConnectionId = table.Column<Guid>(type: "uuid", nullable: false),
                     HasFullAccess = table.Column<bool>(type: "boolean", nullable: false),
+                    RestrictedTablesJson = table.Column<string>(type: "jsonb", nullable: true),
                     GrantedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     GrantedByUserId = table.Column<string>(type: "character varying(450)", maxLength: 450, nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
@@ -331,28 +331,6 @@ namespace SqlSpace.Infrastructure.Migrations
                         column: x => x.DatabaseConnectionId,
                         principalTable: "ConnectedDatabases",
                         principalColumn: "ConnectionId",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TableRestrictions",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    UserDatabaseAccessId = table.Column<int>(type: "integer", nullable: false),
-                    TableName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    SchemaName = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TableRestrictions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_TableRestrictions_UserDatabaseAccesses_UserDatabaseAccessId",
-                        column: x => x.UserDatabaseAccessId,
-                        principalTable: "UserDatabaseAccesses",
-                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -445,9 +423,21 @@ namespace SqlSpace.Infrastructure.Migrations
                 columns: new[] { "DatabaseConnectionId", "SchemaHash" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_DatabaseSchemaSnapshots_SchemaText",
+                table: "DatabaseSchemaSnapshots",
+                column: "SchemaText")
+                .Annotation("Npgsql:IndexMethod", "gin");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_QueryHistories_DatabaseConnectionId_ExecutedAt",
                 table: "QueryHistories",
                 columns: new[] { "DatabaseConnectionId", "ExecutedAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QueryHistories_ResultsJson",
+                table: "QueryHistories",
+                column: "ResultsJson")
+                .Annotation("Npgsql:IndexMethod", "gin");
 
             migrationBuilder.CreateIndex(
                 name: "IX_QueryHistories_Status",
@@ -469,21 +459,6 @@ namespace SqlSpace.Infrastructure.Migrations
                 name: "IX_RefreshTokens_UserId",
                 table: "RefreshTokens",
                 column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RefreshTokens_UserId_RevokedOnUtc",
-                table: "RefreshTokens",
-                columns: new[] { "UserId", "RevokedOnUtc" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TableRestrictions_UserDatabaseAccessId",
-                table: "TableRestrictions",
-                column: "UserDatabaseAccessId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TableRestrictions_UserDatabaseAccessId_SchemaName_TableName",
-                table: "TableRestrictions",
-                columns: new[] { "UserDatabaseAccessId", "SchemaName", "TableName" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserDatabaseAccesses_DatabaseConnectionId_UserId_IsDeleted_~",
@@ -527,13 +502,10 @@ namespace SqlSpace.Infrastructure.Migrations
                 name: "RefreshTokens");
 
             migrationBuilder.DropTable(
-                name: "TableRestrictions");
+                name: "UserDatabaseAccesses");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
-
-            migrationBuilder.DropTable(
-                name: "UserDatabaseAccesses");
 
             migrationBuilder.DropTable(
                 name: "ConnectedDatabases");

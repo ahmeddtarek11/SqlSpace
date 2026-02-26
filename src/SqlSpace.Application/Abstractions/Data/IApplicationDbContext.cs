@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using SqlSpace.Domain.Models;
 
 namespace SqlSpace.Application.Abstractions.Data;
@@ -15,11 +16,16 @@ public interface IApplicationDbContext
 {
     DbSet<ConnectedDatabase> ConnectedDatabases { get; }
     DbSet<UserDatabaseAccess> UserDatabaseAccesses { get; }
-    DbSet<TableRestriction> TableRestrictions { get; }
+    
     DbSet<DatabaseSchemaSnapshot> DatabaseSchemaSnapshots { get; }
     DbSet<QueryHistory> QueryHistories { get; }
     DbSet<AccessAuditLog> AccessAuditLogs { get; }
     DbSet<RefreshToken> RefreshTokens { get; }
+
+    //DbSet<TableRestriction> TableRestrictions { get; }
+    // deprecated
+
+    Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

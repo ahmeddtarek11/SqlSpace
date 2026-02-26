@@ -5,7 +5,7 @@ namespace SqlSpace.Application.Abstractions.Access;
 /// </summary>
 public class UserAccessSummary
 {
-    public int AccessId { get; set; }
+    public Guid AccessId { get; set; }
     public string UserId { get; set; } = string.Empty;
     public string UserEmail { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using SqlSpace.Application.Abstractions.Data;
 using SqlSpace.Domain.Models;
 using SqlSpace.Infrastructure.Identity;
@@ -15,11 +16,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
 
     public DbSet<ConnectedDatabase> ConnectedDatabases => Set<ConnectedDatabase>();
     public DbSet<UserDatabaseAccess> UserDatabaseAccesses => Set<UserDatabaseAccess>();
-    public DbSet<TableRestriction> TableRestrictions => Set<TableRestriction>();
     public DbSet<DatabaseSchemaSnapshot> DatabaseSchemaSnapshots => Set<DatabaseSchemaSnapshot>();
     public DbSet<QueryHistory> QueryHistories => Set<QueryHistory>();
     public DbSet<AccessAuditLog> AccessAuditLogs => Set<AccessAuditLog>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    //deprecated  // public DbSet<TableRestriction> TableRestrictions => Set<TableRestriction>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -33,5 +35,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
         // pre save logic 
             return base.SaveChangesAsync(cancellationToken);
     }
+
+    public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+        => Database.BeginTransactionAsync(cancellationToken);
 
 }

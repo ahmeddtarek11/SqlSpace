@@ -5,6 +5,6 @@ namespace SqlSpace.Application.Abstractions.Access;
 /// </summary>
 public class TableRestrictionInput
 {
-    public string TableName { get; set; } = string.Empty;
-    public string? SchemaName { get; set; }
+    public string Table { get; set; } = string.Empty;
+    public string Schema { get; set; } =string.Empty;
 }

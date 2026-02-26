@@ -7,7 +7,7 @@ namespace SqlSpace.Domain.Models;
 
 public class UserDatabaseAccess
 {
-     public int Id { get; set; }
+     public Guid Id { get; set; }
     
     public string UserId { get; set; } = string.Empty;
     
@@ -16,6 +16,8 @@ public class UserDatabaseAccess
     public  ConnectedDatabase DatabaseConnection { get; set; } = null!;
     
     public bool HasFullAccess { get; set; } = false;
+    public string? RestrictedTablesJson {get;set;}
+    //with src\SqlSpace.Application\Abstractions\Access\Dtos\TableRestrictionInput.cs
     
  
     public DateTime GrantedAt { get; set; } = DateTime.UtcNow;
@@ -28,5 +30,5 @@ public class UserDatabaseAccess
  
     public string? RevokedByUserId { get; set; }
     
-    public virtual ICollection<TableRestriction> TableRestrictions { get; set; } = new List<TableRestriction>();
+    // public virtual ICollection<TableRestriction> TableRestrictions { get; set; } = new List<TableRestriction>();
 }

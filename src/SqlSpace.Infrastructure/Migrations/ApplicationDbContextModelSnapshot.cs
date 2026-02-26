@@ -422,45 +422,10 @@ namespace SqlSpace.Infrastructure.Migrations
                     b.ToTable("RefreshTokens", (string)null);
                 });
 
-            modelBuilder.Entity("SqlSpace.Domain.Models.TableRestriction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("SchemaName")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<string>("TableName")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<int>("UserDatabaseAccessId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserDatabaseAccessId");
-
-                    b.HasIndex("UserDatabaseAccessId", "SchemaName", "TableName");
-
-                    b.ToTable("TableRestrictions", (string)null);
-                });
-
             modelBuilder.Entity("SqlSpace.Domain.Models.UserDatabaseAccess", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("DatabaseConnectionId")
                         .HasColumnType("uuid");
@@ -478,6 +443,9 @@ namespace SqlSpace.Infrastructure.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("RestrictedTablesJson")
+                        .HasColumnType("jsonb");
 
                     b.Property<DateTime?>("RevokedAt")
                         .HasColumnType("timestamp with time zone");
@@ -675,17 +643,6 @@ namespace SqlSpace.Infrastructure.Migrations
                     b.Navigation("DatabaseConnection");
                 });
 
-            modelBuilder.Entity("SqlSpace.Domain.Models.TableRestriction", b =>
-                {
-                    b.HasOne("SqlSpace.Domain.Models.UserDatabaseAccess", "UserDatabaseAccess")
-                        .WithMany("TableRestrictions")
-                        .HasForeignKey("UserDatabaseAccessId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("UserDatabaseAccess");
-                });
-
             modelBuilder.Entity("SqlSpace.Domain.Models.UserDatabaseAccess", b =>
                 {
                     b.HasOne("SqlSpace.Domain.Models.ConnectedDatabase", "DatabaseConnection")
@@ -712,11 +669,6 @@ namespace SqlSpace.Infrastructure.Migrations
                     b.Navigation("SchemaSnapshots");
 
                     b.Navigation("UserAccesses");
-                });
-
-            modelBuilder.Entity("SqlSpace.Domain.Models.UserDatabaseAccess", b =>
-                {
-                    b.Navigation("TableRestrictions");
                 });
 
             modelBuilder.Entity("SqlSpace.Infrastructure.Identity.ApplicationUser", b =>

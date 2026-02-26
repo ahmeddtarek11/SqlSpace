@@ -7,7 +7,7 @@ public class Result
 {
     private static readonly IReadOnlyList<Error> EmptyErrors = Array.Empty<Error>();
 
-    protected Result(bool isSuccess, IReadOnlyList<Error> errors)
+    protected Result(bool isSuccess, IReadOnlyList<Error> errors, string? message = null)
     {
         if (isSuccess && errors.Count > 0)
         {
@@ -21,17 +21,25 @@ public class Result
 
         IsSuccess = isSuccess;
         Errors = errors;
+        Message = message;
     }
 
     public bool IsSuccess { get; }
     public bool IsFailure => !IsSuccess;
     public IReadOnlyList<Error> Errors { get; }
+    public string? Message { get; }
 
     public static Result Success() => new(true, EmptyErrors);
 
-    public static Result Failure(Error error) => new(false, ToErrorList(error));
+    public static Result Failure(Error error, string? message = null) => new(false, ToErrorList(error), message);
 
-    public static Result Failure(IEnumerable<Error> errors) => new(false, ToErrorList(errors));
+    public static Result Failure(IEnumerable<Error> errors, string? message = null) => new(false, ToErrorList(errors), message);
+
+    public static implicit operator Result(Error error) => Failure(error);
+
+    public static implicit operator Result(Error[] errors) => Failure(errors);
+
+    public static implicit operator Result(List<Error> errors) => Failure(errors);
 
     protected static IReadOnlyList<Error> ToErrorList(Error error)
     {

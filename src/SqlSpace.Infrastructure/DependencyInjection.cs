@@ -5,9 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using SqlSpace.Application.Abstractions.Audit;
 using SqlSpace.Application.Abstractions.Auth;
 using SqlSpace.Application.Abstractions.Data;
 using SqlSpace.Application.Abstractions.Security;
+using SqlSpace.Application.Abstractions.Users;
+using SqlSpace.Infrastructure.AuditLog;
 using SqlSpace.Infrastructure.Data;
 using SqlSpace.Infrastructure.Identity;
 using SqlSpace.Infrastructure.Security;
@@ -72,6 +75,8 @@ public static class DependencyInjection
             services.AddScoped<IJwtTokenProvider,JwtTokenProvider>();
             services.AddScoped<IAuthProvider, AuthProvider>();
             services.AddScoped<IRefreshTokenProvider, RefreshTokenProvider>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 
 
         return services;

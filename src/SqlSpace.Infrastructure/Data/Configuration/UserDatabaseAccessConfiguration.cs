@@ -11,6 +11,7 @@ public class UserDatabaseAccessConfiguration : IEntityTypeConfiguration<UserData
         builder.ToTable("UserDatabaseAccesses");
 
         builder.HasKey(a => a.Id);
+        builder.Property(a=>a.Id).ValueGeneratedNever();
 
         builder.Property(a => a.UserId)
             .IsRequired()
@@ -45,9 +46,13 @@ public class UserDatabaseAccessConfiguration : IEntityTypeConfiguration<UserData
             .HasForeignKey(a => a.DatabaseConnectionId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(a => a.TableRestrictions)
-            .WithOne(r => r.UserDatabaseAccess)
-            .HasForeignKey(r => r.UserDatabaseAccessId)
-            .OnDelete(DeleteBehavior.Restrict);
+        builder.Property(a => a.RestrictedTablesJson)
+            .HasColumnType("jsonb");
+
+        // deprecated
+        // builder.HasMany(a => a.TableRestrictions)
+        //     .WithOne(r => r.UserDatabaseAccess)
+        //     .HasForeignKey(r => r.UserDatabaseAccessId)
+        //     .OnDelete(DeleteBehavior.Restrict);
     }
 }
