@@ -79,4 +79,17 @@ public class ApiController : ControllerBase
 
         return BadRequest(failed);
     }
+
+
+      protected ActionResult<ApiResponse<T>> UnauthorizedResponse<T>()
+    {
+        const string message = "Authentication is required.";
+        var response = ApiResponse<T>.Failed(
+            statusCode: StatusCodes.Status401Unauthorized,
+            errors: new[] { new ApiError("auth.unauthorized", message) },
+            traceId: HttpContext.TraceIdentifier,
+            message: message);
+
+        return StatusCode(StatusCodes.Status401Unauthorized, response);
+}
 }

@@ -10,4 +10,7 @@ public class ConnectionComponents
     public string DatabaseName { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
     public bool UseSSL { get; set; }
+
+    public string Password { get; set; } = string.Empty;
+    public string? AdditionalParameters { get; set; }
 }

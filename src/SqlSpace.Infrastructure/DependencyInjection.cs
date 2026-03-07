@@ -2,17 +2,21 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using SqlSpace.Application.Abstractions.Audit;
 using SqlSpace.Application.Abstractions.Auth;
 using SqlSpace.Application.Abstractions.Data;
+using SqlSpace.Application.Abstractions.Integrations;
 using SqlSpace.Application.Abstractions.Security;
 using SqlSpace.Application.Abstractions.Users;
 using SqlSpace.Infrastructure.AuditLog;
+using SqlSpace.Infrastructure.Connection;
 using SqlSpace.Infrastructure.Data;
 using SqlSpace.Infrastructure.Identity;
+using SqlSpace.Infrastructure.integration;
 using SqlSpace.Infrastructure.Security;
 
 namespace SqlSpace.Infrastructure;
@@ -77,7 +81,9 @@ public static class DependencyInjection
             services.AddScoped<IRefreshTokenProvider, RefreshTokenProvider>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAuditLogRepository, AuditLogRepository>();
-
+            services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
+            services.AddScoped<IConnectionStringBuilder , ConnectionStringBuilderService>();
+            services.AddScoped<IDatabaseSqlExecutor, DatabaseSqlExecutor>();
 
         return services;
     }

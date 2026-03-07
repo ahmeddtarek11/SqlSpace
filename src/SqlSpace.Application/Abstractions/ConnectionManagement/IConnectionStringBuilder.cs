@@ -109,13 +109,5 @@ public interface IConnectionStringBuilder
         string connectionString,
         DbProviders provider);
 
-    /// <summary>
-    /// Gets the default port number for a database provider.
-    /// </summary>
-    /// <param name="provider">Database provider type.</param>
-    /// <returns>Default port number (PostgreSQL: 5432, SqlServer: 1433, MySql: 3306).</returns>
-    /// <remarks>
-    /// Used for auto-filling port field in UI when user selects database type.
-    /// </remarks>
-    int GetDefaultPort(DbProviders provider);
+  
 }

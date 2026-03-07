@@ -307,7 +307,8 @@ public class AccessControlService(IApplicationDbContext context,
     //-------------------------------------------------------------------------------------------------------------------------------------//
 
 
-    public async Task<Result<ICollection<UserAccessSummary>>> ListConnectionUsersAsync(Guid connectionId, string adminUserId, CancellationToken cancellationToken)
+    public async Task<Result<ICollection<UserAccessSummary>>> ListConnectionUsersAsync
+    (Guid connectionId, string adminUserId, CancellationToken cancellationToken)
     {
         if (connectionId == Guid.Empty)
         {
