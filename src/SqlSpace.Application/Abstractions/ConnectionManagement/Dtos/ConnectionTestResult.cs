@@ -11,4 +11,5 @@ public class ConnectionTestResult
     public string? ServerVersion { get; set; }
     public int ResponseTimeMs { get; set; }
     public ConnectionComponents? ExtractedComponents { get; set; }
+    
 }

@@ -31,7 +31,7 @@ namespace SqlSpace.Application.Abstractions.Integrations;
 /// - Transform result set to JSON-serializable format.
 /// - Handle provider-specific data type conversions.
 /// </remarks>
-public interface IDatabaseSqlExecutor
+public interface IDatabaseExecutor
 {
     /// <summary>
     /// Executes a SELECT query on an external database and returns results as structured data.

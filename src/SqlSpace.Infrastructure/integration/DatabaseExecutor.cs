@@ -9,10 +9,10 @@ using SqlSpace.Domain.Models;
 
 namespace SqlSpace.Infrastructure.integration;
 
-public class DatabaseSqlExecutor(ILogger<DatabaseSqlExecutor> logger ,  IDbConnectionFactory connectionFactory  )
- : IDatabaseSqlExecutor
+public class DatabaseExecutor(ILogger<DatabaseExecutor> logger ,  IDbConnectionFactory connectionFactory  )
+ : IDatabaseExecutor
 {
-    private readonly ILogger<DatabaseSqlExecutor> _logger = logger;
+    private readonly ILogger<DatabaseExecutor> _logger = logger;
     //private readonly HybridCache _cache = cache;
     private readonly IDbConnectionFactory _connectionFactory = connectionFactory;
 

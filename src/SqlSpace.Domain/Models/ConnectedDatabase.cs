@@ -27,7 +27,7 @@ public class ConnectedDatabase
    
     public string? AdditionalParameters { get; set; }
     public string? EncryptedRawConnectionString { get; set; } = string.Empty;
-     public bool UseSSL { get; set; } = true;
+    public bool UseSSL { get; set; } = true;
     public bool UsesRawConnectionString { get; set; } = false;
     public DateTime LastSuccessfulConnection { get; set; } 
     public bool IsHealthy { get; set; } = false;

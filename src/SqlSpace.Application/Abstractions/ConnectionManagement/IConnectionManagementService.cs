@@ -1,4 +1,6 @@
+using SqlSpace.Application.Abstractions.ConnectionManagement.Dtos;
 using SqlSpace.Application.DTOs.Connection;
+using SqlSpace.Domain.Common.Results;
 using SqlSpace.Domain.Models;
 
 namespace SqlSpace.Application.Abstractions.Connections;
@@ -55,7 +57,7 @@ public interface IConnectionManagementService
     /// 10. Enqueue background job for schema extraction.
     /// 11. Return created connection (without decrypted credentials).
     /// </remarks>
-    Task<ConnectedDatabase> CreateConnectionAsync(
+    Task<Result<ConnectionCreationResponse>> CreateConnectionAsync(
         string userId,
         CreateConnectionRequest request,
         CancellationToken cancellationToken);
@@ -76,7 +78,7 @@ public interface IConnectionManagementService
     /// 6. Return test result with server metadata.
     /// 7. Return error details if connection fails.
     /// </remarks>
-    Task<ConnectionTestResult> TestConnectionAsync(
+    Task<Result<ConnectionTestResult>> TestNewConnectionAsync(
         TestConnectionRequest request,
         CancellationToken cancellationToken);
 
@@ -99,7 +101,7 @@ public interface IConnectionManagementService
     /// 7. Persist changes.
     /// 8. Return success indicator.
     /// </remarks>
-    Task<bool> UpdatePasswordAsync(
+    Task<Result<bool>> UpdatePasswordAsync(
         Guid connectionId,
         string userId,
         string newPassword,
@@ -123,7 +125,7 @@ public interface IConnectionManagementService
     /// 7. Persist changes atomically.
     /// 8. Return success indicator.
     /// </remarks>
-    Task<bool> DeleteConnectionAsync(
+    Task<Result<bool>> DeleteConnectionAsync(
         Guid connectionId,
         string userId,
         CancellationToken cancellationToken);
@@ -143,7 +145,7 @@ public interface IConnectionManagementService
     /// 4. Include connection health status and last test timestamp.
     /// 5. Return DTO or null if unauthorized.
     /// </remarks>
-    Task<ConnectionDto?> GetConnectionByIdAsync(
+    Task<Result<ConnectionDto?>> GetConnectionByIdAsync(
         Guid connectionId,
         string userId,
         CancellationToken cancellationToken);
@@ -162,7 +164,7 @@ public interface IConnectionManagementService
     /// 4. Map to summary DTOs (name, type, health, role).
     /// 5. Return list ordered by creation date descending.
     /// </remarks>
-    Task<IReadOnlyList<ConnectionSummaryDto>> GetUserConnectionsAsync(
+    Task<Result<IReadOnlyList<ConnectionSummaryDto>>> GetUserConnectionsAsync(
         string userId,
         CancellationToken cancellationToken);
 
@@ -185,7 +187,7 @@ public interface IConnectionManagementService
     /// 7. Persist changes.
     /// 8. Return success indicator.
     /// </remarks>
-    Task<bool> TransferOwnershipAsync(
+    Task<Result<bool>> TransferOwnershipAsync(
         Guid connectionId,
         string currentAdminUserId,
         string newAdminEmail,
@@ -208,7 +210,7 @@ public interface IConnectionManagementService
     /// 7. Persist changes.
     /// 8. Return test result.
     /// </remarks>
-    Task<ConnectionTestResult> TestExistingConnectionHealthAsync(
+    Task<Result<ConnectionTestResult>> TestExistingConnectionHealthAsync(
         Guid connectionId,
         CancellationToken cancellationToken);
 }

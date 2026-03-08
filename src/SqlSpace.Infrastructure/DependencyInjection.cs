@@ -83,7 +83,7 @@ public static class DependencyInjection
             services.AddScoped<IAuditLogRepository, AuditLogRepository>();
             services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
             services.AddScoped<IConnectionStringBuilder , ConnectionStringBuilderService>();
-            services.AddScoped<IDatabaseSqlExecutor, DatabaseSqlExecutor>();
+            services.AddScoped<IDatabaseExecutor, DatabaseExecutor>();
 
         return services;
     }
