@@ -201,6 +201,49 @@ public sealed class DbConnectionFactoryTests
         builder.BuildCallCount.Should().Be(0);
     }
 
+    [Fact]
+    public async Task CreateOpenConnectionAsync_ShouldRethrow_WhenRawConnectionStringDecryptionFails()
+    {
+        var encryption = new FakeEncryptionService();
+        var builder = new FakeConnectionStringBuilder();
+        var sut = CreateSut(encryption, builder);
+
+        var connection = NewBaseConnection();
+        connection.UsesRawConnectionString = true;
+        connection.EncryptedRawConnectionString = "missing-mapping";
+
+        Func<Task> act = () => sut.CreateOpenConnectionAsync(connection, CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*No fake decryption mapping configured*");
+        builder.BuildCallCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CreateOpenConnectionAsync_ShouldRethrow_WhenBuildConnectionStringFails()
+    {
+        var encryption = new FakeEncryptionService();
+        encryption.AddDecryption("enc-password", "plain-password");
+        var builder = new FakeConnectionStringBuilder
+        {
+            BuildException = new InvalidOperationException("builder-failure")
+        };
+        var sut = CreateSut(encryption, builder);
+
+        var connection = NewBaseConnection();
+        connection.UsesRawConnectionString = false;
+        connection.EncryptedPassword = "enc-password";
+        connection.Host = "localhost";
+        connection.DatabaseName = "db";
+        connection.Username = "user";
+
+        Func<Task> act = () => sut.CreateOpenConnectionAsync(connection, CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("builder-failure");
+        builder.BuildCallCount.Should().Be(1);
+    }
+
     private static DbConnectionFactory CreateSut(
         IEncryptionService encryptionService,
         IConnectionStringBuilder connectionStringBuilder)
@@ -266,6 +309,7 @@ public sealed class DbConnectionFactoryTests
         public string LastPassword { get; private set; } = string.Empty;
         public bool LastUseSsl { get; private set; }
         public string? LastAdditionalParameters { get; private set; }
+        public Exception? BuildException { get; set; }
 
         public string BuildConnectionString(
             DbProviders provider,
@@ -286,6 +330,11 @@ public sealed class DbConnectionFactoryTests
             LastPassword = password;
             LastUseSsl = useSSL;
             LastAdditionalParameters = additionalParameters;
+
+            if (BuildException is not null)
+            {
+                throw BuildException;
+            }
 
             return "Host=localhost;Port=5432;Database=fake;Username=fake;Password=fake";
         }

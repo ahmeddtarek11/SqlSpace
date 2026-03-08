@@ -345,6 +345,39 @@ public sealed class ConnectionStringBuilderServiceTests
         result.ParsedComponents.Should().BeNull();
     }
 
+    [Fact]
+    public void BuildConnectionString_ShouldThrowArgumentException_WhenProviderIsUnsupported()
+    {
+        var sut = CreateSut();
+
+        Action act = () => sut.BuildConnectionString(
+            (DbProviders)999,
+            "localhost",
+            5432,
+            "db",
+            "user",
+            "pass",
+            false,
+            null);
+
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*Unsupported provider*");
+    }
+
+    [Fact]
+    public void ValidateConnectionString_ShouldReturnInvalidResult_WhenSqlServerHostIsEmpty()
+    {
+        var sut = CreateSut();
+
+        var result = sut.ValidateConnectionString(
+            "Server=,1433;Database=core;User Id=sa;Password=topsecret;Encrypt=True",
+            DbProviders.SqlServer);
+
+        result.IsValid.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Host is required.");
+        result.ParsedComponents.Should().BeNull();
+    }
+
     private static ConnectionStringBuilderService CreateSut()
     {
         return new ConnectionStringBuilderService(

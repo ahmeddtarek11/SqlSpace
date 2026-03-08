@@ -14,4 +14,8 @@ public class ConnectionSummaryDto
     public bool IsAdmin { get; set; }
     public DateTime CreatedAt { get; set; }
     public string ConnectionSummary { get; set; } = string.Empty;
+
+    public bool HasFullAccess { get; set; }
+
+
 }

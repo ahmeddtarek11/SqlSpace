@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using SqlSpace.Application.Abstractions.Audit;
 using SqlSpace.Application.Abstractions.ConnectionManagement.Dtos;
 using SqlSpace.Application.Abstractions.Connections;
 using SqlSpace.Application.Abstractions.Data;
@@ -11,6 +12,7 @@ using SqlSpace.Domain.Common.Errors;
 using SqlSpace.Domain.Common.Results;
 using SqlSpace.Domain.Enums;
 using SqlSpace.Domain.Models;
+using System.Text.Json;
 
 namespace SqlSpace.Application.Services.Connection;
 
@@ -20,6 +22,7 @@ public class ConnectionManagementService(
     IEncryptionService encryptionService,
     IApplicationDbContext dbContext,
     IUserRepository userRepo,
+    IAuditLogRepository auditLog,
     ILogger<ConnectionManagementService> logger) : IConnectionManagementService
 {
     private readonly IDatabaseExecutor _databaseExecutor = databaseExecutor;
@@ -27,6 +30,7 @@ public class ConnectionManagementService(
     private readonly IEncryptionService _encryptionService = encryptionService;
     private readonly IApplicationDbContext _dbContext = dbContext;
     private readonly IUserRepository _userRepo = userRepo;
+    private readonly IAuditLogRepository _auditLog = auditLog;
     private readonly ILogger<ConnectionManagementService> _logger = logger;
 
 
@@ -373,14 +377,212 @@ public class ConnectionManagementService(
         }
     }
 
-    public Task<Result<IReadOnlyList<ConnectionSummaryDto>>> GetUserConnectionsAsync(string userId, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
+   public async Task<Result<IReadOnlyList<ConnectionSummaryDto>>> GetUserConnectionsAsync(string userId,CancellationToken cancellationToken)
+{
+    if (string.IsNullOrWhiteSpace(userId))
+        return ConnectionErrors.UserIdRequired();
 
-    public Task<Result<bool>> TransferOwnershipAsync(Guid connectionId, string currentAdminUserId, string newAdminEmail, CancellationToken cancellationToken)
+    var user = await _userRepo.GetByIdAsync(userId, cancellationToken);
+    if (user is null)
+        return ConnectionErrors.InvalidUserId(userId);
+
+    var rows = await _dbContext.ConnectedDatabases
+        .AsNoTracking()
+        .Where(c => !c.IsDeleted &&
+            (c.DbAdminId == userId ||
+             c.UserAccesses.Any(a =>
+                 a.UserId == userId &&
+                 !a.IsDeleted &&
+                 a.RevokedAt == null)))
+        .OrderByDescending(c => c.CreatedAt)
+        .Select(c => new
+        {
+            Connection = c,
+            IsAdmin = c.DbAdminId == userId,
+            HasFullAccess = c.DbAdminId == userId
+                ? true
+                : c.UserAccesses
+                    .Where(a => a.UserId == userId && !a.IsDeleted && a.RevokedAt == null)
+                    .Select(a => (bool?)a.HasFullAccess)
+                    .FirstOrDefault() ?? false
+        })
+        .ToListAsync(cancellationToken);
+
+    var result = rows.Select(x => new ConnectionSummaryDto
     {
-        throw new NotImplementedException();
+        ConnectionId = x.Connection.ConnectionId,
+        ConnectionName = x.Connection.ConnectionName,
+        DatabaseProvider = x.Connection.DatabaseProvider,
+        IsHealthy = x.Connection.IsHealthy,
+        CreatedAt = x.Connection.CreatedAt,
+        IsAdmin = x.IsAdmin,
+        HasFullAccess = x.HasFullAccess,
+        ConnectionSummary = x.IsAdmin ? ConnectionSummaryHelper(x.Connection) : string.Empty
+    }).ToList();
+
+    return result;
+}
+
+
+    public async Task<Result<bool>> TransferOwnershipAsync(Guid connectionId, string currentAdminUserId, string newAdminEmail, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation(
+            "TransferOwnership requested. ConnectionId: {ConnectionId}, CurrentAdminUserId: {CurrentAdminUserId}, NewAdminEmail: {NewAdminEmail}",
+            connectionId,
+            currentAdminUserId,
+            newAdminEmail);
+
+        if (connectionId == Guid.Empty)
+        {
+            _logger.LogWarning("TransferOwnership failed validation: empty connection id. CurrentAdminUserId: {CurrentAdminUserId}", currentAdminUserId);
+            return ConnectionErrors.InvalidConnectionId(nameof(connectionId));
+        }
+
+        if (string.IsNullOrWhiteSpace(currentAdminUserId))
+        {
+            _logger.LogWarning("TransferOwnership failed validation: empty current admin user id. ConnectionId: {ConnectionId}", connectionId);
+            return ConnectionErrors.UserIdRequired(nameof(currentAdminUserId));
+        }
+
+        if (string.IsNullOrWhiteSpace(newAdminEmail))
+        {
+            _logger.LogWarning("TransferOwnership failed validation: empty new admin email. ConnectionId: {ConnectionId}, CurrentAdminUserId: {CurrentAdminUserId}", connectionId, currentAdminUserId);
+            return ConnectionErrors.InvalidRequest(nameof(newAdminEmail));
+        }
+
+        var normalizedNewAdminEmail = newAdminEmail.Trim();
+
+        try
+        {
+            var connection = await _dbContext.ConnectedDatabases
+                .FirstOrDefaultAsync(
+                    c => c.ConnectionId == connectionId && !c.IsDeleted,
+                    cancellationToken);
+
+            if (connection is null)
+            {
+                _logger.LogWarning(
+                    "TransferOwnership failed: connection not found. ConnectionId: {ConnectionId}, CurrentAdminUserId: {CurrentAdminUserId}",
+                    connectionId,
+                    currentAdminUserId);
+                return ConnectionErrors.ConnectionNotFound(connectionId.ToString(), nameof(connectionId));
+            }
+
+            if (!string.Equals(connection.DbAdminId, currentAdminUserId, StringComparison.Ordinal))
+            {
+                _logger.LogWarning(
+                    "TransferOwnership denied: current user is not owner. ConnectionId: {ConnectionId}, OwnerId: {OwnerId}, CurrentAdminUserId: {CurrentAdminUserId}",
+                    connectionId,
+                    connection.DbAdminId,
+                    currentAdminUserId);
+                return ConnectionErrors.AdminNotOwner(connectionId.ToString(), nameof(currentAdminUserId));
+            }
+
+            var newAdmin = await _userRepo.GetByEmailAsync(normalizedNewAdminEmail, cancellationToken);
+            if (newAdmin is null)
+            {
+                _logger.LogWarning(
+                    "TransferOwnership failed: new admin user not found by email. ConnectionId: {ConnectionId}, NewAdminEmail: {NewAdminEmail}",
+                    connectionId,
+                    normalizedNewAdminEmail);
+                return ConnectionErrors.InvalidUserId(normalizedNewAdminEmail, nameof(newAdminEmail));
+            }
+
+            if (string.Equals(newAdmin.Id, currentAdminUserId, StringComparison.Ordinal))
+            {
+                _logger.LogInformation(
+                    "TransferOwnership no-op: target admin is already current owner. ConnectionId: {ConnectionId}, UserId: {UserId}",
+                    connectionId,
+                    currentAdminUserId);
+                return true;
+            }
+
+            var now = DateTime.UtcNow;
+            var previousAdminUserId = connection.DbAdminId;
+            connection.DbAdminId = newAdmin.Id;
+
+            var oldAdminAccess = await _dbContext.UserDatabaseAccesses
+                .FirstOrDefaultAsync(
+                    a => a.DatabaseConnectionId == connectionId && a.UserId == currentAdminUserId,
+                    cancellationToken);
+
+            if (oldAdminAccess is null)
+            {
+                await _dbContext.UserDatabaseAccesses.AddAsync(
+                    new UserDatabaseAccess
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = currentAdminUserId,
+                        DatabaseConnectionId = connectionId,
+                        HasFullAccess = true,
+                        RestrictedTablesJson = null,
+                        GrantedAt = now,
+                        GrantedByUserId = currentAdminUserId,
+                        IsDeleted = false,
+                        RevokedAt = null,
+                        RevokedByUserId = null
+                    },
+                    cancellationToken);
+            }
+            else
+            {
+                oldAdminAccess.IsDeleted = false;
+                oldAdminAccess.RevokedAt = null;
+                oldAdminAccess.RevokedByUserId = null;
+                oldAdminAccess.HasFullAccess = true;
+                oldAdminAccess.RestrictedTablesJson = null;
+                oldAdminAccess.GrantedAt = now;
+                oldAdminAccess.GrantedByUserId = currentAdminUserId;
+            }
+
+            var targetAdminAccesses = await _dbContext.UserDatabaseAccesses
+                .Where(a => a.DatabaseConnectionId == connectionId && a.UserId == newAdmin.Id && !a.IsDeleted)
+                .ToListAsync(cancellationToken);
+
+            foreach (var access in targetAdminAccesses)
+            {
+                access.IsDeleted = true;
+                access.RevokedAt ??= now;
+                access.RevokedByUserId ??= currentAdminUserId;
+            }
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            var auditResult = await _auditLog.LogOwnershipTransferAsync(
+                connectionId,
+                previousAdminUserId,
+                newAdmin.Id,
+                cancellationToken);
+
+            if (auditResult.IsFailure)
+            {
+                _logger.LogWarning(
+                    "TransferOwnership succeeded but audit logging failed. ConnectionId: {ConnectionId}, PreviousAdminUserId: {PreviousAdminUserId}, NewAdminUserId: {NewAdminUserId}",
+                    connectionId,
+                    previousAdminUserId,
+                    newAdmin.Id);
+            }
+
+            _logger.LogInformation(
+                "TransferOwnership succeeded. ConnectionId: {ConnectionId}, PreviousAdminUserId: {PreviousAdminUserId}, NewAdminUserId: {NewAdminUserId}",
+                connectionId,
+                previousAdminUserId,
+                newAdmin.Id);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "TransferOwnership failed unexpectedly. ConnectionId: {ConnectionId}, CurrentAdminUserId: {CurrentAdminUserId}, NewAdminEmail: {NewAdminEmail}",
+                connectionId,
+                currentAdminUserId,
+                normalizedNewAdminEmail);
+            return ConnectionErrors.Unexpected(
+                "Failed to transfer connection ownership due to an unexpected error.",
+                nameof(connectionId));
+        }
     }
 
     public async Task<Result<bool>> UpdatePasswordAsync(Guid connectionId, string userId, string newPassword, CancellationToken cancellationToken)
@@ -831,5 +1033,30 @@ public class ConnectionManagementService(
     }
 
    
+
+
+
+private static string ConnectionSummaryHelper(ConnectedDatabase connection)
+{
+    var summary = new
+    {
+        
+        
+        connection.DatabaseName,
+        connection.Host,
+        connection.PortNumber,
+        connection.DatabaseProvider,
+        connection.UseSSL,
+        connection.IsHealthy,
+        connection.LastSuccessfulConnection,
+        connection.AdditionalParameters
+        
+    };
+
+    return JsonSerializer.Serialize(summary, new JsonSerializerOptions
+    {
+        WriteIndented = true
+    });
+}
 
  }
