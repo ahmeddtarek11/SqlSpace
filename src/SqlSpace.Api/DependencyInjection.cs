@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi;
 using SqlSpace.Api.common;
@@ -21,7 +22,11 @@ public static class DependencyInjection
 
 
 
-        services.AddControllers();
+        services.AddControllers().AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters
+            .Add(new JsonStringEnumConverter());
+    });;
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(options =>
     {

@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\SqlSpace.Api\SqlSpace.Api.csproj" />
     <ProjectReference Include="..\..\src\SqlSpace.Application\SqlSpace.Application.csproj" />
     <ProjectReference Include="..\..\src\SqlSpace.Domain\SqlSpace.Domain.csproj" />
     <ProjectReference Include="..\..\src\SqlSpace.Infrastructure\SqlSpace.Infrastructure.csproj" />
