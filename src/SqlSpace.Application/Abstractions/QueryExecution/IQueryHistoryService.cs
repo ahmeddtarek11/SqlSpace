@@ -1,4 +1,5 @@
 using SqlSpace.Application.DTOs.Query;
+using SqlSpace.Domain.Common.Results;
 
 namespace SqlSpace.Application.Abstractions.Query;
 
@@ -50,7 +51,7 @@ public interface IQueryHistoryService
     /// 6. Count total matching records.
     /// 7. Return page result with metadata.
     /// </remarks>
-    Task<PaginatedQueryHistory> GetUserQueryHistoryAsync(
+    Task<Result<PaginatedQueryHistory>> GetUserQueryHistoryAsync(
         string userId,
         Guid? connectionId,
         int pageNumber,
@@ -75,7 +76,7 @@ public interface IQueryHistoryService
     /// 5. Apply pagination.
     /// 6. Return page result.
     /// </remarks>
-    Task<PaginatedQueryHistory> GetConnectionQueryHistoryAsync(
+    Task<Result<PaginatedQueryHistory>> GetConnectionQueryHistoryAsync(
         Guid connectionId,
         string requestingUserId,
         int pageNumber,
@@ -96,7 +97,7 @@ public interface IQueryHistoryService
     /// 3. Include connection details.
     /// 4. Return full query details or null if unauthorized.
     /// </remarks>
-    Task<QueryHistoryDetailDto?> GetQueryByIdAsync(
+    Task<Result<QueryHistoryDetailDto?>> GetQueryByIdAsync(
         Guid queryId,
         string requestingUserId,
         CancellationToken cancellationToken);
@@ -120,7 +121,7 @@ public interface IQueryHistoryService
     /// 6. Identify most queried tables.
     /// 7. Return aggregated statistics.
     /// </remarks>
-    Task<QueryStatistics> GetUserQueryStatisticsAsync(
+    Task<Result<QueryStatistics>> GetUserQueryStatisticsAsync(
         string userId,
         Guid? connectionId,
         DateTime? dateFrom,
@@ -143,12 +144,12 @@ public interface IQueryHistoryService
     /// 3. Generate CSV with headers: Timestamp, Prompt, SQL, Status, Rows, Time.
     /// 4. Return byte array for file download.
     /// </remarks>
-    Task<byte[]> ExportQueryHistoryToCsvAsync(
-        string userId,
-        Guid? connectionId,
-        DateTime? dateFrom,
-        DateTime? dateTo,
-        CancellationToken cancellationToken);
+    // Task<byte[]> ExportQueryHistoryToCsvAsync(
+    //     string userId,
+    //     Guid? connectionId,
+    //     DateTime? dateFrom,
+    //     DateTime? dateTo,
+    //     CancellationToken cancellationToken);
 
     /// <summary>
     /// Searches query history by keyword in prompts or SQL.
@@ -169,7 +170,7 @@ public interface IQueryHistoryService
     /// 5. Apply pagination.
     /// 6. Return search results.
     /// </remarks>
-    Task<PaginatedQueryHistory> SearchQueryHistoryAsync(
+    Task<Result<PaginatedQueryHistory>> SearchQueryHistoryAsync(
         string userId,
         string searchTerm,
         Guid? connectionId,

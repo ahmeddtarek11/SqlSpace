@@ -1,4 +1,5 @@
 using SqlSpace.Application.DTOs.Query;
+using SqlSpace.Domain.Common.Results;
 
 namespace SqlSpace.Application.Abstractions.Query;
 
@@ -45,7 +46,7 @@ public interface IQueryExecutionService
     /// 1. Validate connection exists and is not deleted.
     /// 2. Verify user has active access grant (admin or explicit grant).
     /// 3. Retrieve user's accessible tables (full or filtered by restrictions).
-    /// 4. Get filtered schema context for LLM.
+    /// 4. Get filtered schema context for LLM.(validate a schema exists , if not , exctract the schema and presist in db)
     /// 5. Send prompt + schema to AI service for SQL generation.
     /// 6. Validate generated SQL (SELECT-only, authorized tables).
     /// 7. Execute SQL on external database using connection factory.
@@ -53,7 +54,7 @@ public interface IQueryExecutionService
     /// 9. Persist complete query record to history with permission snapshot.
     /// 10. Return result to caller.
     /// </remarks>
-    Task<QueryExecutionResult> ExecutePromptAsync(
+    Task<Result<QueryExecutionResult>> ExecutePromptAsync(
         Guid connectionId,
         string userId,
         string userPrompt,
@@ -77,7 +78,7 @@ public interface IQueryExecutionService
     /// 7. Create new query history record (separate from original).
     /// 8. Return updated result.
     /// </remarks>
-    Task<QueryExecutionResult> RerunQueryAsync(
+    Task<Result<QueryExecutionResult>> RerunQueryAsync(
         Guid queryId,
         string userId,
         CancellationToken cancellationToken);
@@ -99,7 +100,7 @@ public interface IQueryExecutionService
     /// 4. Apply pagination.
     /// 5. Return page result with total count.
     /// </remarks>
-    Task<PaginatedQueryHistory> GetUserQueryHistoryAsync(
+    Task<Result<PaginatedQueryHistory>> GetUserQueryHistoryAsync(
         string userId,
         Guid? connectionId,
         int pageNumber,

@@ -68,7 +68,7 @@ public interface ISqlValidator
     /// 3. Scan for write operations (INSERT, UPDATE, DELETE, MERGE).
     /// 4. Return boolean result.
     /// </remarks>
-    bool IsSelectOnly(string sql);
+    // bool IsSelectOnly(string sql);
 
     /// <summary>
     /// Extracts all table names referenced in SQL query.
@@ -82,7 +82,7 @@ public interface ISqlValidator
     /// 3. Normalize table names (lowercase, trim).
     /// 4. Return distinct list of referenced tables.
     /// </remarks>
-    IReadOnlyList<string> ExtractTableNames(string sql);
+    // IReadOnlyList<string> ExtractTableNames(string sql);
 
     /// <summary>
     /// Scans SQL for dangerous keywords that could cause data modification or system damage.

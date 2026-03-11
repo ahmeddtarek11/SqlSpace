@@ -1,4 +1,5 @@
 using SqlSpace.Application.DTOs.AI;
+using SqlSpace.Domain.Common.Results;
 
 namespace SqlSpace.Application.Abstractions.AI;
 
@@ -42,7 +43,7 @@ public interface ITextToSqlClient
     /// 5. Parse the response body JSON.
     /// 6. Return normalized SqlGenerationResponse or throw for unrecoverable errors.
     /// </remarks>
-    Task<SqlGenerationResponse> SendSqlGenerationRequestAsync(
+    Task<Result<SqlGenerationResponse>> SendSqlGenerationRequestAsync(
         SqlGenerationRequest request, 
         CancellationToken cancellationToken);
 }

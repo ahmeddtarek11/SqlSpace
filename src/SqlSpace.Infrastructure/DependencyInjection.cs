@@ -5,13 +5,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using SqlSpace.Application.Abstractions.AI;
 using SqlSpace.Application.Abstractions.Audit;
 using SqlSpace.Application.Abstractions.Auth;
 using SqlSpace.Application.Abstractions.Data;
 using SqlSpace.Application.Abstractions.Integrations;
+using SqlSpace.Application.Abstractions.Schema;
 using SqlSpace.Application.Abstractions.Security;
 using SqlSpace.Application.Abstractions.Users;
+using SqlSpace.Infrastructure.AI;
 using SqlSpace.Infrastructure.AuditLog;
 using SqlSpace.Infrastructure.Connection;
 using SqlSpace.Infrastructure.Data;
@@ -35,6 +39,21 @@ public static class DependencyInjection
 
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
         services.AddHttpContextAccessor();
+        services.Configure<llmApi>(configuration.GetSection("LlmApi"));
+        services.AddHttpClient<ITextToSqlClient, TextToSqlClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<llmApi>>().Value;
+            if (!string.IsNullOrWhiteSpace(options.BaseLink) &&
+                Uri.TryCreate(options.BaseLink, UriKind.Absolute, out var baseUri))
+            {
+                client.BaseAddress = baseUri;
+            }
+
+            if (options.TimeoutSeconds > 0)
+            {
+                client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
+            }
+        });
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -84,6 +103,7 @@ public static class DependencyInjection
             services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
             services.AddScoped<IConnectionStringBuilder , ConnectionStringBuilderService>();
             services.AddScoped<IDatabaseExecutor, DatabaseExecutor>();
+            services.AddScoped<ISchemaExtractor , SchemaExtractor>();
 
         return services;
     }
