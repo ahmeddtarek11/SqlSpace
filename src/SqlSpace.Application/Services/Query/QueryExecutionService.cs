@@ -91,6 +91,22 @@ public class QueryExecutionService(
                     new Error("query_execution.forbidden", "User does not have access to this connection.", nameof(userId)));
             }
 
+
+        var schemaContext = await _schemaContextService.GetFilteredSchemaForPromptAsync(
+                connectionId,
+                userId,
+                userProvidedSchemaOverride: null,
+                cancellationToken);
+
+            if (string.IsNullOrWhiteSpace(schemaContext))
+            {
+                return Result<QueryExecutionResult>.Failure(
+                    new Error("query_execution.schema_unavailable", "Schema context is unavailable for this connection."));
+            }
+
+
+
+
             var accessibleResult = await _accessControlService.GetAccessibleTableNamesAsync(
                 connectionId,
                 userId,
@@ -102,23 +118,34 @@ public class QueryExecutionService(
             }
 
             var accessibleTables = accessibleResult.Value?.ToList() ?? new List<string>();
+            if (accessibleTables.Count == 0 && isAdmin)
+            {
+                _logger.LogInformation(
+                    "No accessible tables found for admin user {UserId}. Attempting schema refresh for connection {ConnectionId}.",
+                    userId,
+                    connectionId);
+
+                await _schemaContextService.RefreshSchemaAsync(connectionId, userId, cancellationToken);
+
+                accessibleResult = await _accessControlService.GetAccessibleTableNamesAsync(
+                    connectionId,
+                    userId,
+                    cancellationToken);
+
+                if (accessibleResult.IsFailure)
+                {
+                    return Result<QueryExecutionResult>.Failure(accessibleResult.Errors);
+                }
+
+                accessibleTables = accessibleResult.Value?.ToList() ?? new List<string>();
+            }
             if (accessibleTables.Count == 0)
             {
                 return Result<QueryExecutionResult>.Failure(
                     new Error("query_execution.no_accessible_tables", "No accessible tables found for the user."));
             }
 
-            var schemaContext = await _schemaContextService.GetFilteredSchemaForPromptAsync(
-                connectionId,
-                userId,
-                userProvidedSchemaOverride: null,
-                cancellationToken);
-
-            if (string.IsNullOrWhiteSpace(schemaContext))
-            {
-                return Result<QueryExecutionResult>.Failure(
-                    new Error("query_execution.schema_unavailable", "Schema context is unavailable for this connection."));
-            }
+           
 
             var restrictedSnapshot = await LoadRestrictedTablesSnapshotAsync(
                 connectionId,

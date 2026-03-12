@@ -868,7 +868,11 @@ public class AccessControlService(IApplicationDbContext context,
             return new List<string>();
         }
 
-        var schemaObject = JsonSerializer.Deserialize<SchemaSnapShotModel>(schema.SchemaText);
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        var schemaObject = JsonSerializer.Deserialize<SchemaSnapShotModel>(schema.SchemaText, options);
         
         return schemaObject?.Tables
             ?.Select(t => provider.BuildTableKey(t.Name, t.Schema))
