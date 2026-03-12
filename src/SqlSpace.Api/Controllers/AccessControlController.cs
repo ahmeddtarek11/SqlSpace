@@ -141,11 +141,11 @@ public partial class AccessControlController(
             userId,
             cancellationToken);
 
-        return ToApiResponse(result, StatusCodes.Status200OK, "Connection access evaluated.");
+        return ToApiResponse(result, StatusCodes.Status200OK, $"Connection access evaluated -- Has Access : {result.Value}.");
     }
 
     [HttpGet("connections/{connectionId:guid}/can-access-table")]
-    [EndpointSummary("Check if a user can access a specific table")]
+    [EndpointSummary("Check if a user can access a specific table -  null schema name only for mysql")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status401Unauthorized)]

@@ -28,7 +28,7 @@ public class AccessControlService(IApplicationDbContext context,
     private readonly ILogger<AccessControlService> _logger = logger;
     private readonly IAuditLogRepository _auditLog = auditLog;
 
-    public async Task<Result<bool>> CanAccessTableAsync(Guid connectionId, string userId, string tableName, string? schemaName, CancellationToken cancellationToken)
+    public async Task<Result<bool>> CanAccessTableAsync(Guid connectionId, string userId, string tableName, string schemaName, CancellationToken cancellationToken)
     {
         if (connectionId == Guid.Empty)
         {
@@ -56,9 +56,20 @@ public class AccessControlService(IApplicationDbContext context,
                     db => db.ConnectionId == connectionId && !db.IsDeleted,
                     cancellationToken);
 
+            
+
             if (database is null)
             {
                 return AccessControlErrors.ConnectionNotFound(nameof(connectionId));
+            }
+
+            if(schemaName is null ){
+            if(database.DatabaseProvider == DbProviders.SqlServer || database.DatabaseProvider == DbProviders.PostgreSql){
+                
+                return AccessControlErrors.EmptySchemaName(nameof(schemaName));
+                
+            }
+             schemaName = database.DatabaseName;
             }
 
             if (string.Equals(database.DbAdminId, userId, StringComparison.Ordinal))
@@ -193,8 +204,11 @@ public class AccessControlService(IApplicationDbContext context,
         }
 
 
-
-        var schemaObject = JsonSerializer.Deserialize<SchemaSnapShotModel>(schema.SchemaText);
+    var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        var schemaObject = JsonSerializer.Deserialize<SchemaSnapShotModel>(schema.SchemaText ,options);
         if (schemaObject is null || schemaObject.Tables is null){
             return AccessControlErrors.SchemaSnapshotNotFound("invalid schema format");
         }
@@ -680,7 +694,8 @@ public class AccessControlService(IApplicationDbContext context,
                 HasFullAccess = newAccess.HasFullAccess,
                 GrantedAt = newAccess.GrantedAt,
                 GrantedByUserEmail = admin.Email,
-                RestrictedTables = rt
+                RestrictedTables = rt,
+                
             };
         }
         catch (Exception ex)

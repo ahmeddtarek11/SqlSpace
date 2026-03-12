@@ -22,8 +22,13 @@ public static class AccessControlErrors
     public const string PersistFailedCode = "access_control.persist_failed";
     public const string UnexpectedCode = "access_control.unexpected";
 
+    public const string EmptySchemaNameCode = "access_control.Empty_Schema_Name";
+
     public static Error InvalidConnectionId(string? target = null) =>
         new(InvalidConnectionIdCode, "Database connection identifier is invalid.", target);
+
+        public static Error EmptySchemaName(string? target = null) =>
+        new(EmptySchemaNameCode, "Empty Schema Name for a database provider supporting schema name.", target);
 
     public static Error InvalidAdminUserId(string? target = null) =>
         new(InvalidAdminUserIdCode, "Admin user identifier is invalid.", target);

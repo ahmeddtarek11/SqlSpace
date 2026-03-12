@@ -16,4 +16,5 @@ public sealed class GrantAccessRequest
 
     [Description("Optional restricted tables list. Required when HasFullAccess=false.")]
     public List<TableRestrictionInput>? RestrictedTables { get; set; }
+    
 }
