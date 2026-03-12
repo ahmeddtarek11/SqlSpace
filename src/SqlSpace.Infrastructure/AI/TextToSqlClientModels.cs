@@ -32,6 +32,9 @@ internal sealed class TextToSqlErrorPayload
 
 internal sealed class SchemaSnapshotPayload
 {
+    [JsonPropertyName("database")]
+    public string? Database { get; set; }
+
     [JsonPropertyName("tables")]
     public List<SchemaTablePayload> Tables { get; set; } = new();
 }

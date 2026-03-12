@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using SqlSpace.Application.Abstractions.AI;
 using SqlSpace.Application.DTOs.AI;
 using SqlSpace.Domain.Common.Results;
+using SqlSpace.Domain.Enums;
 
 namespace SqlSpace.Infrastructure.AI;
 
@@ -20,12 +21,62 @@ public sealed class TextToSqlClient(
         SqlGenerationRequest request,
         CancellationToken cancellationToken)
     {
-        if (!TextToSqlClientHelpers.TryValidateRequest(request, out var validationError))
+        if (request is null)
         {
-            return Result<SqlGenerationResponse>.Failure(validationError);
+            return Result<SqlGenerationResponse>.Failure(
+                new Error("llm.invalid_request", "Request payload cannot be null.", nameof(request)));
         }
 
-        if (!TextToSqlClientHelpers.TryMapDbType(request.DatabaseProvider, out var dbType))
+        if (string.IsNullOrWhiteSpace(request.UserPrompt))
+        {
+            return Result<SqlGenerationResponse>.Failure(
+                new Error("llm.invalid_request", "UserPrompt cannot be empty.", nameof(request.UserPrompt)));
+        }
+
+        if (request.UserPrompt.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length < 3)
+        {
+            return Result<SqlGenerationResponse>.Failure(
+                new Error("llm.invalid_request", "UserPrompt must contain at least 3 words.", nameof(request.UserPrompt)));
+        }
+
+        if (string.IsNullOrWhiteSpace(request.SchemaContext))
+        {
+            return Result<SqlGenerationResponse>.Failure(
+                new Error("llm.invalid_request", "SchemaContext cannot be empty.", nameof(request.SchemaContext)));
+        }
+
+        if (string.IsNullOrWhiteSpace(request.DatabaseProvider))
+        {
+            return Result<SqlGenerationResponse>.Failure(
+                new Error("llm.invalid_request", "DatabaseProvider is required.", nameof(request.DatabaseProvider)));
+        }
+
+        var dbType = string.Empty;
+        var providerNormalized = request.DatabaseProvider.Trim().ToLowerInvariant();
+        if (providerNormalized is "postgres" or "postgresql")
+        {
+            dbType = "postgres";
+        }
+        else if (providerNormalized is "mysql")
+        {
+            dbType = "mysql";
+        }
+        else if (providerNormalized is "sqlserver" or "sql_server" or "mssql")
+        {
+            dbType = "sqlserver";
+        }
+        else if (Enum.TryParse<DbProviders>(request.DatabaseProvider, ignoreCase: true, out var parsedProvider))
+        {
+            dbType = parsedProvider switch
+            {
+                DbProviders.PostgreSql => "postgres",
+                DbProviders.MySql => "mysql",
+                DbProviders.SqlServer => "sqlserver",
+                _ => string.Empty
+            };
+        }
+
+        if (string.IsNullOrWhiteSpace(dbType))
         {
             return Result<SqlGenerationResponse>.Failure(
                 new Error(
@@ -36,6 +87,7 @@ public sealed class TextToSqlClient(
 
         if (!TextToSqlClientHelpers.TryBuildRoleSchema(
                 request.SchemaContext,
+                request.DatabaseProvider,
                 out var roleSchema,
                 out var schemaError))
         {
@@ -43,19 +95,19 @@ public sealed class TextToSqlClient(
                 new Error("llm.invalid_schema", schemaError));
         }
 
+        if (string.IsNullOrWhiteSpace(_options.Value.BaseLink) ||
+            !Uri.TryCreate(_options.Value.BaseLink, UriKind.Absolute, out var endpoint))
+        {
+            return Result<SqlGenerationResponse>.Failure(
+                new Error("llm.config_missing", "LlmApi BaseLink is not configured or is not a valid absolute URI."));
+        }
+
         var payload = new TextToSqlRequestPayload
         {
-            Question = request.UserPrompt,
+            Question = request.UserPrompt.Trim(),
             DbType = dbType,
             RoleSchema = roleSchema
         };
-
-        var endpoint = TextToSqlClientHelpers.ResolveEndpoint(_options.Value, _httpClient.BaseAddress);
-        if (endpoint is null)
-        {
-            return Result<SqlGenerationResponse>.Failure(
-                new Error("llm.config_missing", "LlmApi BaseLink is not configured."));
-        }
 
         try
         {
@@ -95,7 +147,16 @@ public sealed class TextToSqlClient(
 
             if (apiError is not null)
             {
-                return Result<SqlGenerationResponse>.Failure(TextToSqlClientHelpers.ToError(apiError));
+                var code = string.IsNullOrWhiteSpace(apiError.ErrorCode)
+                    ? "llm.error"
+                    : $"llm.{apiError.ErrorCode.ToLowerInvariant()}";
+
+                var message = string.IsNullOrWhiteSpace(apiError.Message)
+                    ? "LLM API returned an error."
+                    : apiError.Message;
+
+                return Result<SqlGenerationResponse>.Failure(
+                    new Error(code, message, apiError.ErrorSubcode));
             }
 
             return Result<SqlGenerationResponse>.Failure(

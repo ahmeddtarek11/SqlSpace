@@ -113,7 +113,9 @@ public class ConnectionManagementService(
                 request.DatabaseProvider,
                 request.InputMode,
                 testErrorMessage);
-           return ConnectionErrors.ConnectionTestFailed("Cannot TestConnection with the provided Id , try again with valid parameters");
+           return Result<ConnectionCreationResponse>.Failure(
+               testRes.Errors,
+               testErrorMessage ?? "Connection test failed.");
         }
 
         _logger.LogInformation("Connection test succeeded. UserId: {UserId}, ConnectionName: {ConnectionName}", userId, request.ConnectionName);
