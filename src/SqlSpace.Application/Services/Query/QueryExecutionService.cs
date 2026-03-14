@@ -290,6 +290,199 @@ public class QueryExecutionService(
         }
     }
 
+    public async Task<Result<QueryExecutionResult>> ExecuteSqlAsync(
+        Guid connectionId,
+        string userId,
+        string userPrompt,
+        string generatedSql,
+        CancellationToken cancellationToken)
+    {
+        if (connectionId == Guid.Empty)
+        {
+            return Result<QueryExecutionResult>.Failure(
+                new Error("query_execution.invalid_connection_id", "ConnectionId cannot be empty.", nameof(connectionId)));
+        }
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Result<QueryExecutionResult>.Failure(
+                new Error("query_execution.invalid_user_id", "UserId is required.", nameof(userId)));
+        }
+
+        if (string.IsNullOrWhiteSpace(generatedSql))
+        {
+            return Result<QueryExecutionResult>.Failure(
+                new Error("query_execution.invalid_sql", "SQL is required.", nameof(generatedSql)));
+        }
+
+        userPrompt = string.IsNullOrWhiteSpace(userPrompt) ? "Saved query" : userPrompt;
+
+        try
+        {
+            var connection = await _dbcontext.ConnectedDatabases
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    c => c.ConnectionId == connectionId && !c.IsDeleted,
+                    cancellationToken);
+
+            if (connection is null)
+            {
+                return Result<QueryExecutionResult>.Failure(
+                    new Error("query_execution.connection_not_found", "Connection not found.", nameof(connectionId)));
+            }
+
+            var isAdmin = string.Equals(connection.DbAdminId, userId, StringComparison.Ordinal);
+
+            var accessResult = await _accessControlService.HasAccessToConnectionAsync(
+                connectionId,
+                userId,
+                cancellationToken);
+
+            if (accessResult.IsFailure)
+            {
+                return Result<QueryExecutionResult>.Failure(accessResult.Errors);
+            }
+
+            if (accessResult.Value != true)
+            {
+                return Result<QueryExecutionResult>.Failure(
+                    new Error("query_execution.forbidden", "User does not have access to this connection.", nameof(userId)));
+            }
+
+            var accessibleResult = await _accessControlService.GetAccessibleTableNamesAsync(
+                connectionId,
+                userId,
+                cancellationToken);
+
+            if (accessibleResult.IsFailure)
+            {
+                return Result<QueryExecutionResult>.Failure(accessibleResult.Errors);
+            }
+
+            var accessibleTables = accessibleResult.Value?.ToList() ?? new List<string>();
+            if (accessibleTables.Count == 0 && isAdmin)
+            {
+                _logger.LogInformation(
+                    "No accessible tables found for admin user {UserId}. Attempting schema refresh for connection {ConnectionId}.",
+                    userId,
+                    connectionId);
+
+                await _schemaContextService.RefreshSchemaAsync(connectionId, userId, cancellationToken);
+
+                accessibleResult = await _accessControlService.GetAccessibleTableNamesAsync(
+                    connectionId,
+                    userId,
+                    cancellationToken);
+
+                if (accessibleResult.IsFailure)
+                {
+                    return Result<QueryExecutionResult>.Failure(accessibleResult.Errors);
+                }
+
+                accessibleTables = accessibleResult.Value?.ToList() ?? new List<string>();
+            }
+
+            if (accessibleTables.Count == 0)
+            {
+                return Result<QueryExecutionResult>.Failure(
+                    new Error("query_execution.no_accessible_tables", "No accessible tables found for the user."));
+            }
+
+            var restrictedSnapshot = await LoadRestrictedTablesSnapshotAsync(
+                connectionId,
+                userId,
+                isAdmin,
+                cancellationToken);
+
+            var validation = await _sqlValidator.ValidateQueryAsync(
+                generatedSql,
+                accessibleTables,
+                cancellationToken);
+
+            if (!validation.IsValid)
+            {
+                var status = validation.UnauthorizedTables.Count > 0
+                    ? QueryStatus.InsufficientPermissions
+                    : QueryStatus.ValidationFailed;
+
+                var history = await SaveHistoryAsync(
+                    connection,
+                    userId,
+                    userPrompt,
+                    generatedSql,
+                    llmResponse: null,
+                    status,
+                    validation.ErrorMessage ?? "SQL validation failed.",
+                    dbResult: null,
+                    accessibleTables,
+                    restrictedSnapshot,
+                    wasAdmin: isAdmin,
+                    cancellationToken);
+
+                return BuildResult(history);
+            }
+
+            var dbResult = await _databaseExecutor.ExecuteQueryAsync(connection, generatedSql, cancellationToken);
+            if (!dbResult.Success)
+            {
+                var status = dbResult.ErrorMessage?.Contains("cancel", StringComparison.OrdinalIgnoreCase) == true
+                    ? QueryStatus.Timeout
+                    : QueryStatus.ExecutionFailed;
+
+                var history = await SaveHistoryAsync(
+                    connection,
+                    userId,
+                    userPrompt,
+                    generatedSql,
+                    llmResponse: null,
+                    status,
+                    dbResult.ErrorMessage ?? "Query execution failed.",
+                    dbResult,
+                    accessibleTables,
+                    restrictedSnapshot,
+                    wasAdmin: isAdmin,
+                    cancellationToken);
+
+                return BuildResult(history);
+            }
+
+            var successHistory = await SaveHistoryAsync(
+                connection,
+                userId,
+                userPrompt,
+                generatedSql,
+                llmResponse: null,
+                QueryStatus.Success,
+                errorMessage: null,
+                dbResult,
+                accessibleTables,
+                restrictedSnapshot,
+                wasAdmin: isAdmin,
+                cancellationToken);
+
+            return BuildResult(successHistory);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogWarning(
+                "Query execution cancelled for connection {ConnectionId} and user {UserId}",
+                connectionId,
+                userId);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Query execution failed for connection {ConnectionId} and user {UserId}",
+                connectionId,
+                userId);
+
+            return Result<QueryExecutionResult>.Failure(
+                new Error("query_execution.unexpected", "Unexpected error while executing query."));
+        }
+    }
+
     public Task<Result<PaginatedQueryHistory>> GetUserQueryHistoryAsync(
         string userId,
         Guid? connectionId,

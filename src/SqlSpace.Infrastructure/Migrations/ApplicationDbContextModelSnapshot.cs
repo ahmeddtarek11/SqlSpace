@@ -422,6 +422,50 @@ namespace SqlSpace.Infrastructure.Migrations
                     b.ToTable("RefreshTokens", (string)null);
                 });
 
+            modelBuilder.Entity("SqlSpace.Domain.Models.SavedQuery", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DatabaseConnectionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("GeneratedSql")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("QueryHistoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<string>("UserPrompt")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DatabaseConnectionId");
+
+                    b.HasIndex("UserId", "CreatedAtUtc");
+
+                    b.ToTable("SavedQueries", (string)null);
+                });
+
             modelBuilder.Entity("SqlSpace.Domain.Models.UserDatabaseAccess", b =>
                 {
                     b.Property<Guid>("Id")
@@ -637,6 +681,17 @@ namespace SqlSpace.Infrastructure.Migrations
                     b.HasOne("SqlSpace.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany("QueriesHistory")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DatabaseConnection");
+                });
+
+            modelBuilder.Entity("SqlSpace.Domain.Models.SavedQuery", b =>
+                {
+                    b.HasOne("SqlSpace.Domain.Models.ConnectedDatabase", "DatabaseConnection")
+                        .WithMany()
+                        .HasForeignKey("DatabaseConnectionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

@@ -61,6 +61,22 @@ public interface IQueryExecutionService
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// Executes a pre-generated SQL query through the validation and execution pipeline.
+    /// </summary>
+    /// <param name="connectionId">Target database connection identifier.</param>
+    /// <param name="userId">Authenticated user identifier from JWT claims.</param>
+    /// <param name="userPrompt">Original user prompt or label for history.</param>
+    /// <param name="generatedSql">SQL statement to validate and execute.</param>
+    /// <param name="cancellationToken">Cancellation token for request lifetime control.</param>
+    /// <returns>Complete query execution result including SQL, results, and execution metadata.</returns>
+    Task<Result<QueryExecutionResult>> ExecuteSqlAsync(
+        Guid connectionId,
+        string userId,
+        string userPrompt,
+        string generatedSql,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// Re-executes a previously run query from history with current user permissions.
     /// </summary>
     /// <param name="queryId">Query history record identifier to re-run.</param>

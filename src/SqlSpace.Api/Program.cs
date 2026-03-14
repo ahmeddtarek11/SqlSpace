@@ -12,7 +12,17 @@ var builder = WebApplication.CreateBuilder(args);
 // });
 
 builder.Services.AddApplication().AddInfrastructure(builder.Configuration).AddApi();
-
+// 1. Add this before builder.Build()
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5174") // Add your frontend URLs
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
 
 var app = builder.Build();
 
@@ -28,10 +38,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+// CORS should run before auth and before endpoints are mapped.
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
-

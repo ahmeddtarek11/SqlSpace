@@ -68,4 +68,23 @@ public sealed class SchemaController(
             return ToApiResponse(failure, StatusCodes.Status200OK, "Schema refresh failed.");
         }
     }
+
+
+    [HttpGet("connections/GetFilteredConnectionSchema")]
+    [EndpointSummary("Gets the Filtered schema for restricted users and the full schema for admins or users with full access")]
+    [ProducesResponseType(typeof(ApiResponse<string?>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<string?>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<string?>), StatusCodes.Status401Unauthorized)]
+     public async Task<ActionResult<ApiResponse<string?>>> GetFullFilteredSchema(Guid connectionId , CancellationToken cancellationToken)
+    {
+        string? res = string.Empty;
+        var userId = _currentUserService.GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return UnauthorizedResponse<string?>();
+        }
+
+        res = await _schemaContextService.GetFilteredSchemaForPromptAsync(connectionId, userId, null, cancellationToken);
+        return ToApiResponse(Result<string?>.Success(res), StatusCodes.Status200OK, "Schema loaded successfully.");
+    }
 }

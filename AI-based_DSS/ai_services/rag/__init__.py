@@ -1,3 +1,0 @@
-"""
-RAG service package.
-"""

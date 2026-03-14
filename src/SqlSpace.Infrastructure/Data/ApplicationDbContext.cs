@@ -18,6 +18,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     public DbSet<UserDatabaseAccess> UserDatabaseAccesses => Set<UserDatabaseAccess>();
     public DbSet<DatabaseSchemaSnapshot> DatabaseSchemaSnapshots => Set<DatabaseSchemaSnapshot>();
     public DbSet<QueryHistory> QueryHistories => Set<QueryHistory>();
+    public DbSet<SavedQuery> SavedQueries => Set<SavedQuery>();
     public DbSet<AccessAuditLog> AccessAuditLogs => Set<AccessAuditLog>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 

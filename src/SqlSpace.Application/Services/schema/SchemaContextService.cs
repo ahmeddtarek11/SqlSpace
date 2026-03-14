@@ -300,5 +300,9 @@ public class SchemaContextService(
         public bool IsPrimaryKey { get; set; }
         public bool IsNullable { get; set; }
         public int? MaxLength { get; set; }
+        public string? ForeignKeyName { get; set; }
+        public string? ReferencedTableSchema { get; set; }
+        public string? ReferencedTableName { get; set; }
+        public string? ReferencedColumnName { get; set; }
     }
 }

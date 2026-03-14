@@ -28,7 +28,8 @@ public class AccessControlService(IApplicationDbContext context,
     private readonly ILogger<AccessControlService> _logger = logger;
     private readonly IAuditLogRepository _auditLog = auditLog;
 
-    public async Task<Result<bool>> CanAccessTableAsync(Guid connectionId, string userId, string tableName, string schemaName, CancellationToken cancellationToken)
+    public async Task<Result<bool>> CanAccessTableAsync
+    (Guid connectionId, string userId, string tableName, string schemaName, CancellationToken cancellationToken)
     {
         if (connectionId == Guid.Empty)
         {

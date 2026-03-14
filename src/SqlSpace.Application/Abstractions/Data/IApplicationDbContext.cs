@@ -19,6 +19,7 @@ public interface IApplicationDbContext
     
     DbSet<DatabaseSchemaSnapshot> DatabaseSchemaSnapshots { get; }
     DbSet<QueryHistory> QueryHistories { get; }
+    DbSet<SavedQuery> SavedQueries { get; }
     DbSet<AccessAuditLog> AccessAuditLogs { get; }
     DbSet<RefreshToken> RefreshTokens { get; }
 

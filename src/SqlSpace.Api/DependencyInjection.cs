@@ -36,6 +36,8 @@ public static class DependencyInjection
             Version = "v1"
         });
 
+     
+
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
             Name = "Authorization",
