@@ -68,15 +68,15 @@ public sealed class ConnectionManagementServiceTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value!.Should().HaveCount(3);
-        result.Value.Select(c => c.ConnectionId).Should().ContainInOrder(
+        result!.Value!.Select(c => c.ConnectionId).Should().ContainInOrder(
             granted.ConnectionId,
             ownedNew.ConnectionId,
             ownedOld.ConnectionId);
 
-        result.Value.First(c => c.ConnectionId == granted.ConnectionId).IsAdmin.Should().BeFalse();
-        result.Value.First(c => c.ConnectionId == granted.ConnectionId).HasFullAccess.Should().BeFalse();
-        result.Value.First(c => c.ConnectionId == ownedNew.ConnectionId).IsAdmin.Should().BeTrue();
-        result.Value.First(c => c.ConnectionId == ownedNew.ConnectionId).HasFullAccess.Should().BeTrue();
+        result!.Value!.First(c => c.ConnectionId == granted.ConnectionId).IsAdmin.Should().BeFalse();
+        result!.Value!.First(c => c.ConnectionId == granted.ConnectionId).HasFullAccess.Should().BeFalse();
+        result!.Value!.First(c => c.ConnectionId == ownedNew.ConnectionId).IsAdmin.Should().BeTrue();
+        result!.Value!.First(c => c.ConnectionId == ownedNew.ConnectionId).HasFullAccess.Should().BeTrue();
     }
 
     [Fact]
