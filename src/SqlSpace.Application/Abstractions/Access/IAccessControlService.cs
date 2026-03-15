@@ -200,4 +200,8 @@ public interface IAccessControlService
         Guid connectionId,
         string adminUserId,
         CancellationToken cancellationToken);
+
+        Task<Result<bool>> IsAdmin(Guid ConnectionId , string userId);
+
+    
 }

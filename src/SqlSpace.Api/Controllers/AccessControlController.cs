@@ -187,4 +187,23 @@ public partial class AccessControlController(
 
         return ToApiResponse(result, StatusCodes.Status200OK, "Accessible tables loaded.");
     }
+
+
+     [EndpointSummary("check if a user is the admin of a connection")]
+    [EndpointDescription("Parameters: connectionId (path) target connection id, userId (query optional) user id to evaluate. userId fallback: if omitted, current authenticated user id from JWT claims is used.")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status401Unauthorized)]
+     [HttpGet("connections/IsAdmin")]
+    public async Task<ActionResult<ApiResponse<bool>>> isAdmin(Guid ConnectionId)
+    {
+        var userId = _currentUserService.GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return UnauthorizedResponse<bool>();
+        }
+        var res = await _accessControlService.IsAdmin(ConnectionId, userId);
+        return ToApiResponse(res, StatusCodes.Status200OK, "Success");
+    }
+    
 }

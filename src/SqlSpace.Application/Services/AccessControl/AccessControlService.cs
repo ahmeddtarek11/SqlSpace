@@ -895,6 +895,18 @@ public class AccessControlService(IApplicationDbContext context,
             .ToList() ?? new List<string>();
     }
 
+    public async Task<Result<bool>> IsAdmin(Guid ConnectionId , string userId)
+    {
+        
+        var db = await  _context.ConnectedDatabases.
+        FirstOrDefaultAsync(cd=>cd.ConnectionId == ConnectionId);
+        if(db is null)
+        {
+            return Result<bool>.Failure(new Error("access.Control_DatabaseNotFound" , "Cannot find a db with the provided Id"));
+        }
+
+        return db.DbAdminId == userId;
+    }
 
 }
 
