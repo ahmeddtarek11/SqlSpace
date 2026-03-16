@@ -49,7 +49,7 @@ export function SQLPreview({ sql, explanation, onChange, readOnly = false }: Pro
           <Button
             variant="ghost"
             size="icon"
-            className="w-7 h-7 text-(--text-muted) hover:text-white"
+            className="w-7 h-7 text-(--text-muted) hover:text-(--text-primary)"
             onClick={handleCopy}
           >
             {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}

@@ -50,7 +50,7 @@ export function TopNav() {
         <div className="w-7 h-7 rounded-lg bg-violet-600/20 border border-violet-500/40 flex items-center justify-center">
           <Database className="w-3.5 h-3.5 text-violet-400" />
         </div>
-        <span className="font-semibold text-sm text-white hidden sm:block">SqlSpace</span>
+        <span className="font-semibold text-sm text-(--text-primary) hidden sm:block">SqlSpace</span>
       </Link>
 
       {/* Nav tabs */}
@@ -64,7 +64,7 @@ export function TopNav() {
               className={cn(
                 'relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors',
                 active
-                  ? 'text-white bg-(--bg-elevated)'
+                  ? 'text-(--text-primary) bg-(--bg-elevated)'
                   : 'text-(--text-muted) hover:text-(--text-secondary) hover:bg-(--bg-elevated)'
               )}
             >
@@ -88,7 +88,7 @@ export function TopNav() {
           variant="ghost"
           size="icon"
           onClick={toggleTheme}
-          className="w-8 h-8 text-(--text-muted) hover:text-white"
+          className="w-8 h-8 text-(--text-muted) hover:text-(--text-primary)"
         >
           {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </Button>

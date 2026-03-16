@@ -215,12 +215,12 @@ export default function NewConnectionPage() {
         <Button
           variant="ghost"
           size="icon"
-          className="w-8 h-8 text-(--text-muted) hover:text-white"
+          className="w-8 h-8 text-(--text-muted) hover:text-(--text-primary)"
           onClick={() => navigate('/connections')}
         >
           <ArrowLeft className="w-4 h-4" />
         </Button>
-        <h1 className="text-lg font-semibold text-white">New Connection</h1>
+        <h1 className="text-lg font-semibold text-(--text-primary)">New Connection</h1>
       </div>
 
       {/* Body */}
@@ -296,13 +296,13 @@ export default function NewConnectionPage() {
               className="space-y-5"
             >
               <section className="space-y-4 p-5 rounded-xl border border-(--border-default) bg-(--bg-surface)">
-                <h3 className="text-sm font-medium text-white">Connection Details</h3>
+                <h3 className="text-sm font-medium text-(--text-primary)">Connection Details</h3>
 
                 <div className="space-y-1.5">
                   <Label className="text-(--text-secondary) text-sm">Connection Name</Label>
                   <Input
                     placeholder="My Production DB"
-                    className="bg-(--bg-elevated) border-(--border-default) text-white"
+                    className="bg-(--bg-elevated) border-(--border-default) text-(--text-primary)"
                     {...fieldsForm.register('connectionName')}
                   />
                   {fe.connectionName && (
@@ -315,7 +315,7 @@ export default function NewConnectionPage() {
                     <Label className="text-(--text-secondary) text-sm">Host</Label>
                     <Input
                       placeholder="localhost"
-                      className="bg-(--bg-elevated) border-(--border-default) text-white"
+                      className="bg-(--bg-elevated) border-(--border-default) text-(--text-primary)"
                       {...fieldsForm.register('host')}
                     />
                     {fe.host && <p className="text-xs text-red-400">{fe.host.message}</p>}
@@ -324,7 +324,7 @@ export default function NewConnectionPage() {
                     <Label className="text-(--text-secondary) text-sm">Port</Label>
                     <Input
                       type="number"
-                      className="bg-(--bg-elevated) border-(--border-default) text-white"
+                      className="bg-(--bg-elevated) border-(--border-default) text-(--text-primary)"
                       {...fieldsForm.register('port')}
                     />
                     {fe.port && <p className="text-xs text-red-400">{fe.port.message}</p>}
@@ -335,7 +335,7 @@ export default function NewConnectionPage() {
                   <Label className="text-(--text-secondary) text-sm">Database Name</Label>
                   <Input
                     placeholder="my_database"
-                    className="bg-(--bg-elevated) border-(--border-default) text-white"
+                    className="bg-(--bg-elevated) border-(--border-default) text-(--text-primary)"
                     {...fieldsForm.register('databaseName')}
                   />
                   {fe.databaseName && (
@@ -348,7 +348,7 @@ export default function NewConnectionPage() {
                     <Label className="text-(--text-secondary) text-sm">Username</Label>
                     <Input
                       placeholder="postgres"
-                      className="bg-(--bg-elevated) border-(--border-default) text-white"
+                      className="bg-(--bg-elevated) border-(--border-default) text-(--text-primary)"
                       {...fieldsForm.register('username')}
                     />
                   </div>
@@ -357,7 +357,7 @@ export default function NewConnectionPage() {
                     <Input
                       type="password"
                       placeholder="••••••••"
-                      className="bg-(--bg-elevated) border-(--border-default) text-white"
+                      className="bg-(--bg-elevated) border-(--border-default) text-(--text-primary)"
                       {...fieldsForm.register('password')}
                     />
                   </div>
@@ -365,7 +365,7 @@ export default function NewConnectionPage() {
               </section>
 
               <section className="space-y-3 p-5 rounded-xl border border-(--border-default) bg-(--bg-surface)">
-                <h3 className="text-sm font-medium text-white">Options</h3>
+                <h3 className="text-sm font-medium text-(--text-primary)">Options</h3>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
@@ -381,7 +381,7 @@ export default function NewConnectionPage() {
                   </Label>
                   <Input
                     placeholder="key=value;key2=value2"
-                    className="bg-(--bg-elevated) border-(--border-default) text-white"
+                    className="bg-(--bg-elevated) border-(--border-default) text-(--text-primary)"
                     {...fieldsForm.register('additionalParameters')}
                   />
                 </div>
@@ -397,13 +397,13 @@ export default function NewConnectionPage() {
               className="space-y-5"
             >
               <section className="space-y-4 p-5 rounded-xl border border-(--border-default) bg-(--bg-surface)">
-                <h3 className="text-sm font-medium text-white">Connection Details</h3>
+                <h3 className="text-sm font-medium text-(--text-primary)">Connection Details</h3>
 
                 <div className="space-y-1.5">
                   <Label className="text-(--text-secondary) text-sm">Connection Name</Label>
                   <Input
                     placeholder="My Production DB"
-                    className="bg-(--bg-elevated) border-(--border-default) text-white"
+                    className="bg-(--bg-elevated) border-(--border-default) text-(--text-primary)"
                     {...connStringForm.register('connectionName')}
                   />
                   {ce.connectionName && (
@@ -422,7 +422,7 @@ export default function NewConnectionPage() {
                         ? 'Server=localhost;Port=3306;Database=mydb;Uid=root;Pwd=secret'
                         : 'Server=localhost,1433;Database=mydb;User Id=sa;Password=secret'
                     }
-                    className="w-full rounded-lg border border-(--border-default) bg-(--bg-elevated) text-white text-sm px-3 py-2 font-mono resize-y min-h-[100px] outline-none focus:border-violet-500/60 transition-colors"
+                    className="w-full rounded-lg border border-(--border-default) bg-(--bg-elevated) text-(--text-primary) text-sm px-3 py-2 font-mono resize-y min-h-[100px] outline-none focus:border-violet-500/60 transition-colors"
                     {...connStringForm.register('rawConnectionString')}
                   />
                   {ce.rawConnectionString && (
@@ -438,7 +438,7 @@ export default function NewConnectionPage() {
             <Button
               type="button"
               variant="outline"
-              className="border-(--border-strong) text-(--text-secondary) hover:text-white gap-2"
+              className="border-(--border-strong) text-(--text-secondary) hover:text-(--text-primary) gap-2"
               onClick={handleTest}
               disabled={testStatus === 'testing'}
             >

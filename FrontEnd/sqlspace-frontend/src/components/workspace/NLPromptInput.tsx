@@ -64,7 +64,7 @@ export function NLPromptInput({ onSubmit }: Props) {
             placeholder="Ask anything about your data… e.g. 'Show me top 10 customers by revenue this month'"
             rows={3}
             disabled={isExecuting}
-            className="flex-1 resize-none border-0 bg-transparent p-0 text-sm text-white placeholder:text-(--text-muted) focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="flex-1 resize-none border-0 bg-transparent p-0 text-sm text-(--text-primary) placeholder:text-(--text-muted) focus-visible:ring-0 focus-visible:ring-offset-0"
           />
         </div>
 

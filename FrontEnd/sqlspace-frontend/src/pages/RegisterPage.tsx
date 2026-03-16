@@ -50,7 +50,7 @@ export default function RegisterPage() {
           <div className="w-12 h-12 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center mb-4 glow-accent">
             <Database className="w-6 h-6 text-violet-400" />
           </div>
-          <h1 className="text-2xl font-semibold text-white">Create account</h1>
+          <h1 className="text-2xl font-semibold text-(--text-primary)">Create account</h1>
           <p className="text-sm text-(--text-secondary) mt-1">Join SqlSpace</p>
         </div>
 
@@ -61,7 +61,7 @@ export default function RegisterPage() {
               <Input
                 id="username"
                 placeholder="your_username"
-                className="bg-(--bg-elevated) border-(--border-default) text-white placeholder:text-(--text-muted)"
+                className="bg-(--bg-elevated) border-(--border-default) text-(--text-primary) placeholder:text-(--text-muted)"
                 {...register('username')}
               />
               {errors.username && <p className="text-xs text-red-400">{errors.username.message}</p>}
@@ -73,7 +73,7 @@ export default function RegisterPage() {
                 id="email"
                 type="email"
                 placeholder="you@example.com"
-                className="bg-(--bg-elevated) border-(--border-default) text-white placeholder:text-(--text-muted)"
+                className="bg-(--bg-elevated) border-(--border-default) text-(--text-primary) placeholder:text-(--text-muted)"
                 {...register('email')}
               />
               {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
@@ -85,7 +85,7 @@ export default function RegisterPage() {
                 id="password"
                 type="password"
                 placeholder="••••••••"
-                className="bg-(--bg-elevated) border-(--border-default) text-white placeholder:text-(--text-muted)"
+                className="bg-(--bg-elevated) border-(--border-default) text-(--text-primary) placeholder:text-(--text-muted)"
                 {...register('password')}
               />
               {errors.password && <p className="text-xs text-red-400">{errors.password.message}</p>}

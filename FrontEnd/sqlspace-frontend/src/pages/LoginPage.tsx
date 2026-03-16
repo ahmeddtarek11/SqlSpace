@@ -53,7 +53,7 @@ export default function LoginPage() {
           <div className="w-12 h-12 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center mb-4 glow-accent">
             <Database className="w-6 h-6 text-violet-400" />
           </div>
-          <h1 className="text-2xl font-semibold text-white">Welcome back</h1>
+          <h1 className="text-2xl font-semibold text-(--text-primary)">Welcome back</h1>
           <p className="text-sm text-(--text-secondary) mt-1">Sign in to SqlSpace</p>
         </div>
 
@@ -67,7 +67,7 @@ export default function LoginPage() {
                 type="email"
                 placeholder="you@example.com"
                 autoComplete="email"
-                className="bg-(--bg-elevated) border-(--border-default) text-white placeholder:text-(--text-muted) focus:border-violet-500"
+                className="bg-(--bg-elevated) border-(--border-default) text-(--text-primary) placeholder:text-(--text-muted) focus:border-violet-500"
                 {...register('email')}
               />
               {errors.email && (
@@ -82,7 +82,7 @@ export default function LoginPage() {
                 type="password"
                 placeholder="••••••••"
                 autoComplete="current-password"
-                className="bg-(--bg-elevated) border-(--border-default) text-white placeholder:text-(--text-muted) focus:border-violet-500"
+                className="bg-(--bg-elevated) border-(--border-default) text-(--text-primary) placeholder:text-(--text-muted) focus:border-violet-500"
                 {...register('password')}
               />
               {errors.password && (

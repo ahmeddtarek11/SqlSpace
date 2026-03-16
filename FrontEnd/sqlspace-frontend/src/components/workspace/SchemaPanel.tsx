@@ -9,12 +9,14 @@ import {
   PanelRightClose,
   PanelRight,
   Database,
+  Network,
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { connectionsApi } from '@/api/connections'
 import { useConnectionStore } from '@/stores/connection-store'
 import { cn } from '@/lib/utils'
 import type { SchemaColumn, SchemaTable } from '@/types'
+import { SchemaVisualizer } from './SchemaVisualizer'
 
 // ── Column row ────────────────────────────────────────────────
 
@@ -139,6 +141,7 @@ function SchemaGroup({ schemaName, tables }: { schemaName: string; tables: Schem
 
 export function SchemaPanel() {
   const [isOpen, setIsOpen] = useState(true)
+  const [visualizerOpen, setVisualizerOpen] = useState(false)
   const activeConnectionId = useConnectionStore((s) => s.activeConnectionId)
 
   const { data: schema, isLoading } = useQuery({
@@ -212,6 +215,23 @@ export function SchemaPanel() {
           ))
         )}
       </div>
+
+      {/* Visualize button */}
+      {schema && schema.tables.length > 0 && (
+        <div className="shrink-0 px-3 py-3 border-t border-(--border-default)">
+          <button
+            onClick={() => setVisualizerOpen(true)}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-violet-400 border border-violet-500/30 bg-violet-600/10 hover:bg-violet-600/20 hover:text-violet-300 transition-colors"
+          >
+            <Network className="w-3.5 h-3.5" />
+            Visualize Schema
+          </button>
+        </div>
+      )}
+
+      {visualizerOpen && schema && (
+        <SchemaVisualizer schema={schema} onClose={() => setVisualizerOpen(false)} />
+      )}
     </aside>
   )
 }

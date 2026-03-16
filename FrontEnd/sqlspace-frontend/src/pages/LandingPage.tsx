@@ -28,7 +28,7 @@ const FADE_UP = {
 
 export default function LandingPage() {
   return (
-    <div className="grid-bg min-h-screen text-white flex flex-col">
+    <div className="grid-bg min-h-screen text-(--text-primary) flex flex-col">
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 py-4 border-b border-(--border-subtle) backdrop-blur-sm sticky top-0 z-20">
         <div className="flex items-center gap-2">
@@ -38,7 +38,7 @@ export default function LandingPage() {
           <span className="font-semibold">SqlSpace</span>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="text-(--text-secondary) hover:text-white" asChild>
+          <Button variant="ghost" size="sm" className="text-(--text-secondary) hover:text-(--text-primary)" asChild>
             <Link to="/login">Sign in</Link>
           </Button>
           <Button size="sm" className="bg-violet-600 hover:bg-violet-500 text-white" asChild>
@@ -99,7 +99,7 @@ export default function LandingPage() {
               <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </Button>
-          <Button size="lg" variant="outline" className="border-(--border-strong) text-(--text-secondary) hover:text-white" asChild>
+          <Button size="lg" variant="outline" className="border-(--border-strong) text-(--text-secondary) hover:text-(--text-primary)" asChild>
             <Link to="/login">Sign in</Link>
           </Button>
         </motion.div>
@@ -117,7 +117,7 @@ export default function LandingPage() {
                 <Sparkles className="w-4 h-4 text-violet-400" />
                 <span className="text-sm text-(--text-muted)">Natural language prompt</span>
               </div>
-              <p className="text-sm text-white">
+              <p className="text-sm text-(--text-primary)">
                 Show me the top 10 customers by total revenue in the last 30 days
               </p>
               <div className="mt-3 pt-3 border-t border-(--border-subtle)">
@@ -153,7 +153,7 @@ LIMIT 10;`}
               <div className="w-10 h-10 rounded-lg bg-(--bg-elevated) border border-(--border-default) flex items-center justify-center mb-4">
                 {f.icon}
               </div>
-              <h3 className="text-sm font-semibold text-white mb-2">{f.title}</h3>
+              <h3 className="text-sm font-semibold text-(--text-primary) mb-2">{f.title}</h3>
               <p className="text-sm text-(--text-muted)">{f.desc}</p>
             </motion.div>
           ))}
@@ -164,10 +164,10 @@ LIMIT 10;`}
       <footer className="border-t border-(--border-subtle) px-6 py-6 flex items-center justify-between text-xs text-(--text-muted)">
         <span>© 2026 SqlSpace</span>
         <div className="flex items-center gap-4">
-          <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-white">
+          <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-(--text-primary)">
             GitHub
           </a>
-          <Link to="/login" className="hover:text-white">Sign in</Link>
+          <Link to="/login" className="hover:text-(--text-primary)">Sign in</Link>
         </div>
       </footer>
     </div>

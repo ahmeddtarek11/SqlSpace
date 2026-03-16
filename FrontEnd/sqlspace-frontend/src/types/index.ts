@@ -86,7 +86,7 @@ export interface QueryExecutionResult {
   resultsJson: string | null       // JSON-encoded rows
   rowsReturned: number | null
   executionTimeMs: number
-  status: 'Completed' | 'Failed' | 'Pending'
+  status: 'Success' | 'Failed' | 'InsufficientPermissions' | 'ValidationFailed' | 'LlmError' | 'ExecutionFailed' | 'Timeout'
   errorMessage: string | null
 }
 
@@ -101,7 +101,7 @@ export interface QueryHistoryDto {
   queryId: string
   userPrompt: string | null
   generatedSql: string | null
-  status: 'Completed' | 'Failed' | 'Pending'
+  status: 'Success' | 'Failed' | 'InsufficientPermissions' | 'ValidationFailed' | 'LlmError' | 'ExecutionFailed' | 'Timeout'
   rowsReturned: number | null
   executionTimeMs: number | null
   executedAt: string
@@ -172,8 +172,10 @@ export interface InsightsSummary {
 }
 
 export interface InsightVolumeBucket {
-  bucket: string
-  count: number
+  date: string
+  total: number
+  successful: number
+  failed: number
 }
 
 export interface TableQueryCount {
@@ -181,10 +183,36 @@ export interface TableQueryCount {
   queryCount: number
 }
 
+export interface QueryStatistics {
+  totalQueries: number
+  successfulQueries: number
+  failedQueries: number
+  averageExecutionTimeMs: number
+  totalRowsReturned: number
+  mostQueriedTables: TableQueryCount[]
+  firstQueryDate: string | null
+  lastQueryDate: string | null
+}
+
+export interface UserQueryCount {
+  userId: string
+  userEmail: string
+  userName: string
+  queryCount: number
+}
+
+export interface ConnectionQueryCount {
+  connectionId: string
+  connectionName: string
+  queryCount: number
+}
+
 export interface ConnectionInsights {
   summary: InsightsSummary
   volume: InsightVolumeBucket[] | null
   topTables: TableQueryCount[] | null
+  topUsers: UserQueryCount[] | null
+  topConnections: ConnectionQueryCount[] | null
 }
 
 // ── Access Control ────────────────────────────────────────────

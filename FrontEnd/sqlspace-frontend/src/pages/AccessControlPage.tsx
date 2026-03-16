@@ -119,7 +119,7 @@ function TablePicker({ allTables, allowedTables, onChange }: TablePickerProps) {
                     ) : (
                       <Square className="w-3.5 h-3.5 text-(--text-muted) shrink-0" />
                     )}
-                    <span className={cn('text-xs font-mono', checked ? 'text-white' : 'text-(--text-muted) line-through')}>
+                    <span className={cn('text-xs font-mono', checked ? 'text-(--text-primary)' : 'text-(--text-muted) line-through')}>
                       {t.name}
                     </span>
                     {!checked && (
@@ -185,9 +185,9 @@ function GrantDialog({ connectionId, allTables, onClose }: GrantDialogProps) {
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-(--bg-elevated) border-(--border-default) text-white">
+      <DialogContent className="sm:max-w-md bg-(--bg-elevated) border-(--border-default) text-(--text-primary)">
         <DialogHeader>
-          <DialogTitle className="text-white flex items-center gap-2">
+          <DialogTitle className="text-(--text-primary) flex items-center gap-2">
             <UserCheck className="w-4 h-4 text-violet-400" />
             Grant Access
           </DialogTitle>
@@ -200,7 +200,7 @@ function GrantDialog({ connectionId, allTables, onClose }: GrantDialogProps) {
             <Input
               type="email"
               placeholder="user@example.com"
-              className="bg-(--bg-surface) border-(--border-default) text-white"
+              className="bg-(--bg-surface) border-(--border-default) text-(--text-primary)"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -312,9 +312,9 @@ function EditDialog({ connectionId, user, allTables, onClose }: EditDialogProps)
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-(--bg-elevated) border-(--border-default) text-white">
+      <DialogContent className="sm:max-w-md bg-(--bg-elevated) border-(--border-default) text-(--text-primary)">
         <DialogHeader>
-          <DialogTitle className="text-white flex items-center gap-2">
+          <DialogTitle className="text-(--text-primary) flex items-center gap-2">
             <Pencil className="w-4 h-4 text-violet-400" />
             Edit Access
           </DialogTitle>
@@ -323,7 +323,7 @@ function EditDialog({ connectionId, user, allTables, onClose }: EditDialogProps)
         <div className="space-y-4 mt-2">
           {/* User info (read-only) */}
           <div className="rounded-lg border border-(--border-default) bg-(--bg-surface) px-4 py-3">
-            <p className="text-sm text-white">{user.userEmail}</p>
+            <p className="text-sm text-(--text-primary)">{user.userEmail}</p>
             {user.userName && (
               <p className="text-xs text-(--text-muted) mt-0.5">{user.userName}</p>
             )}
@@ -423,7 +423,7 @@ function UserRow({ user, totalTables, onEdit, onRevoke, isRevoking }: UserRowPro
 
       {/* User info */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-white truncate">{user.userEmail}</p>
+        <p className="text-sm text-(--text-primary) truncate">{user.userEmail}</p>
         {user.userName && (
           <p className="text-xs text-(--text-muted) truncate">{user.userName}</p>
         )}
@@ -489,15 +489,17 @@ export default function AccessControlPage() {
   const [editingUser, setEditingUser] = useState<UserAccessSummary | null>(null)
   const [revokingId, setRevokingId] = useState<string | null>(null)
 
-  // All accessible connections — used to populate the dropdown
   const { data: connections = [], isLoading: connectionsLoading } = useQuery({
     queryKey: ['connections'],
     queryFn: connectionsApi.list,
   })
 
-  // Derive active connection — explicit selection or first in list
+  // Only show connections where the current user is admin
+  const adminConnections = connections.filter((c) => c.isAdmin)
+
+  // Derive active connection — explicit selection or first admin connection
   const activeConnectionId =
-    selectedConnectionId || connections[0]?.connectionId || ''
+    selectedConnectionId || adminConnections[0]?.connectionId || ''
 
   // Check admin status for the selected connection via the dedicated endpoint
   const { data: schema } = useQuery({
@@ -533,7 +535,7 @@ export default function AccessControlPage() {
       <div className="flex items-center gap-4 px-6 py-4 border-b border-(--border-default) bg-(--bg-surface) shrink-0 flex-wrap">
         <div className="flex items-center gap-2">
           <Shield className="w-5 h-5 text-violet-400" />
-          <h1 className="text-lg font-semibold text-white">Access Control</h1>
+          <h1 className="text-lg font-semibold text-(--text-primary)">Access Control</h1>
         </div>
 
         {/* Connection selector */}
@@ -541,16 +543,16 @@ export default function AccessControlPage() {
           <span className="text-xs text-(--text-muted)">Connection:</span>
           {connectionsLoading ? (
             <Skeleton className="h-8 w-40 rounded-lg bg-(--bg-elevated)" />
-          ) : connections.length === 0 ? (
-            <span className="text-xs text-(--text-muted)">No connections</span>
+          ) : adminConnections.length === 0 ? (
+            <span className="text-xs text-(--text-muted)">No admin connections</span>
           ) : (
             <div className="relative">
               <select
                 value={activeConnectionId}
                 onChange={(e) => setSelectedConnectionId(e.target.value)}
-                className="appearance-none pl-3 pr-8 py-1.5 rounded-lg border border-(--border-default) bg-(--bg-elevated) text-white text-sm cursor-pointer focus:outline-none focus:border-violet-500/60 transition-colors"
+                className="appearance-none pl-3 pr-8 py-1.5 rounded-lg border border-(--border-default) bg-(--bg-elevated) text-(--text-primary) text-sm cursor-pointer focus:outline-none focus:border-violet-500/60 transition-colors"
               >
-                {connections.map((c) => (
+                {adminConnections.map((c) => (
                   <option key={c.connectionId} value={c.connectionId}>
                     {c.connectionName}
                   </option>
@@ -577,9 +579,10 @@ export default function AccessControlPage() {
       {/* ── Body ── */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         {!activeConnectionId ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <Shield className="w-10 h-10 text-(--text-muted) mb-3" />
-            <p className="text-sm text-(--text-muted)">Select a connection to manage access</p>
+          <div className="flex flex-col items-center justify-center h-full text-center gap-2">
+            <Shield className="w-10 h-10 text-(--text-muted)" />
+            <p className="text-sm text-(--text-primary) font-medium">No admin connections</p>
+            <p className="text-xs text-(--text-muted)">You need to be the owner of a connection to manage its access control</p>
           </div>
         ) : (
           <div className="p-6 space-y-4">
@@ -592,13 +595,13 @@ export default function AccessControlPage() {
                 </div>
                 <div className="px-3 py-2 rounded-lg bg-(--bg-surface) border border-(--border-default)">
                   <span className="text-sm text-(--text-muted)">
-                    <span className="text-white font-medium">{users.length}</span>{' '}
+                    <span className="text-(--text-primary) font-medium">{users.length}</span>{' '}
                     user{users.length !== 1 ? 's' : ''} with access
                   </span>
                 </div>
                 <div className="px-3 py-2 rounded-lg bg-(--bg-surface) border border-(--border-default)">
                   <span className="text-sm text-(--text-muted)">
-                    <span className="text-white font-medium">{allTables.length}</span> tables in schema
+                    <span className="text-(--text-primary) font-medium">{allTables.length}</span> tables in schema
                   </span>
                 </div>
               </div>
@@ -627,7 +630,7 @@ export default function AccessControlPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="mt-2 border-(--border-strong) text-(--text-secondary) hover:text-white"
+                    className="mt-2 border-(--border-strong) text-(--text-secondary) hover:text-(--text-primary)"
                     onClick={() => setShowGrant(true)}
                   >
                     <Plus className="w-3.5 h-3.5 mr-1" />

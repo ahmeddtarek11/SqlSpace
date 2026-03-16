@@ -18,14 +18,22 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config
 })
 
-// On 401, clear auth and redirect to login
+// On 401 clear auth; for all errors extract a meaningful message from the response body
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  (error: AxiosError<{ message?: string | null; errors?: { code: string; message: string }[] | null }>) => {
     if (error.response?.status === 401) {
       useAuthStore.getState().logout()
       window.location.href = '/login'
     }
-    return Promise.reject(error)
+
+    const body = error.response?.data
+    const message =
+      body?.errors?.[0]?.message ||
+      body?.message ||
+      error.message ||
+      'An unexpected error occurred'
+
+    return Promise.reject(new Error(message))
   }
 )

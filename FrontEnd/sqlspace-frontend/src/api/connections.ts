@@ -40,6 +40,16 @@ export const connectionsApi = {
     await apiClient.post(`/api/connections/${id}/health-test`)
   },
 
+  updatePassword: async (id: string, newPassword: string): Promise<void> => {
+    const { data } = await apiClient.patch<ApiResponse<boolean>>(`/api/connections/${id}/password`, { newPassword })
+    if (!data.success) throw new Error(data.message ?? 'Failed to update password')
+  },
+
+  transferOwnership: async (id: string, newAdminEmail: string): Promise<void> => {
+    const { data } = await apiClient.post<ApiResponse<boolean>>(`/api/connections/${id}/transfer-ownership`, { newAdminEmail })
+    if (!data.success) throw new Error(data.message ?? 'Failed to transfer ownership')
+  },
+
   /** Returns parsed schema from backend (backend returns a JSON-encoded string) */
   schema: async (connectionId: string): Promise<ParsedSchema> => {
     const { data } = await apiClient.get<ApiResponse<string>>(

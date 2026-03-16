@@ -14,6 +14,13 @@ export const insightsApi = {
     )
     return data.data
   },
+
+  getForConnectionAdmin: async (connectionId: string): Promise<ConnectionInsights> => {
+    const { data } = await apiClient.get<ApiResponse<ConnectionInsights>>(
+      `/api/connections/${connectionId}/insights/admin`
+    )
+    return data.data
+  },
 }
 
 export const accessApi = {

@@ -131,7 +131,7 @@ export function ResultsTable({ result }: Props) {
                 {hg.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-3 py-2 text-left text-xs font-medium text-(--text-muted) border-b border-(--border-default) cursor-pointer select-none hover:text-white whitespace-nowrap"
+                    className="px-3 py-2 text-left text-xs font-medium text-(--text-muted) border-b border-(--border-default) cursor-pointer select-none hover:text-(--text-primary) whitespace-nowrap"
                     onClick={header.column.getToggleSortingHandler()}
                   >
                     <span className="flex items-center gap-1">
@@ -145,30 +145,33 @@ export function ResultsTable({ result }: Props) {
             ))}
           </thead>
           <tbody>
-            {virtualizer.getVirtualItems().map((virtualRow) => {
-              const row = rows[virtualRow.index]
-              return (
-                <tr
-                  key={row.id}
-                  data-index={virtualRow.index}
-                  ref={virtualizer.measureElement}
-                  className="hover:bg-(--bg-elevated) transition-colors border-b border-(--border-subtle) last:border-0"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-3 py-2 text-xs text-white whitespace-nowrap max-w-48 truncate">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              )
-            })}
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={table.getAllColumns().length} className="px-3 py-8 text-center text-(--text-muted)">
+                  No rows found
+                </td>
+              </tr>
+            ) : (
+              virtualizer.getVirtualItems().map((virtualRow) => {
+                const row = rows[virtualRow.index]
+                return (
+                  <tr
+                    key={row.id}
+                    data-index={virtualRow.index}
+                    ref={virtualizer.measureElement}
+                    className="hover:bg-(--bg-elevated) transition-colors border-b border-(--border-subtle) last:border-0"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-3 py-2 text-xs text-(--text-primary) whitespace-nowrap max-w-48 truncate">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                )
+              })
+            )}
           </tbody>
         </table>
-
-        {/* Virtualizer spacer */}
-        {virtualizer.getTotalSize() > 0 && (
-          <div style={{ height: `${virtualizer.getTotalSize()}px` }} />
-        )}
       </div>
     </div>
   )

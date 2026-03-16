@@ -118,9 +118,9 @@ export function ConnectionForm({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md bg-(--bg-elevated) border-(--border-default) text-white">
+      <DialogContent className="sm:max-w-md bg-(--bg-elevated) border-(--border-default) text-(--text-primary)">
         <DialogHeader>
-          <DialogTitle className="text-white">New Connection</DialogTitle>
+          <DialogTitle className="text-(--text-primary)">New Connection</DialogTitle>
           <div className="flex items-center gap-2 mt-2">
             {(['provider', 'fields', 'test'] as Step[]).map((s, i) => (
               <div key={s} className="flex items-center gap-2">
@@ -160,31 +160,31 @@ export function ConnectionForm({ open, onOpenChange }: Props) {
             <div className="space-y-3">
               <div className="space-y-1">
                 <Label className="text-(--text-secondary) text-sm">Connection name</Label>
-                <Input placeholder="My Database" className="bg-(--bg-surface) border-(--border-default) text-white" {...register('connectionName')} />
+                <Input placeholder="My Database" className="bg-(--bg-surface) border-(--border-default) text-(--text-primary)" {...register('connectionName')} />
                 {errors.connectionName && <p className="text-xs text-red-400">{errors.connectionName.message}</p>}
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div className="col-span-2 space-y-1">
                   <Label className="text-(--text-secondary) text-sm">Host</Label>
-                  <Input placeholder="localhost" className="bg-(--bg-surface) border-(--border-default) text-white" {...register('host')} />
+                  <Input placeholder="localhost" className="bg-(--bg-surface) border-(--border-default) text-(--text-primary)" {...register('host')} />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-(--text-secondary) text-sm">Port</Label>
-                  <Input type="number" className="bg-(--bg-surface) border-(--border-default) text-white" {...register('port')} />
+                  <Input type="number" className="bg-(--bg-surface) border-(--border-default) text-(--text-primary)" {...register('port')} />
                 </div>
               </div>
               <div className="space-y-1">
                 <Label className="text-(--text-secondary) text-sm">Database</Label>
-                <Input placeholder="my_database" className="bg-(--bg-surface) border-(--border-default) text-white" {...register('databaseName')} />
+                <Input placeholder="my_database" className="bg-(--bg-surface) border-(--border-default) text-(--text-primary)" {...register('databaseName')} />
                 {errors.databaseName && <p className="text-xs text-red-400">{errors.databaseName.message}</p>}
               </div>
               <div className="space-y-1">
                 <Label className="text-(--text-secondary) text-sm">Username</Label>
-                <Input className="bg-(--bg-surface) border-(--border-default) text-white" {...register('username')} />
+                <Input className="bg-(--bg-surface) border-(--border-default) text-(--text-primary)" {...register('username')} />
               </div>
               <div className="space-y-1">
                 <Label className="text-(--text-secondary) text-sm">Password</Label>
-                <Input type="password" className="bg-(--bg-surface) border-(--border-default) text-white" {...register('password')} />
+                <Input type="password" className="bg-(--bg-surface) border-(--border-default) text-(--text-primary)" {...register('password')} />
               </div>
               <div className="flex gap-2">
                 <Button type="button" variant="ghost" className="flex-1" onClick={() => setStep('provider')}>Back</Button>
