@@ -253,7 +253,7 @@ public class SchemaExtractor(IDbConnectionFactory connectionFactory, ILogger<Sch
                         
                         
                         
-            DbProviders.MySql => @"
+            DbProviders.MySql or DbProviders.MariaDb or DbProviders.PlanetScale => @"
             SELECT
                 c.TABLE_SCHEMA,
                 c.TABLE_NAME,
@@ -300,6 +300,195 @@ public class SchemaExtractor(IDbConnectionFactory connectionFactory, ILogger<Sch
             AND c.COLUMN_NAME = fk.COLUMN_NAME
             WHERE c.TABLE_SCHEMA = DATABASE()
             ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION;",
+
+            DbProviders.CockroachDb => @"
+            SELECT
+                c.table_schema,
+                c.table_name,
+                t.table_type,
+                c.column_name,
+                c.data_type,
+                c.is_nullable,
+                c.character_maximum_length,
+                CASE WHEN pk.column_name IS NOT NULL THEN 1 ELSE 0 END AS is_primary_key,
+                fk.constraint_name AS foreign_key_name,
+                fk.referenced_table_schema,
+                fk.referenced_table_name,
+                fk.referenced_column_name
+            FROM information_schema.columns c
+            JOIN information_schema.tables t
+            ON c.table_schema = t.table_schema
+            AND c.table_name = t.table_name
+            LEFT JOIN (
+                SELECT kcu.table_schema, kcu.table_name, kcu.column_name
+                FROM information_schema.table_constraints tc
+                JOIN information_schema.key_column_usage kcu
+                ON tc.constraint_name = kcu.constraint_name
+                AND tc.table_schema = kcu.table_schema
+                AND tc.table_name = kcu.table_name
+                WHERE tc.constraint_type = 'PRIMARY KEY'
+            ) pk
+            ON c.table_schema = pk.table_schema
+            AND c.table_name = pk.table_name
+            AND c.column_name = pk.column_name
+            LEFT JOIN (
+                SELECT
+                    fk_kcu.table_schema,
+                    fk_kcu.table_name,
+                    fk_kcu.column_name,
+                    fk_tc.constraint_name,
+                    pk_kcu.table_schema AS referenced_table_schema,
+                    pk_kcu.table_name AS referenced_table_name,
+                    pk_kcu.column_name AS referenced_column_name
+                FROM information_schema.table_constraints fk_tc
+                JOIN information_schema.key_column_usage fk_kcu
+                ON fk_tc.constraint_name = fk_kcu.constraint_name
+                AND fk_tc.table_schema = fk_kcu.table_schema
+                AND fk_tc.table_name = fk_kcu.table_name
+                JOIN information_schema.referential_constraints rc
+                ON fk_tc.constraint_name = rc.constraint_name
+                AND fk_tc.table_schema = rc.constraint_schema
+                JOIN information_schema.key_column_usage pk_kcu
+                ON pk_kcu.constraint_name = rc.unique_constraint_name
+                AND pk_kcu.ordinal_position = fk_kcu.position_in_unique_constraint
+                WHERE fk_tc.constraint_type = 'FOREIGN KEY'
+            ) fk
+            ON c.table_schema = fk.table_schema
+            AND c.table_name = fk.table_name
+            AND c.column_name = fk.column_name
+            WHERE c.table_schema NOT IN ('pg_catalog', 'information_schema', 'crdb_internal', 'pg_extension')
+            ORDER BY c.table_schema, c.table_name, c.ordinal_position;",
+
+            DbProviders.Supabase => @"
+            SELECT
+                c.table_schema,
+                c.table_name,
+                t.table_type,
+                c.column_name,
+                c.data_type,
+                c.is_nullable,
+                c.character_maximum_length,
+                CASE WHEN pk.column_name IS NOT NULL THEN 1 ELSE 0 END AS is_primary_key,
+                fk.constraint_name AS foreign_key_name,
+                fk.referenced_table_schema,
+                fk.referenced_table_name,
+                fk.referenced_column_name
+            FROM information_schema.columns c
+            JOIN information_schema.tables t
+            ON c.table_schema = t.table_schema
+            AND c.table_name = t.table_name
+            LEFT JOIN (
+                SELECT kcu.table_schema, kcu.table_name, kcu.column_name
+                FROM information_schema.table_constraints tc
+                JOIN information_schema.key_column_usage kcu
+                ON tc.constraint_name = kcu.constraint_name
+                AND tc.table_schema = kcu.table_schema
+                AND tc.table_name = kcu.table_name
+                WHERE tc.constraint_type = 'PRIMARY KEY'
+            ) pk
+            ON c.table_schema = pk.table_schema
+            AND c.table_name = pk.table_name
+            AND c.column_name = pk.column_name
+            LEFT JOIN (
+                SELECT
+                    fk_kcu.table_schema,
+                    fk_kcu.table_name,
+                    fk_kcu.column_name,
+                    fk_tc.constraint_name,
+                    pk_kcu.table_schema AS referenced_table_schema,
+                    pk_kcu.table_name AS referenced_table_name,
+                    pk_kcu.column_name AS referenced_column_name
+                FROM information_schema.table_constraints fk_tc
+                JOIN information_schema.key_column_usage fk_kcu
+                ON fk_tc.constraint_catalog = fk_kcu.constraint_catalog
+                AND fk_tc.constraint_schema = fk_kcu.constraint_schema
+                AND fk_tc.constraint_name = fk_kcu.constraint_name
+                AND fk_tc.table_schema = fk_kcu.table_schema
+                AND fk_tc.table_name = fk_kcu.table_name
+                JOIN information_schema.referential_constraints rc
+                ON fk_tc.constraint_catalog = rc.constraint_catalog
+                AND fk_tc.constraint_schema = rc.constraint_schema
+                AND fk_tc.constraint_name = rc.constraint_name
+                JOIN information_schema.key_column_usage pk_kcu
+                ON pk_kcu.constraint_catalog = rc.unique_constraint_catalog
+                AND pk_kcu.constraint_schema = rc.unique_constraint_schema
+                AND pk_kcu.constraint_name = rc.unique_constraint_name
+                AND pk_kcu.ordinal_position = fk_kcu.position_in_unique_constraint
+                WHERE fk_tc.constraint_type = 'FOREIGN KEY'
+            ) fk
+            ON c.table_schema = fk.table_schema
+            AND c.table_name = fk.table_name
+            AND c.column_name = fk.column_name
+            WHERE c.table_schema NOT IN (
+                'pg_catalog', 'information_schema',
+                'auth', 'storage', 'realtime', 'graphql', 'graphql_public',
+                'supabase_migrations', 'extensions', 'vault', 'pgsodium'
+            )
+            ORDER BY c.table_schema, c.table_name, c.ordinal_position;",
+
+            DbProviders.Redshift => @"
+            SELECT
+                c.table_schema,
+                c.table_name,
+                t.table_type,
+                c.column_name,
+                c.data_type,
+                c.is_nullable,
+                c.character_maximum_length,
+                CASE WHEN pk.column_name IS NOT NULL THEN 1 ELSE 0 END AS is_primary_key,
+                fk.constraint_name AS foreign_key_name,
+                fk.referenced_table_schema,
+                fk.referenced_table_name,
+                fk.referenced_column_name
+            FROM information_schema.columns c
+            JOIN information_schema.tables t
+            ON c.table_schema = t.table_schema
+            AND c.table_name = t.table_name
+            LEFT JOIN (
+                SELECT kcu.table_schema, kcu.table_name, kcu.column_name
+                FROM information_schema.table_constraints tc
+                JOIN information_schema.key_column_usage kcu
+                ON tc.constraint_name = kcu.constraint_name
+                AND tc.table_schema = kcu.table_schema
+                AND tc.table_name = kcu.table_name
+                WHERE tc.constraint_type = 'PRIMARY KEY'
+            ) pk
+            ON c.table_schema = pk.table_schema
+            AND c.table_name = pk.table_name
+            AND c.column_name = pk.column_name
+            LEFT JOIN (
+                SELECT
+                    fk_kcu.table_schema,
+                    fk_kcu.table_name,
+                    fk_kcu.column_name,
+                    fk_tc.constraint_name,
+                    pk_kcu.table_schema AS referenced_table_schema,
+                    pk_kcu.table_name AS referenced_table_name,
+                    pk_kcu.column_name AS referenced_column_name
+                FROM information_schema.table_constraints fk_tc
+                JOIN information_schema.key_column_usage fk_kcu
+                ON fk_tc.constraint_catalog = fk_kcu.constraint_catalog
+                AND fk_tc.constraint_schema = fk_kcu.constraint_schema
+                AND fk_tc.constraint_name = fk_kcu.constraint_name
+                AND fk_tc.table_schema = fk_kcu.table_schema
+                AND fk_tc.table_name = fk_kcu.table_name
+                JOIN information_schema.referential_constraints rc
+                ON fk_tc.constraint_catalog = rc.constraint_catalog
+                AND fk_tc.constraint_schema = rc.constraint_schema
+                AND fk_tc.constraint_name = rc.constraint_name
+                JOIN information_schema.key_column_usage pk_kcu
+                ON pk_kcu.constraint_catalog = rc.unique_constraint_catalog
+                AND pk_kcu.constraint_schema = rc.unique_constraint_schema
+                AND pk_kcu.constraint_name = rc.unique_constraint_name
+                AND pk_kcu.ordinal_position = fk_kcu.position_in_unique_constraint
+                WHERE fk_tc.constraint_type = 'FOREIGN KEY'
+            ) fk
+            ON c.table_schema = fk.table_schema
+            AND c.table_name = fk.table_name
+            AND c.column_name = fk.column_name
+            WHERE c.table_schema NOT IN ('pg_catalog', 'information_schema', 'pg_toast', 'pg_internal')
+            ORDER BY c.table_schema, c.table_name, c.ordinal_position;",
+
             _ => throw new NotSupportedException($"Database Provider {provider} is not supported yet")
         };
     }

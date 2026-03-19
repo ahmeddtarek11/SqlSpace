@@ -100,9 +100,14 @@ public class DbConnectionFactory(IEncryptionService encryptionService,
 
         DbConnection dbConnection = connection.DatabaseProvider switch
         {
-            DbProviders.PostgreSql => new NpgsqlConnection(connectionString),
-            DbProviders.SqlServer => new SqlConnection(connectionString),
-            DbProviders.MySql => new MySqlConnection(connectionString),
+            DbProviders.PostgreSql  => new NpgsqlConnection(connectionString),
+            DbProviders.CockroachDb => new NpgsqlConnection(connectionString),
+            DbProviders.Supabase    => new NpgsqlConnection(connectionString),
+            DbProviders.Redshift    => new NpgsqlConnection(connectionString),
+            DbProviders.SqlServer   => new SqlConnection(connectionString),
+            DbProviders.MySql       => new MySqlConnection(connectionString),
+            DbProviders.MariaDb     => new MySqlConnection(connectionString),
+            DbProviders.PlanetScale => new MySqlConnection(connectionString),
             _ => throw new NotSupportedException($"Database Provider {connection.DatabaseProvider} is not supported yet")
         };
 

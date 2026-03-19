@@ -330,19 +330,25 @@ private static string EscapeValue(string value)
         if (!parameters.TryGetValue(sslParamName, out var sslValue))
             return false;
 
+        var pgSslValues = sslValue.Equals("Require", StringComparison.OrdinalIgnoreCase) ||
+                          sslValue.Equals("VerifyCA", StringComparison.OrdinalIgnoreCase) ||
+                          sslValue.Equals("VerifyFull", StringComparison.OrdinalIgnoreCase);
+
+        var mySqlSslValues = sslValue.Equals("Required", StringComparison.OrdinalIgnoreCase) ||
+                             sslValue.Equals("VerifyCA", StringComparison.OrdinalIgnoreCase) ||
+                             sslValue.Equals("VerifyFull", StringComparison.OrdinalIgnoreCase);
+
         return provider switch
         {
-            DbProviders.PostgreSql => sslValue.Equals("Require", StringComparison.OrdinalIgnoreCase) ||
-                                      sslValue.Equals("VerifyCA", StringComparison.OrdinalIgnoreCase) ||
-                                      sslValue.Equals("VerifyFull", StringComparison.OrdinalIgnoreCase),
-            
-            DbProviders.SqlServer => sslValue.Equals("True", StringComparison.OrdinalIgnoreCase) ||
-                                     sslValue.Equals("Mandatory", StringComparison.OrdinalIgnoreCase),
-            
-            DbProviders.MySql => sslValue.Equals("Required", StringComparison.OrdinalIgnoreCase) ||
-                                 sslValue.Equals("VerifyCA", StringComparison.OrdinalIgnoreCase) ||
-                                 sslValue.Equals("VerifyFull", StringComparison.OrdinalIgnoreCase),
-            
+            DbProviders.PostgreSql  => pgSslValues,
+            DbProviders.CockroachDb => pgSslValues,
+            DbProviders.Supabase    => pgSslValues,
+            DbProviders.Redshift    => pgSslValues,
+            DbProviders.SqlServer   => sslValue.Equals("True", StringComparison.OrdinalIgnoreCase) ||
+                                       sslValue.Equals("Mandatory", StringComparison.OrdinalIgnoreCase),
+            DbProviders.MySql       => mySqlSslValues,
+            DbProviders.MariaDb     => mySqlSslValues,
+            DbProviders.PlanetScale => mySqlSslValues,
             _ => false
         };
     }

@@ -3,6 +3,7 @@ import type {
   ApiResponse,
   QueryExecutionResult,
   PaginatedQueryHistory,
+  QueryHistoryDetailDto,
   SavedQueryDto,
   CreateSavedQueryRequest,
   QueryResult,
@@ -81,6 +82,11 @@ export const queriesApi = {
     const { data } = await apiClient.get<ApiResponse<PaginatedQueryHistory>>('/api/queries/history', {
       params: { pageNumber: params?.pageNumber ?? 1, pageSize: params?.pageSize ?? 50 },
     })
+    return data.data
+  },
+
+  historyById: async (queryId: string): Promise<QueryHistoryDetailDto | null> => {
+    const { data } = await apiClient.get<ApiResponse<QueryHistoryDetailDto | null>>(`/api/queries/history/${queryId}`)
     return data.data
   },
 

@@ -22,8 +22,7 @@ import { SchemaVisualizer } from './SchemaVisualizer'
 
 function ColumnRow({ col }: { col: SchemaColumn }) {
   return (
-    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-(--bg-elevated) group">
-      {/* PK / FK / plain icon */}
+    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-white/5 group transition-colors">
       {col.isPrimaryKey ? (
         <KeyRound className="w-3 h-3 text-amber-400 shrink-0" />
       ) : col.foreignKeyName ? (
@@ -33,15 +32,15 @@ function ColumnRow({ col }: { col: SchemaColumn }) {
           <span
             className={cn(
               'w-1.5 h-1.5 rounded-full',
-              col.isNullable ? 'border border-(--border-strong)' : 'bg-(--text-muted)'
+              col.isNullable ? 'border border-white/20' : 'bg-zinc-600'
             )}
           />
         </span>
       )}
 
-      <span className="text-xs text-(--text-secondary) truncate flex-1 font-mono">{col.name}</span>
+      <span className="text-xs text-zinc-400 truncate flex-1 font-mono">{col.name}</span>
 
-      <span className="text-[10px] text-(--text-muted) shrink-0 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
+      <span className="text-[10px] text-zinc-600 shrink-0 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
         {col.dataType}
         {col.maxLength ? `(${col.maxLength})` : ''}
       </span>
@@ -58,17 +57,17 @@ function TableNode({ table }: { table: SchemaTable }) {
     <div>
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center gap-1.5 px-2 py-1 rounded hover:bg-(--bg-elevated) text-left group"
+        className="w-full flex items-center gap-1.5 px-2 py-1 rounded hover:bg-white/5 text-left group transition-colors"
       >
         <ChevronRight
           className={cn(
-            'w-3 h-3 text-(--text-muted) shrink-0 transition-transform',
+            'w-3 h-3 text-zinc-600 shrink-0 transition-transform',
             expanded && 'rotate-90'
           )}
         />
-        <Table2 className="w-3.5 h-3.5 text-violet-400 shrink-0" />
-        <span className="text-xs text-(--text-primary) truncate flex-1">{table.name}</span>
-        <span className="text-[10px] text-(--text-muted) opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+        <Table2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+        <span className="text-xs text-zinc-200 truncate flex-1">{table.name}</span>
+        <span className="text-[10px] text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
           {table.columns.length}
         </span>
       </button>
@@ -102,19 +101,19 @@ function SchemaGroup({ schemaName, tables }: { schemaName: string; tables: Schem
     <div className="mb-1">
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center gap-1.5 px-2 py-1 rounded hover:bg-(--bg-elevated) text-left"
+        className="w-full flex items-center gap-1.5 px-2 py-1 rounded hover:bg-white/5 text-left transition-colors"
       >
         <ChevronRight
           className={cn(
-            'w-3 h-3 text-(--text-muted) shrink-0 transition-transform',
+            'w-3 h-3 text-zinc-600 shrink-0 transition-transform',
             expanded && 'rotate-90'
           )}
         />
-        <Database className="w-3 h-3 text-(--text-muted) shrink-0" />
-        <span className="text-xs font-medium text-(--text-muted) uppercase tracking-wider truncate">
+        <Database className="w-3 h-3 text-zinc-600 shrink-0" />
+        <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider truncate">
           {schemaName}
         </span>
-        <span className="text-[10px] text-(--text-muted) ml-auto shrink-0">{tables.length}</span>
+        <span className="text-[10px] text-zinc-600 ml-auto shrink-0">{tables.length}</span>
       </button>
 
       <AnimatePresence initial={false}>
@@ -150,7 +149,6 @@ export function SchemaPanel() {
     enabled: !!activeConnectionId,
   })
 
-  // Group tables by schema name
   const grouped = useMemo(() => {
     if (!schema?.tables) return {}
     return schema.tables.reduce<Record<string, SchemaTable[]>>((acc, t) => {
@@ -164,11 +162,11 @@ export function SchemaPanel() {
   // Collapsed strip
   if (!isOpen) {
     return (
-      <aside className="w-8 shrink-0 flex flex-col items-center pt-3 border-l border-(--border-default) bg-(--bg-surface)">
+      <aside className="w-8 shrink-0 flex flex-col items-center pt-3 border-l border-white/10 bg-[#111113]">
         <button
           onClick={() => setIsOpen(true)}
           title="Show schema"
-          className="p-1 rounded hover:bg-(--bg-elevated) text-(--text-muted) hover:text-violet-400 transition-colors"
+          className="p-1 rounded hover:bg-white/5 text-zinc-500 hover:text-sky-400 transition-colors"
         >
           <PanelRight className="w-4 h-4" />
         </button>
@@ -177,14 +175,14 @@ export function SchemaPanel() {
   }
 
   return (
-    <aside className="w-64 shrink-0 flex flex-col border-l border-(--border-default) bg-(--bg-surface)">
+    <aside className="w-64 shrink-0 flex flex-col border-l border-white/10 bg-[#111113]">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-3 border-b border-(--border-default) shrink-0">
-        <span className="text-xs font-medium text-(--text-muted) uppercase tracking-wider">Schema</span>
+      <div className="flex items-center justify-between px-3 py-3 border-b border-white/10 shrink-0">
+        <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Schema</span>
         <button
           onClick={() => setIsOpen(false)}
           title="Hide schema"
-          className="p-1 rounded hover:bg-(--bg-elevated) text-(--text-muted) hover:text-violet-400 transition-colors"
+          className="p-1 rounded hover:bg-white/5 text-zinc-500 hover:text-sky-400 transition-colors"
         >
           <PanelRightClose className="w-3.5 h-3.5" />
         </button>
@@ -192,23 +190,23 @@ export function SchemaPanel() {
 
       {/* Database name badge */}
       {schema?.database && (
-        <div className="px-3 py-2 border-b border-(--border-default) shrink-0">
-          <span className="text-xs text-(--text-muted) font-mono">{schema.database}</span>
+        <div className="px-3 py-2 border-b border-white/10 shrink-0">
+          <span className="text-xs text-zinc-600 font-mono">{schema.database}</span>
         </div>
       )}
 
       {/* Tree */}
       <div className="flex-1 min-h-0 overflow-y-auto px-2 py-2">
         {!activeConnectionId ? (
-          <p className="text-xs text-(--text-muted) text-center py-6">Select a connection</p>
+          <p className="text-xs text-zinc-600 text-center py-6">Select a connection</p>
         ) : isLoading ? (
           <div className="space-y-2 px-1">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-6 w-full rounded bg-(--bg-elevated)" />
+              <Skeleton key={i} className="h-6 w-full rounded bg-white/5" />
             ))}
           </div>
         ) : !schema || Object.keys(grouped).length === 0 ? (
-          <p className="text-xs text-(--text-muted) text-center py-6">No schema available</p>
+          <p className="text-xs text-zinc-600 text-center py-6">No schema available</p>
         ) : (
           Object.entries(grouped).map(([schemaName, tables]) => (
             <SchemaGroup key={schemaName} schemaName={schemaName} tables={tables} />
@@ -218,10 +216,10 @@ export function SchemaPanel() {
 
       {/* Visualize button */}
       {schema && schema.tables.length > 0 && (
-        <div className="shrink-0 px-3 py-3 border-t border-(--border-default)">
+        <div className="shrink-0 px-3 py-3 border-t border-white/10">
           <button
             onClick={() => setVisualizerOpen(true)}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-violet-400 border border-violet-500/30 bg-violet-600/10 hover:bg-violet-600/20 hover:text-violet-300 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-sky-400 border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 hover:text-sky-300 transition-colors"
           >
             <Network className="w-3.5 h-3.5" />
             Visualize Schema

@@ -8,9 +8,7 @@ import {
   type SortingState,
   type ColumnDef,
 } from '@tanstack/react-table'
-import { useVirtualizer } from '@tanstack/react-virtual'
-import { useRef } from 'react'
-import { ChevronUp, ChevronDown, Download, BarChart2 } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Download, BarChart2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatMs, formatNumber } from '@/lib/utils'
@@ -44,21 +42,27 @@ function downloadJSON(rows: Record<string, unknown>[]) {
 
 export function ResultsTable({ result }: Props) {
   const [sorting, setSorting] = useState<SortingState>([])
-  const parentRef = useRef<HTMLDivElement>(null)
 
   const columns = useMemo<ColumnDef<Record<string, unknown>>[]>(
-    () =>
-      result.columns.map((col) => ({
+    () => [
+      {
+        id: '__rowNumber',
+        header: '#',
+        cell: (info) => <span className="text-xs font-mono text-zinc-500">{info.row.index + 1}</span>,
+        enableSorting: false,
+      },
+      ...result.columns.map((col) => ({
         accessorKey: col,
         header: col,
         cell: (info) => {
           const val = info.getValue()
           if (val === null || val === undefined) {
-            return <span className="text-(--text-muted) italic text-xs">null</span>
+            return <span className="text-zinc-600 italic text-xs">null</span>
           }
           return <span className="text-xs font-mono">{String(val)}</span>
         },
       })),
+    ],
     [result.columns]
   )
 
@@ -74,29 +78,24 @@ export function ResultsTable({ result }: Props) {
   })
 
   const { rows } = table.getRowModel()
-
-  const virtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 36,
-    overscan: 10,
-  })
+  const pageIndex = table.getState().pagination.pageIndex
+  const pageCount = table.getPageCount()
 
   return (
-    <div className="flex flex-col rounded-xl border border-(--border-default) overflow-hidden bg-(--bg-surface)">
+    <div className="flex h-full min-h-0 flex-col rounded-xl border border-white/10 overflow-hidden bg-[#111113]">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-(--border-default) bg-(--bg-elevated) shrink-0">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#18181b] shrink-0">
         <div className="flex items-center gap-3">
-          <Badge variant="secondary" className="bg-green-500/15 text-green-400 border-green-500/30 text-xs">
+          <Badge variant="secondary" className="bg-green-500/10 text-green-400 border-green-500/20 text-xs">
             {formatNumber(result.row_count)} rows
           </Badge>
-          <span className="text-xs text-(--text-muted)">{formatMs(result.execution_time_ms)}</span>
+          <span className="text-xs text-zinc-500">{formatMs(result.execution_time_ms)}</span>
         </div>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs text-(--text-muted) hover:text-(--text-secondary)"
+            className="h-7 text-xs text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
             onClick={() => downloadCSV(result.columns, result.rows)}
           >
             <Download className="w-3.5 h-3.5 mr-1" />
@@ -105,7 +104,7 @@ export function ResultsTable({ result }: Props) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs text-(--text-muted) hover:text-(--text-secondary)"
+            className="h-7 text-xs text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
             onClick={() => downloadJSON(result.rows)}
           >
             <Download className="w-3.5 h-3.5 mr-1" />
@@ -114,7 +113,7 @@ export function ResultsTable({ result }: Props) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs text-(--text-muted) hover:text-(--text-secondary)"
+            className="h-7 text-xs text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
           >
             <BarChart2 className="w-3.5 h-3.5 mr-1" />
             Visualize
@@ -123,15 +122,15 @@ export function ResultsTable({ result }: Props) {
       </div>
 
       {/* Table */}
-      <div ref={parentRef} className="overflow-auto flex-1" style={{ maxHeight: '340px' }}>
+      <div className="overflow-auto flex-1 min-h-0">
         <table className="w-full text-sm border-collapse">
-          <thead className="sticky top-0 z-10 bg-(--bg-elevated)">
+          <thead className="sticky top-0 z-10 bg-[#18181b]">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
                 {hg.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-3 py-2 text-left text-xs font-medium text-(--text-muted) border-b border-(--border-default) cursor-pointer select-none hover:text-(--text-primary) whitespace-nowrap"
+                    className="px-3 py-2 text-left text-xs font-medium text-zinc-400 uppercase tracking-wide border-b border-white/10 cursor-pointer select-none hover:text-zinc-200 whitespace-nowrap transition-colors"
                     onClick={header.column.getToggleSortingHandler()}
                   >
                     <span className="flex items-center gap-1">
@@ -144,25 +143,22 @@ export function ResultsTable({ result }: Props) {
               </tr>
             ))}
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-white/5 font-mono text-zinc-300">
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={table.getAllColumns().length} className="px-3 py-8 text-center text-(--text-muted)">
+                <td colSpan={table.getAllColumns().length} className="px-3 py-8 text-center text-zinc-600">
                   No rows found
                 </td>
               </tr>
             ) : (
-              virtualizer.getVirtualItems().map((virtualRow) => {
-                const row = rows[virtualRow.index]
+              rows.map((row) => {
                 return (
                   <tr
                     key={row.id}
-                    data-index={virtualRow.index}
-                    ref={virtualizer.measureElement}
-                    className="hover:bg-(--bg-elevated) transition-colors border-b border-(--border-subtle) last:border-0"
+                    className="hover:bg-white/5 transition-colors"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-3 py-2 text-xs text-(--text-primary) whitespace-nowrap max-w-48 truncate">
+                      <td key={cell.id} className="px-3 py-2 text-xs text-zinc-300 whitespace-nowrap max-w-48 truncate">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
@@ -172,6 +168,35 @@ export function ResultsTable({ result }: Props) {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between px-4 py-2 border-t border-white/10 bg-[#18181b] shrink-0">
+        <span className="text-xs text-zinc-500">
+          Page {pageCount === 0 ? 0 : pageIndex + 1} of {pageCount}
+        </span>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs border-white/10 text-zinc-300 hover:text-white hover:bg-white/5 disabled:text-zinc-600 disabled:bg-black/20"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            <ChevronLeft className="w-3.5 h-3.5 mr-1" />
+            Prev
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs border-white/10 text-zinc-300 hover:text-white hover:bg-white/5 disabled:text-zinc-600 disabled:bg-black/20"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+            <ChevronRight className="w-3.5 h-3.5 ml-1" />
+          </Button>
+        </div>
       </div>
     </div>
   )

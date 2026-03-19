@@ -23,15 +23,15 @@ export function SQLPreview({ sql, explanation, onChange, readOnly = false }: Pro
   }
 
   return (
-    <div className="flex flex-col rounded-xl border border-(--border-default) overflow-hidden bg-(--bg-surface)">
+    <div className="flex flex-col rounded-xl border border-white/10 overflow-hidden bg-[#111113]">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-(--border-default) bg-(--bg-elevated)">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-[#18181b]">
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="bg-violet-600/20 text-violet-300 border-violet-500/30 text-xs">
+          <Badge variant="secondary" className="bg-sky-500/10 text-sky-400 border-sky-500/20 text-xs font-mono">
             SQL
           </Badge>
           {!readOnly && (
-            <span className="text-xs text-(--text-muted)">Editable</span>
+            <span className="text-xs text-zinc-600">Editable</span>
           )}
         </div>
         <div className="flex items-center gap-1">
@@ -39,7 +39,7 @@ export function SQLPreview({ sql, explanation, onChange, readOnly = false }: Pro
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 px-2 text-xs text-(--text-muted) hover:text-(--text-secondary)"
+              className="h-7 px-2 text-xs text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
               onClick={() => setShowExplanation((v) => !v)}
             >
               Explain
@@ -49,7 +49,7 @@ export function SQLPreview({ sql, explanation, onChange, readOnly = false }: Pro
           <Button
             variant="ghost"
             size="icon"
-            className="w-7 h-7 text-(--text-muted) hover:text-(--text-primary)"
+            className="w-7 h-7 text-zinc-500 hover:text-zinc-200 hover:bg-white/5"
             onClick={handleCopy}
           >
             {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -66,7 +66,7 @@ export function SQLPreview({ sql, explanation, onChange, readOnly = false }: Pro
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <p className="px-4 py-2 text-xs text-(--text-secondary) bg-violet-600/5 border-b border-(--border-default)">
+            <p className="px-4 py-2 text-xs text-zinc-400 bg-sky-500/5 border-b border-white/10">
               {explanation}
             </p>
           </motion.div>

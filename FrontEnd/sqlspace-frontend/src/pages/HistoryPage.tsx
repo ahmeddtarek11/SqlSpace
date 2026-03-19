@@ -1,233 +1,15 @@
-import { useState, useEffect } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Search, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Bookmark, RotateCcw, Zap, TrendingUp, AlertCircle, Timer } from 'lucide-react'
-import { toast } from 'sonner'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { useEffect, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
+import { Search, Filter, ChevronRight, ChevronLeft } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
 import { queriesApi } from '@/api/queries'
-import { useWorkspaceStore } from '@/stores/workspace-store'
-import { useConnectionStore } from '@/stores/connection-store'
-import { formatDate, formatMs, truncate } from '@/lib/utils'
-import type { QueryHistoryDto } from '@/types'
-
-// ── Save dialog ───────────────────────────────────────────────────────────────
-function SaveDialog({
-  queryId,
-  userPrompt,
-  onSaveSuccess,
-  qc,
-}: {
-  queryId: string
-  userPrompt: string | null
-  onSaveSuccess: () => void
-  qc: ReturnType<typeof useQueryClient>
-}) {
-  const [name, setName] = useState(userPrompt || '')
-
-  const saveMutation = useMutation({
-    mutationFn: () => queriesApi.saveQuery({ name, queryHistoryId: queryId }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['saved-queries'] })
-      toast.success('Query saved')
-      setName('')
-      onSaveSuccess()
-    },
-    onError: () => toast.error('Failed to save query'),
-  })
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-(--bg-surface) border border-(--border-default) rounded-xl p-6 max-w-sm w-full"
-      >
-        <h2 className="text-lg font-semibold text-(--text-primary) mb-4">Save Query</h2>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter query name"
-          className="w-full px-3 py-2 bg-(--bg-elevated) border border-(--border-default) rounded-lg text-(--text-primary) placeholder:text-(--text-muted) mb-4 focus:outline-none focus:ring-2 focus:ring-violet-500"
-        />
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onSaveSuccess} className="flex-1">Cancel</Button>
-          <Button
-            onClick={() => saveMutation.mutate()}
-            disabled={!name.trim() || saveMutation.isPending}
-            className="flex-1 bg-violet-600 hover:bg-violet-700"
-          >
-            Save
-          </Button>
-        </div>
-      </motion.div>
-    </div>
-  )
-}
-
-// ── History item ──────────────────────────────────────────────────────────────
-function HistoryItem({ item, qc }: { item: QueryHistoryDto; qc: ReturnType<typeof useQueryClient> }) {
-  const navigate = useNavigate()
-  const { setPrompt, setGeneratedSQL, setExplanation, setResult } = useWorkspaceStore()
-  const { setActiveConnection } = useConnectionStore()
-  const [expanded, setExpanded] = useState(false)
-  const [showSaveDialog, setShowSaveDialog] = useState(false)
-  const success = item.status === 'Success'
-
-  const rerunMutation = useMutation({
-    mutationFn: () => queriesApi.rerun(item.queryId),
-    onSuccess: (res) => {
-      setPrompt(item.userPrompt ?? '')
-      setGeneratedSQL(res.sql)
-      setExplanation(res.explanation)
-      setResult(res.result)
-      if (item.connectionName) {
-        // connectionName is string, store needs connectionId — navigate and let workspace refetch
-      }
-      void qc.invalidateQueries({ queryKey: ['history'] })
-      toast.success('Query re-executed')
-      navigate('/workspace')
-    },
-    onError: (e: Error) => toast.error(e.message),
-  })
-
-  return (
-    <>
-      <motion.div layout className="border border-(--border-default) rounded-xl overflow-hidden bg-(--bg-surface)">
-        <button
-          className="w-full flex items-start gap-3 p-4 text-left hover:bg-(--bg-elevated) transition-colors"
-          onClick={() => setExpanded((v) => !v)}
-        >
-          {success ? (
-            <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-          ) : (
-            <XCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm text-(--text-primary) truncate">{item.userPrompt}</p>
-            <p className="text-xs text-(--text-muted) mt-0.5 font-mono truncate">{truncate(item.generatedSql ?? '', 60)}</p>
-          </div>
-          <div className="flex flex-col items-end gap-1 shrink-0">
-            {item.connectionName && (
-              <Badge variant="secondary" className="text-xs bg-(--bg-elevated) text-(--text-muted) border-(--border-default)">
-                {item.connectionName}
-              </Badge>
-            )}
-            <div className="flex items-center gap-2 text-xs text-(--text-muted)">
-              {item.executionTimeMs != null && (
-                <><Clock className="w-3 h-3" /><span>{formatMs(item.executionTimeMs)}</span><span>·</span></>
-              )}
-              <span>{item.rowsReturned ?? 0} rows</span>
-            </div>
-            <span className="text-xs text-(--text-muted)">{formatDate(item.executedAt)}</span>
-          </div>
-          {expanded ? <ChevronUp className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" /> : <ChevronDown className="w-4 h-4 text-(--text-muted) mt-0.5 shrink-0" />}
-        </button>
-
-        <AnimatePresence>
-          {expanded && (
-            <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden border-t border-(--border-default)">
-              <div className="p-4 space-y-3">
-                <div>
-                  <p className="text-xs font-medium text-(--text-muted) uppercase tracking-wider mb-2">Generated SQL</p>
-                  <pre className="text-xs font-mono text-cyan-300 bg-(--bg-elevated) rounded-lg p-3 overflow-x-auto whitespace-pre-wrap">
-                    {item.generatedSql}
-                  </pre>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1 border-(--border-default) text-(--text-secondary) hover:text-(--text-primary) gap-1.5"
-                    disabled={rerunMutation.isPending}
-                    onClick={() => rerunMutation.mutate()}
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    {rerunMutation.isPending ? 'Running…' : 'Rerun'}
-                  </Button>
-                  {success && (
-                    <Button
-                      size="sm"
-                      className="flex-1 bg-violet-600 hover:bg-violet-700 text-white gap-1.5"
-                      onClick={() => setShowSaveDialog(true)}
-                    >
-                      <Bookmark className="w-3.5 h-3.5" />
-                      Save Query
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      {showSaveDialog && (
-        <SaveDialog
-          queryId={item.queryId}
-          userPrompt={item.userPrompt}
-          onSaveSuccess={() => setShowSaveDialog(false)}
-          qc={qc}
-        />
-      )}
-    </>
-  )
-}
-
-// ── Stats bar ─────────────────────────────────────────────────────────────────
-function StatsBar() {
-  const { data: stats } = useQuery({
-    queryKey: ['history-stats'],
-    queryFn: () => queriesApi.historyStats(),
-  })
-
-  if (!stats) return null
-
-  const successRate = stats.totalQueries > 0 ? Math.round((stats.successfulQueries / stats.totalQueries) * 100) : 0
-
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-6 py-3 border-b border-(--border-default) bg-(--bg-elevated)">
-      <div className="flex items-center gap-2">
-        <Zap className="w-4 h-4 text-violet-400 shrink-0" />
-        <div>
-          <p className="text-xs text-(--text-muted)">Total Queries</p>
-          <p className="text-sm font-semibold text-(--text-primary)">{stats.totalQueries.toLocaleString()}</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <TrendingUp className="w-4 h-4 text-green-400 shrink-0" />
-        <div>
-          <p className="text-xs text-(--text-muted)">Success Rate</p>
-          <p className="text-sm font-semibold text-(--text-primary)">{successRate}%</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
-        <div>
-          <p className="text-xs text-(--text-muted)">Failed</p>
-          <p className="text-sm font-semibold text-(--text-primary)">{stats.failedQueries.toLocaleString()}</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <Timer className="w-4 h-4 text-amber-400 shrink-0" />
-        <div>
-          <p className="text-xs text-(--text-muted)">Avg Time</p>
-          <p className="text-sm font-semibold text-(--text-primary)">{formatMs(stats.averageExecutionTimeMs)}</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Page ───────────────────────────────────────────────────────────────────────
 export default function HistoryPage() {
+  const pageSize = 15
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const qc = useQueryClient()
+  const [selectedConnectionId, setSelectedConnectionId] = useState('all')
+  const [pageNumber, setPageNumber] = useState(1)
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300)
@@ -236,54 +18,193 @@ export default function HistoryPage() {
 
   const isSearching = debouncedSearch.trim().length > 0
 
-  const { data: historyData, isLoading: historyLoading } = useQuery({
-    queryKey: ['history'],
-    queryFn: () => queriesApi.history({ pageSize: 100 }),
-    enabled: !isSearching,
+  const { data: connections = [] } = useQuery({
+    queryKey: ['connections-list-for-history'],
+    queryFn: () => import('@/api/connections').then((m) => m.connectionsApi.list()),
   })
 
-  const { data: searchData, isLoading: searchLoading } = useQuery({
-    queryKey: ['history-search', debouncedSearch],
-    queryFn: () => queriesApi.searchHistory({ searchTerm: debouncedSearch, pageSize: 100 }),
-    enabled: isSearching,
+  const selectedConnectionName = useMemo(
+    () => connections.find((c) => c.connectionId === selectedConnectionId)?.connectionName ?? null,
+    [connections, selectedConnectionId]
+  )
+
+  useEffect(() => {
+    setPageNumber(1)
+  }, [debouncedSearch, selectedConnectionId])
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['history-page', pageNumber, debouncedSearch, selectedConnectionId],
+    queryFn: async () => {
+      if (isSearching) {
+        return queriesApi.searchHistory({
+          searchTerm: debouncedSearch,
+          connectionId: selectedConnectionId !== 'all' ? selectedConnectionId : undefined,
+          pageNumber,
+          pageSize,
+        })
+      }
+
+      if (selectedConnectionId === 'all') {
+        return queriesApi.history({ pageNumber, pageSize })
+      }
+
+      const allItems = await queriesApi.history({ pageNumber: 1, pageSize: 500 })
+      const filtered = allItems.items.filter((item) => item.connectionName === selectedConnectionName)
+      const start = (pageNumber - 1) * pageSize
+      const paged = filtered.slice(start, start + pageSize)
+
+      return {
+        ...allItems,
+        items: paged,
+        totalCount: filtered.length,
+        pageNumber,
+        pageSize,
+        totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
+        hasPreviousPage: pageNumber > 1,
+        hasNextPage: start + pageSize < filtered.length,
+      }
+    },
   })
 
-  const isLoading = isSearching ? searchLoading : historyLoading
-  const items = (isSearching ? searchData?.items : historyData?.items) ?? []
-  const totalCount = (isSearching ? searchData?.totalCount : historyData?.totalCount) ?? 0
+  const items = data?.items ?? []
+  const totalCount = data?.totalCount ?? 0
+  const hasPreviousPage = data?.hasPreviousPage ?? false
+  const hasNextPage = data?.hasNextPage ?? false
+  const startEntry = totalCount === 0 ? 0 : (pageNumber - 1) * pageSize + 1
+  const endEntry = Math.min(pageNumber * pageSize, totalCount)
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-4 px-6 py-4 border-b border-(--border-default) bg-(--bg-surface) shrink-0">
-        <h1 className="text-lg font-semibold text-(--text-primary)">Query History</h1>
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--text-muted)" />
-          <Input
-            placeholder="Search queries…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-(--bg-elevated) border-(--border-default) text-(--text-primary) placeholder:text-(--text-muted)"
-          />
-        </div>
-        <span className="text-sm text-(--text-muted)">{totalCount} results</span>
+    <div className="px-6 py-8 w-full h-full min-h-0 flex flex-col">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-white tracking-tight">Query History</h1>
+        <p className="text-zinc-400 mt-1">Audit log of all queries executed across your connections.</p>
       </div>
 
-      <StatsBar />
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search prompts or SQL..."
+            className="w-full bg-[#111113] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-sky-500 transition-all shadow-sm"
+          />
+        </div>
+        <div className="w-full sm:w-64 relative">
+          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+          <select
+            className="w-full bg-[#111113] border border-white/10 rounded-xl py-2.5 pl-9 pr-4 text-white focus:outline-none focus:border-sky-500 appearance-none shadow-sm"
+            value={selectedConnectionId}
+            onChange={(e) => setSelectedConnectionId(e.target.value)}
+          >
+            <option value="all">All Connections</option>
+            {connections.map((connection) => (
+              <option key={connection.connectionId} value={connection.connectionId}>
+                {connection.connectionName}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto p-6">
-        {isLoading ? (
-          <div className="space-y-3">
-            {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-20 rounded-xl bg-(--bg-surface)" />)}
+      <div className="bg-[#111113] border border-white/10 rounded-2xl overflow-hidden shadow-xl flex-1 min-h-160 flex flex-col">
+        <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-[#18181b] border-b border-white/10 text-zinc-400 uppercase text-xs font-semibold tracking-wider">
+              <tr>
+                <th className="px-6 py-4 w-1/3">Query Prompt</th>
+                <th className="px-6 py-4">Connection</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Rows</th>
+                <th className="px-6 py-4">Time</th>
+                <th className="px-6 py-4 text-right">Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {isLoading ? (
+                Array.from({ length: pageSize }).map((_, idx) => (
+                  <tr key={idx}>
+                    <td className="px-6 py-4 text-zinc-500" colSpan={6}>Loading...</td>
+                  </tr>
+                ))
+              ) : items.length === 0 ? (
+                <tr>
+                  <td className="px-6 py-8 text-zinc-500 text-center" colSpan={6}>No query history found.</td>
+                </tr>
+              ) : (
+                items.map((item) => (
+                  <tr key={item.queryId} className="hover:bg-white/5 transition-colors group cursor-pointer">
+                    <td className="px-6 py-4">
+                      <Link to={`/history/${item.queryId}`} className="block">
+                        <div className="font-medium text-white mb-1 truncate max-w-md" title={item.userPrompt ?? ''}>
+                          {item.userPrompt ?? '(No prompt)'}
+                        </div>
+                        <div className="font-mono text-xs text-zinc-500 truncate max-w-md">
+                          {item.generatedSql ? `${item.generatedSql.substring(0, 60)}...` : 'No SQL generated'}
+                        </div>
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Link to={`/history/${item.queryId}`} className="block">
+                        <span className="text-zinc-300 font-medium">{item.connectionName ?? 'Unknown Connection'}</span>
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Link to={`/history/${item.queryId}`} className="block">
+                        {item.status === 'Success' ? (
+                          <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20">Success</Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20">Failed</Badge>
+                        )}
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 text-zinc-400 font-mono text-xs">
+                      <Link to={`/history/${item.queryId}`} className="block">{item.rowsReturned ?? 0}</Link>
+                    </td>
+                    <td className="px-6 py-4 text-zinc-400 font-mono text-xs">
+                      <Link to={`/history/${item.queryId}`} className="block">{item.executionTimeMs ?? 0}ms</Link>
+                    </td>
+                    <td className="px-6 py-4 text-right text-zinc-400">
+                      <Link to={`/history/${item.queryId}`} className="flex items-center justify-end gap-3">
+                        {new Intl.DateTimeFormat('en-US', {
+                          month: 'short',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false,
+                        }).format(new Date(item.executedAt))}
+                        <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-sky-400 transition-colors" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="px-6 py-4 border-t border-white/10 bg-[#18181b] flex items-center justify-between">
+          <span className="text-sm text-zinc-500">
+            Showing {startEntry} to {endEntry} of {totalCount.toLocaleString()} entries
+          </span>
+          <div className="flex gap-2">
+            <button
+              className="px-3 py-1.5 rounded-lg border border-white/10 text-zinc-300 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-1 text-sm disabled:text-zinc-500 disabled:cursor-not-allowed disabled:bg-black/20"
+              disabled={!hasPreviousPage}
+              onClick={() => setPageNumber((current) => Math.max(1, current - 1))}
+            >
+              <ChevronLeft className="w-4 h-4" /> Prev
+            </button>
+            <button
+              className="px-3 py-1.5 rounded-lg border border-white/10 text-zinc-300 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-1 text-sm disabled:text-zinc-500 disabled:cursor-not-allowed disabled:bg-black/20"
+              disabled={!hasNextPage}
+              onClick={() => setPageNumber((current) => current + 1)}
+            >
+              Next <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
-        ) : items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-(--text-muted) text-sm">No queries found</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {items.map((item) => <HistoryItem key={item.queryId} item={item} qc={qc} />)}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   )

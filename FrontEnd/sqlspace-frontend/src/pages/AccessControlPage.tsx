@@ -31,9 +31,6 @@ import { formatDate, cn } from '@/lib/utils'
 import type { UserAccessSummary, TableRestrictionInput, SchemaTable } from '@/types'
 
 // ── Table Picker ──────────────────────────────────────────────
-// Shows schema tables as a checklist.
-// `allowedTables` = Set of "schema.name" strings the user CAN access.
-// Toggling a table adds/removes it from the allowed set.
 
 interface TablePickerProps {
   allTables: SchemaTable[]
@@ -73,29 +70,27 @@ function TablePicker({ allTables, allowedTables, onChange }: TablePickerProps) {
 
   return (
     <div className="space-y-2">
-      {/* Select/Deselect all */}
       <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={() => toggleAll(!allSelected)}
-          className="text-xs text-violet-400 hover:text-violet-300 underline-offset-2 hover:underline transition-colors"
+          className="text-xs text-sky-400 hover:text-sky-300 underline-offset-2 hover:underline transition-colors"
         >
           {allSelected ? 'Deselect all' : 'Select all'}
         </button>
-        <span className="text-xs text-(--text-muted)">
+        <span className="text-xs text-zinc-600">
           {allowedTables.size} / {allTables.length} tables allowed
         </span>
       </div>
 
-      {/* Table list */}
-      <div className="max-h-56 overflow-y-auto rounded-lg border border-(--border-default) divide-y divide-(--border-subtle)">
+      <div className="max-h-56 overflow-y-auto rounded-xl border border-white/10 divide-y divide-white/5">
         {allTables.length === 0 ? (
-          <p className="text-xs text-(--text-muted) text-center py-4">No schema loaded</p>
+          <p className="text-xs text-zinc-600 text-center py-4">No schema loaded</p>
         ) : (
           Object.entries(grouped).map(([schemaName, tables]) => (
             <div key={schemaName}>
-              <div className="px-3 py-1.5 bg-(--bg-elevated) sticky top-0">
-                <span className="text-[10px] font-medium text-(--text-muted) uppercase tracking-wider">
+              <div className="px-3 py-1.5 bg-[#18181b] sticky top-0">
+                <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
                   {schemaName}
                 </span>
               </div>
@@ -110,16 +105,16 @@ function TablePicker({ allTables, allowedTables, onChange }: TablePickerProps) {
                     className={cn(
                       'w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors',
                       checked
-                        ? 'bg-(--bg-surface) hover:bg-(--bg-elevated)'
+                        ? 'bg-[#111113] hover:bg-white/5'
                         : 'bg-red-500/5 hover:bg-red-500/10'
                     )}
                   >
                     {checked ? (
-                      <CheckSquare className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+                      <CheckSquare className="w-3.5 h-3.5 text-sky-400 shrink-0" />
                     ) : (
-                      <Square className="w-3.5 h-3.5 text-(--text-muted) shrink-0" />
+                      <Square className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
                     )}
-                    <span className={cn('text-xs font-mono', checked ? 'text-(--text-primary)' : 'text-(--text-muted) line-through')}>
+                    <span className={cn('text-xs font-mono', checked ? 'text-zinc-200' : 'text-zinc-600 line-through')}>
                       {t.name}
                     </span>
                     {!checked && (
@@ -154,7 +149,6 @@ function GrantDialog({ connectionId, allTables, onClose }: GrantDialogProps) {
   const qc = useQueryClient()
   const [email, setEmail] = useState('')
   const [hasFullAccess, setHasFullAccess] = useState(true)
-  // allowed tables = all tables by default
   const [allowedTables, setAllowedTables] = useState<Set<string>>(
     () => new Set(allTables.map(tableKey))
   )
@@ -185,37 +179,35 @@ function GrantDialog({ connectionId, allTables, onClose }: GrantDialogProps) {
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-(--bg-elevated) border-(--border-default) text-(--text-primary)">
+      <DialogContent className="sm:max-w-md bg-[#18181b] border-white/10 text-white">
         <DialogHeader>
-          <DialogTitle className="text-(--text-primary) flex items-center gap-2">
-            <UserCheck className="w-4 h-4 text-violet-400" />
+          <DialogTitle className="text-white flex items-center gap-2">
+            <UserCheck className="w-4 h-4 text-sky-400" />
             Grant Access
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 mt-2">
-          {/* Email */}
           <div className="space-y-1.5">
-            <Label className="text-(--text-secondary) text-sm">User Email</Label>
+            <Label className="text-zinc-400 text-sm">User Email</Label>
             <Input
               type="email"
               placeholder="user@example.com"
-              className="bg-(--bg-surface) border-(--border-default) text-(--text-primary)"
+              className="bg-[#111113] border-white/10 text-white placeholder:text-zinc-600 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
-          {/* Access level */}
           <div className="space-y-2">
-            <Label className="text-(--text-secondary) text-sm">Access Level</Label>
-            <div className="flex items-center gap-1 p-1 rounded-lg bg-(--bg-surface) border border-(--border-default) w-fit">
+            <Label className="text-zinc-400 text-sm">Access Level</Label>
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-[#111113] border border-white/10 w-fit">
               <button
                 type="button"
                 onClick={() => setHasFullAccess(true)}
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
-                  hasFullAccess ? 'bg-violet-600 text-white' : 'text-(--text-muted) hover:text-(--text-secondary)'
+                  hasFullAccess ? 'bg-sky-600 text-white' : 'text-zinc-500 hover:text-zinc-300'
                 )}
               >
                 <Unlock className="w-3.5 h-3.5" />
@@ -226,7 +218,7 @@ function GrantDialog({ connectionId, allTables, onClose }: GrantDialogProps) {
                 onClick={() => setHasFullAccess(false)}
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
-                  !hasFullAccess ? 'bg-violet-600 text-white' : 'text-(--text-muted) hover:text-(--text-secondary)'
+                  !hasFullAccess ? 'bg-sky-600 text-white' : 'text-zinc-500 hover:text-zinc-300'
                 )}
               >
                 <Lock className="w-3.5 h-3.5" />
@@ -235,10 +227,9 @@ function GrantDialog({ connectionId, allTables, onClose }: GrantDialogProps) {
             </div>
           </div>
 
-          {/* Table picker (only for restricted) */}
           {!hasFullAccess && (
             <div className="space-y-1.5">
-              <Label className="text-(--text-secondary) text-sm">Allowed Tables</Label>
+              <Label className="text-zinc-400 text-sm">Allowed Tables</Label>
               <TablePicker
                 allTables={allTables}
                 allowedTables={allowedTables}
@@ -247,13 +238,12 @@ function GrantDialog({ connectionId, allTables, onClose }: GrantDialogProps) {
             </div>
           )}
 
-          {/* Actions */}
           <div className="flex gap-2 pt-1">
-            <Button variant="ghost" className="flex-1 text-(--text-muted)" onClick={onClose}>
+            <Button variant="ghost" className="flex-1 text-zinc-600 hover:text-zinc-300 hover:bg-white/5" onClick={onClose}>
               Cancel
             </Button>
             <Button
-              className="flex-1 bg-violet-600 hover:bg-violet-500"
+              className="flex-1 bg-sky-600 hover:bg-sky-500 shadow-lg shadow-sky-500/25 active:scale-[0.98] transition-all"
               disabled={!canSubmit}
               onClick={() => mutation.mutate()}
             >
@@ -279,7 +269,6 @@ function EditDialog({ connectionId, user, allTables, onClose }: EditDialogProps)
   const qc = useQueryClient()
   const [hasFullAccess, setHasFullAccess] = useState(user.hasFullAccess)
 
-  // Build initial allowed set: all tables MINUS the restricted ones
   const [allowedTables, setAllowedTables] = useState<Set<string>>(() => {
     if (user.hasFullAccess) return new Set(allTables.map(tableKey))
     return new Set(
@@ -312,27 +301,25 @@ function EditDialog({ connectionId, user, allTables, onClose }: EditDialogProps)
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-(--bg-elevated) border-(--border-default) text-(--text-primary)">
+      <DialogContent className="sm:max-w-md bg-[#18181b] border-white/10 text-white">
         <DialogHeader>
-          <DialogTitle className="text-(--text-primary) flex items-center gap-2">
-            <Pencil className="w-4 h-4 text-violet-400" />
+          <DialogTitle className="text-white flex items-center gap-2">
+            <Pencil className="w-4 h-4 text-sky-400" />
             Edit Access
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 mt-2">
-          {/* User info (read-only) */}
-          <div className="rounded-lg border border-(--border-default) bg-(--bg-surface) px-4 py-3">
-            <p className="text-sm text-(--text-primary)">{user.userEmail}</p>
+          <div className="rounded-xl border border-white/10 bg-[#111113] px-4 py-3">
+            <p className="text-sm text-zinc-200">{user.userEmail}</p>
             {user.userName && (
-              <p className="text-xs text-(--text-muted) mt-0.5">{user.userName}</p>
+              <p className="text-xs text-zinc-600 mt-0.5">{user.userName}</p>
             )}
           </div>
 
-          {/* Access level */}
           <div className="space-y-2">
-            <Label className="text-(--text-secondary) text-sm">Access Level</Label>
-            <div className="flex items-center gap-1 p-1 rounded-lg bg-(--bg-surface) border border-(--border-default) w-fit">
+            <Label className="text-zinc-400 text-sm">Access Level</Label>
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-[#111113] border border-white/10 w-fit">
               <button
                 type="button"
                 onClick={() => {
@@ -341,7 +328,7 @@ function EditDialog({ connectionId, user, allTables, onClose }: EditDialogProps)
                 }}
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
-                  hasFullAccess ? 'bg-violet-600 text-white' : 'text-(--text-muted) hover:text-(--text-secondary)'
+                  hasFullAccess ? 'bg-sky-600 text-white' : 'text-zinc-500 hover:text-zinc-300'
                 )}
               >
                 <Unlock className="w-3.5 h-3.5" />
@@ -352,7 +339,7 @@ function EditDialog({ connectionId, user, allTables, onClose }: EditDialogProps)
                 onClick={() => setHasFullAccess(false)}
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
-                  !hasFullAccess ? 'bg-violet-600 text-white' : 'text-(--text-muted) hover:text-(--text-secondary)'
+                  !hasFullAccess ? 'bg-sky-600 text-white' : 'text-zinc-500 hover:text-zinc-300'
                 )}
               >
                 <Lock className="w-3.5 h-3.5" />
@@ -361,10 +348,9 @@ function EditDialog({ connectionId, user, allTables, onClose }: EditDialogProps)
             </div>
           </div>
 
-          {/* Table picker */}
           {!hasFullAccess && (
             <div className="space-y-1.5">
-              <Label className="text-(--text-secondary) text-sm">Allowed Tables</Label>
+              <Label className="text-zinc-400 text-sm">Allowed Tables</Label>
               <TablePicker
                 allTables={allTables}
                 allowedTables={allowedTables}
@@ -373,13 +359,12 @@ function EditDialog({ connectionId, user, allTables, onClose }: EditDialogProps)
             </div>
           )}
 
-          {/* Actions */}
           <div className="flex gap-2 pt-1">
-            <Button variant="ghost" className="flex-1 text-(--text-muted)" onClick={onClose}>
+            <Button variant="ghost" className="flex-1 text-zinc-600 hover:text-zinc-300 hover:bg-white/5" onClick={onClose}>
               Cancel
             </Button>
             <Button
-              className="flex-1 bg-violet-600 hover:bg-violet-500"
+              className="flex-1 bg-sky-600 hover:bg-sky-500 shadow-lg shadow-sky-500/25 active:scale-[0.98] transition-all"
               disabled={mutation.isPending}
               onClick={() => mutation.mutate()}
             >
@@ -415,28 +400,28 @@ function UserRow({ user, totalTables, onEdit, onRevoke, isRevoking }: UserRowPro
     .toUpperCase()
 
   return (
-    <div className="flex items-center gap-4 px-4 py-3 border-b border-(--border-subtle) last:border-0 hover:bg-(--bg-elevated) transition-colors group">
+    <div className="flex items-center gap-4 px-4 py-3 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors group">
       {/* Avatar */}
-      <div className="w-8 h-8 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center shrink-0">
-        <span className="text-xs font-semibold text-violet-300">{initials}</span>
+      <div className="w-8 h-8 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0">
+        <span className="text-xs font-semibold text-sky-300">{initials}</span>
       </div>
 
       {/* User info */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-(--text-primary) truncate">{user.userEmail}</p>
+        <p className="text-sm text-zinc-200 truncate">{user.userEmail}</p>
         {user.userName && (
-          <p className="text-xs text-(--text-muted) truncate">{user.userName}</p>
+          <p className="text-xs text-zinc-600 truncate">{user.userName}</p>
         )}
       </div>
 
       {/* Access level badge */}
       {user.hasFullAccess ? (
-        <Badge className="bg-green-600/15 text-green-400 border-green-500/30 text-xs shrink-0">
+        <Badge className="bg-green-500/10 text-green-400 border-green-500/20 text-xs shrink-0">
           <Unlock className="w-3 h-3 mr-1" />
           Full Access
         </Badge>
       ) : (
-        <Badge className="bg-amber-600/15 text-amber-400 border-amber-500/30 text-xs shrink-0">
+        <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-xs shrink-0">
           <Lock className="w-3 h-3 mr-1" />
           {allowedCount} / {totalTables} tables
         </Badge>
@@ -444,9 +429,9 @@ function UserRow({ user, totalTables, onEdit, onRevoke, isRevoking }: UserRowPro
 
       {/* Granted info */}
       <div className="text-right hidden md:block shrink-0">
-        <p className="text-xs text-(--text-muted)">{formatDate(user.grantedAt)}</p>
+        <p className="text-xs text-zinc-600">{formatDate(user.grantedAt)}</p>
         {user.grantedByUserEmail && (
-          <p className="text-[10px] text-(--text-muted) truncate max-w-32">by {user.grantedByUserEmail}</p>
+          <p className="text-[10px] text-zinc-600 truncate max-w-32">by {user.grantedByUserEmail}</p>
         )}
       </div>
 
@@ -455,7 +440,7 @@ function UserRow({ user, totalTables, onEdit, onRevoke, isRevoking }: UserRowPro
         <Button
           variant="ghost"
           size="icon"
-          className="w-7 h-7 text-(--text-muted) hover:text-violet-400"
+          className="w-7 h-7 text-zinc-600 hover:text-sky-400 hover:bg-sky-500/10"
           onClick={onEdit}
           title="Edit access"
         >
@@ -464,7 +449,7 @@ function UserRow({ user, totalTables, onEdit, onRevoke, isRevoking }: UserRowPro
         <Button
           variant="ghost"
           size="icon"
-          className="w-7 h-7 text-(--text-muted) hover:text-red-400"
+          className="w-7 h-7 text-zinc-600 hover:text-red-400 hover:bg-red-500/10"
           onClick={onRevoke}
           disabled={isRevoking}
           title="Revoke access"
@@ -494,14 +479,11 @@ export default function AccessControlPage() {
     queryFn: connectionsApi.list,
   })
 
-  // Only show connections where the current user is admin
   const adminConnections = connections.filter((c) => c.isAdmin)
 
-  // Derive active connection — explicit selection or first admin connection
   const activeConnectionId =
     selectedConnectionId || adminConnections[0]?.connectionId || ''
 
-  // Check admin status for the selected connection via the dedicated endpoint
   const { data: schema } = useQuery({
     queryKey: ['schema', activeConnectionId],
     queryFn: () => connectionsApi.schema(activeConnectionId),
@@ -532,25 +514,25 @@ export default function AccessControlPage() {
   return (
     <div className="flex flex-col h-full">
       {/* ── Header ── */}
-      <div className="flex items-center gap-4 px-6 py-4 border-b border-(--border-default) bg-(--bg-surface) shrink-0 flex-wrap">
+      <div className="flex items-center gap-4 px-6 py-4 border-b border-white/10 bg-[#111113] shrink-0 flex-wrap">
         <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-violet-400" />
-          <h1 className="text-lg font-semibold text-(--text-primary)">Access Control</h1>
+          <Shield className="w-5 h-5 text-sky-400" />
+          <h1 className="text-lg font-semibold text-white">Access Control</h1>
         </div>
 
         {/* Connection selector */}
         <div className="flex items-center gap-2 ml-2">
-          <span className="text-xs text-(--text-muted)">Connection:</span>
+          <span className="text-xs text-zinc-600">Connection:</span>
           {connectionsLoading ? (
-            <Skeleton className="h-8 w-40 rounded-lg bg-(--bg-elevated)" />
+            <Skeleton className="h-8 w-40 rounded-lg bg-white/5" />
           ) : adminConnections.length === 0 ? (
-            <span className="text-xs text-(--text-muted)">No admin connections</span>
+            <span className="text-xs text-zinc-600">No admin connections</span>
           ) : (
             <div className="relative">
               <select
                 value={activeConnectionId}
                 onChange={(e) => setSelectedConnectionId(e.target.value)}
-                className="appearance-none pl-3 pr-8 py-1.5 rounded-lg border border-(--border-default) bg-(--bg-elevated) text-(--text-primary) text-sm cursor-pointer focus:outline-none focus:border-violet-500/60 transition-colors"
+                className="appearance-none pl-3 pr-8 py-1.5 rounded-lg border border-white/10 bg-[#18181b] text-zinc-200 text-sm cursor-pointer focus:outline-none focus:border-sky-500 transition-colors"
               >
                 {adminConnections.map((c) => (
                   <option key={c.connectionId} value={c.connectionId}>
@@ -558,7 +540,7 @@ export default function AccessControlPage() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-(--text-muted) pointer-events-none" />
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600 pointer-events-none" />
             </div>
           )}
         </div>
@@ -566,7 +548,7 @@ export default function AccessControlPage() {
         <div className="ml-auto">
           <Button
             size="sm"
-            className="bg-violet-600 hover:bg-violet-500 text-white"
+            className="bg-sky-600 hover:bg-sky-500 text-white shadow-lg shadow-sky-500/25 active:scale-[0.98] transition-all"
             disabled={!activeConnectionId}
             onClick={() => setShowGrant(true)}
           >
@@ -577,60 +559,60 @@ export default function AccessControlPage() {
       </div>
 
       {/* ── Body ── */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto bg-[#080809]">
         {!activeConnectionId ? (
           <div className="flex flex-col items-center justify-center h-full text-center gap-2">
-            <Shield className="w-10 h-10 text-(--text-muted)" />
-            <p className="text-sm text-(--text-primary) font-medium">No admin connections</p>
-            <p className="text-xs text-(--text-muted)">You need to be the owner of a connection to manage its access control</p>
+            <Shield className="w-10 h-10 text-zinc-600" />
+            <p className="text-sm text-zinc-300 font-medium">No admin connections</p>
+            <p className="text-xs text-zinc-600">You need to be the owner of a connection to manage its access control</p>
           </div>
         ) : (
           <div className="p-6 space-y-4">
             {/* Stats */}
             {selectedConn && (
               <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-(--bg-surface) border border-(--border-default)">
-                  <div className="w-2 h-2 rounded-full bg-violet-500" />
-                  <span className="text-sm text-(--text-secondary)">{selectedConn.connectionName}</span>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#111113] border border-white/10">
+                  <div className="w-2 h-2 rounded-full bg-sky-500 shadow-[0_0_6px_rgba(14,165,233,0.5)]" />
+                  <span className="text-sm text-zinc-300">{selectedConn.connectionName}</span>
                 </div>
-                <div className="px-3 py-2 rounded-lg bg-(--bg-surface) border border-(--border-default)">
-                  <span className="text-sm text-(--text-muted)">
-                    <span className="text-(--text-primary) font-medium">{users.length}</span>{' '}
+                <div className="px-3 py-2 rounded-lg bg-[#111113] border border-white/10">
+                  <span className="text-sm text-zinc-500">
+                    <span className="text-zinc-200 font-medium">{users.length}</span>{' '}
                     user{users.length !== 1 ? 's' : ''} with access
                   </span>
                 </div>
-                <div className="px-3 py-2 rounded-lg bg-(--bg-surface) border border-(--border-default)">
-                  <span className="text-sm text-(--text-muted)">
-                    <span className="text-(--text-primary) font-medium">{allTables.length}</span> tables in schema
+                <div className="px-3 py-2 rounded-lg bg-[#111113] border border-white/10">
+                  <span className="text-sm text-zinc-500">
+                    <span className="text-zinc-200 font-medium">{allTables.length}</span> tables in schema
                   </span>
                 </div>
               </div>
             )}
 
             {/* User list */}
-            <div className="bg-(--bg-surface) border border-(--border-default) rounded-xl overflow-hidden">
-              <div className="flex items-center gap-4 px-4 py-2.5 border-b border-(--border-default) bg-(--bg-elevated)">
+            <div className="bg-[#111113] border border-white/10 rounded-xl overflow-hidden">
+              <div className="flex items-center gap-4 px-4 py-2.5 border-b border-white/10 bg-[#18181b]">
                 <span className="w-8 shrink-0" />
-                <span className="flex-1 text-xs font-medium text-(--text-muted) uppercase tracking-wider">User</span>
-                <span className="text-xs font-medium text-(--text-muted) uppercase tracking-wider w-36">Access Level</span>
-                <span className="text-xs font-medium text-(--text-muted) uppercase tracking-wider hidden md:block w-28">Granted</span>
+                <span className="flex-1 text-xs font-medium text-zinc-500 uppercase tracking-wider">User</span>
+                <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider w-36">Access Level</span>
+                <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider hidden md:block w-28">Granted</span>
                 <span className="w-16 shrink-0" />
               </div>
 
               {usersLoading ? (
                 <div className="p-4 space-y-3">
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-14 rounded-lg bg-(--bg-elevated)" />
+                    <Skeleton key={i} className="h-14 rounded-lg bg-white/5" />
                   ))}
                 </div>
               ) : users.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-2">
-                  <UserCheck className="w-8 h-8 text-(--text-muted)" />
-                  <p className="text-sm text-(--text-muted)">No users have been granted access yet</p>
+                  <UserCheck className="w-8 h-8 text-zinc-600" />
+                  <p className="text-sm text-zinc-600">No users have been granted access yet</p>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="mt-2 border-(--border-strong) text-(--text-secondary) hover:text-(--text-primary)"
+                    className="mt-2 border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
                     onClick={() => setShowGrant(true)}
                   >
                     <Plus className="w-3.5 h-3.5 mr-1" />
@@ -654,7 +636,6 @@ export default function AccessControlPage() {
         )}
       </div>
 
-      {/* ── Dialogs — always mounted, controlled by open prop ── */}
       {showGrant && activeConnectionId && (
         <GrantDialog
           connectionId={activeConnectionId}

@@ -35,15 +35,15 @@ function ConnectionItem({
       className={cn(
         'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors group',
         active
-          ? 'bg-violet-600/15 border border-violet-500/30'
-          : 'hover:bg-(--bg-elevated) border border-transparent'
+          ? 'bg-sky-500/10 border border-sky-500/30'
+          : 'hover:bg-white/5 border border-transparent'
       )}
     >
-      <span className={cn('w-2 h-2 rounded-full shrink-0', PROVIDER_COLORS[conn.databaseProvider] ?? 'bg-gray-500')} />
+      <span className={cn('w-2 h-2 rounded-full shrink-0', PROVIDER_COLORS[conn.databaseProvider] ?? 'bg-zinc-500')} />
 
       <div className="flex-1 min-w-0">
-        <p className={cn('text-sm truncate', active ? 'text-violet-300' : 'text-(--text-primary)')}>{conn.connectionName}</p>
-        <p className="text-xs text-(--text-muted)">{conn.databaseProvider}</p>
+        <p className={cn('text-sm truncate', active ? 'text-sky-300' : 'text-zinc-200')}>{conn.connectionName}</p>
+        <p className="text-xs text-zinc-600">{conn.databaseProvider}</p>
       </div>
 
       <Tooltip>
@@ -59,7 +59,7 @@ function ConnectionItem({
         <TooltipContent>{conn.isHealthy ? 'Healthy' : 'Unhealthy'}</TooltipContent>
       </Tooltip>
 
-      {active && <ChevronRight className="w-3 h-3 text-violet-400 shrink-0" />}
+      {active && <ChevronRight className="w-3 h-3 text-sky-400 shrink-0" />}
     </motion.button>
   )
 }
@@ -84,15 +84,15 @@ export function ConnectionSidebar() {
 
   return (
     <>
-      <aside className="w-56 shrink-0 flex flex-col border-r border-(--border-default) bg-(--bg-surface)">
-        <div className="flex items-center justify-between px-3 py-3 border-b border-(--border-default)">
-          <span className="text-xs font-medium text-(--text-muted) uppercase tracking-wider">Connections</span>
+      <aside className="flex flex-col h-full w-full bg-[#111113]">
+        <div className="flex items-center justify-between px-3 py-3 border-b border-white/10">
+          <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Connections</span>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="w-6 h-6 text-(--text-muted) hover:text-violet-400"
+                className="w-6 h-6 text-zinc-500 hover:text-sky-400 hover:bg-sky-500/10"
                 onClick={() => navigate('/connections/new')}
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -106,14 +106,14 @@ export function ConnectionSidebar() {
           {isLoading ? (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-10 w-full rounded-lg bg-(--bg-elevated)" />
+                <Skeleton key={i} className="h-10 w-full rounded-lg bg-white/5" />
               ))}
             </div>
           ) : connections.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Wifi className="w-8 h-8 text-(--text-muted) mb-2" />
-              <p className="text-xs text-(--text-muted)">No connections yet</p>
-              <Button variant="link" size="sm" className="text-violet-400 text-xs mt-1 h-auto p-0" onClick={() => navigate('/connections/new')}>
+              <Wifi className="w-8 h-8 text-zinc-600 mb-2" />
+              <p className="text-xs text-zinc-600">No connections yet</p>
+              <Button variant="link" size="sm" className="text-sky-400 text-xs mt-1 h-auto p-0" onClick={() => navigate('/connections/new')}>
                 Add one
               </Button>
             </div>
@@ -131,20 +131,19 @@ export function ConnectionSidebar() {
           )}
         </div>
 
-        <div className="px-3 py-2 border-t border-(--border-default)">
+        <div className="px-3 py-2 border-t border-white/10">
           {isLoading ? (
-            <div className="flex items-center gap-1.5 text-xs text-(--text-muted)">
+            <div className="flex items-center gap-1.5 text-xs text-zinc-600">
               <Loader2 className="w-3 h-3 animate-spin" />
               <span>Loading...</span>
             </div>
           ) : (
-            <p className="text-xs text-(--text-muted)">
+            <p className="text-xs text-zinc-600">
               {connections.length} connection{connections.length !== 1 ? 's' : ''}
             </p>
           )}
         </div>
       </aside>
-
     </>
   )
 }

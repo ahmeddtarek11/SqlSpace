@@ -25,7 +25,15 @@ export interface AuthTokensResult {
 }
 
 // ── Connections ───────────────────────────────────────────────
-export type DBProvider = 'SqlServer' | 'PostgreSql' | 'MySql'
+export type DBProvider =
+  | 'SqlServer'
+  | 'PostgreSql'
+  | 'MySql'
+  | 'MariaDb'
+  | 'CockroachDb'
+  | 'Supabase'
+  | 'PlanetScale'
+  | 'Redshift'
 export type ConnectionInputMode = 'IndividualFields' | 'RawConnectionString'
 
 export interface Connection {
@@ -106,6 +114,24 @@ export interface QueryHistoryDto {
   executionTimeMs: number | null
   executedAt: string
   connectionName: string | null
+}
+
+export interface QueryHistoryDetailDto {
+  queryId: string
+  userId: string
+  userEmail: string
+  connectionId: string
+  connectionName: string
+  userPrompt: string
+  generatedSql: string
+  llmResponse: string | null
+  status: 'Success' | 'Failed' | 'InsufficientPermissions' | 'ValidationFailed' | 'LlmError' | 'ExecutionFailed' | 'Timeout'
+  errorMessage: string | null
+  resultsJson: string | null
+  rowsReturned: number | null
+  executionTimeMs: number | null
+  executedAt: string
+  wasAdminAtExecution: boolean
 }
 
 export interface PaginatedQueryHistory {

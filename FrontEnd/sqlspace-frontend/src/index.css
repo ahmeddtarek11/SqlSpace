@@ -6,32 +6,32 @@
 
 @import "tailwindcss";
 
-/* ── NeonGrid Design Tokens ─────────────────────────────────── */
+/* ── QueryMind / Replit Design Tokens ───────────────────────── */
 :root {
   /* Surfaces */
-  --bg-base:      #0a0a0f;
-  --bg-surface:   #10101a;
-  --bg-elevated:  #16162a;
-  --bg-overlay:   #1c1c30;
+  --bg-base:      #080809;
+  --bg-surface:   #111113;
+  --bg-elevated:  #18181b;
+  --bg-overlay:   #1c1c2e;
 
   /* Borders */
-  --border-subtle:  rgba(255,255,255,0.06);
+  --border-subtle:  rgba(255,255,255,0.07);
   --border-default: rgba(255,255,255,0.10);
-  --border-strong:  rgba(255,255,255,0.18);
+  --border-strong:  rgba(255,255,255,0.12);
 
   /* Text */
-  --text-primary:   #f0f0ff;
-  --text-secondary: #9898b8;
-  --text-muted:     #5a5a7a;
+  --text-primary:   #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted:     #52525b;
 
-  /* Accent — violet / neon */
-  --accent:         #7c3aed;
-  --accent-light:   #a78bfa;
-  --accent-glow:    rgba(124, 58, 237, 0.35);
+  /* Accent — sky */
+  --accent:         #0ea5e9;
+  --accent-light:   #38bdf8;
+  --accent-glow:    rgba(14, 165, 233, 0.3);
 
   /* Cyan secondary accent */
-  --cyan:           #06b6d4;
-  --cyan-glow:      rgba(6, 182, 212, 0.25);
+  --cyan:           #22d3ee;
+  --cyan-glow:      rgba(34, 211, 238, 0.2);
 
   /* Status */
   --success:  #22c55e;
@@ -85,7 +85,7 @@ body {
   background-image:
     linear-gradient(var(--grid-color) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-size: 50px 50px;
 }
 
 /* ── Glow utilities ─────────────────────────────────────────── */
@@ -120,8 +120,8 @@ body {
 
 /* ── React Grid Layout overrides ───────────────────────────── */
 .react-grid-item.react-grid-placeholder {
-  background: rgba(124, 58, 237, 0.15) !important;
-  border: 1px dashed rgba(124, 58, 237, 0.4) !important;
+  background: rgba(14, 165, 233, 0.15) !important;
+  border: 1px dashed rgba(14, 165, 233, 0.4) !important;
   border-radius: 0.75rem;
   opacity: 1 !important;
 }
@@ -141,45 +141,93 @@ body {
   bottom: 3px;
   width: 7px;
   height: 7px;
-  border-right: 2px solid rgba(255, 255, 255, 0.18);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.18);
+  border-right: 2px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.12);
   border-radius: 1px;
   transition: border-color 0.15s;
 }
 .react-grid-item:hover .react-resizable-handle-se::after {
-  border-color: rgba(167, 139, 250, 0.6);
+  border-color: rgba(14, 165, 233, 0.6);
 }
 
+/* ── Light mode: remap hardcoded dark Tailwind classes ──────── */
+
+/* Backgrounds */
+.light .bg-\[\#080809\]  { background-color: var(--bg-base)     !important; }
+.light .bg-\[\#0d0d0f\]  { background-color: var(--bg-elevated) !important; }
+.light .bg-\[\#111113\]  { background-color: var(--bg-surface)  !important; }
+.light .bg-\[\#18181b\]  { background-color: var(--bg-elevated) !important; }
+.light .bg-\[\#1c1c2e\]  { background-color: var(--bg-overlay)  !important; }
+
+/* White-opacity backgrounds → dark-opacity equivalents */
+.light .bg-white\/5        { background-color: rgba(0,0,0,0.03) !important; }
+.light .bg-white\/10       { background-color: rgba(0,0,0,0.06) !important; }
+
+/* White-opacity borders → dark-opacity equivalents */
+.light .border-white\/5    { border-color: rgba(0,0,0,0.06) !important; }
+.light .border-white\/10   { border-color: rgba(0,0,0,0.10) !important; }
+.light .border-white\/20   { border-color: rgba(0,0,0,0.18) !important; }
+
+/* Hover white-opacity backgrounds */
+.light .hover\:bg-white\/5:hover  { background-color: rgba(0,0,0,0.04) !important; }
+.light .hover\:bg-white\/10:hover { background-color: rgba(0,0,0,0.08) !important; }
+.light .hover\:border-white\/20:hover { border-color: rgba(0,0,0,0.18) !important; }
+
+/* Text: near-white → dark in light mode */
+.light .text-white   { color: var(--text-primary)   !important; }
+.light .text-zinc-200 { color: var(--text-primary)   !important; }
+.light .text-zinc-300 { color: var(--text-secondary) !important; }
+
+/* Main content text → dark in light mode */
+.light main .text-zinc-400  { color: var(--text-secondary) !important; }
+.light main .text-zinc-500  { color: var(--text-muted)     !important; }
+.light main .hover\:text-zinc-200:hover { color: var(--text-primary) !important; }
+
+/* Sidebar text → dark in light mode */
+.light aside .text-zinc-400  { color: var(--text-secondary) !important; }
+.light aside .text-zinc-500  { color: var(--text-muted)     !important; }
+.light aside .hover\:text-zinc-100:hover { color: var(--text-primary) !important; }
+.light aside .hover\:text-zinc-200:hover { color: var(--text-primary) !important; }
+
+/* Keep white text on colored opaque backgrounds (buttons, badges) */
+.light .bg-sky-600.text-white,
+.light .bg-sky-500.text-white,
+.light .bg-red-500.text-white,
+.light .bg-red-600.text-white,
+.light .bg-green-500.text-white,
+.light .bg-amber-600.text-white,
+.light .bg-amber-500.text-white { color: #ffffff !important; }
+
 /* ── Scrollbar ──────────────────────────────────────────────── */
-::-webkit-scrollbar        { width: 6px; height: 6px; }
-::-webkit-scrollbar-track  { background: var(--bg-surface); }
-::-webkit-scrollbar-thumb  { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar        { width: 8px; height: 8px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: var(--bg-elevated); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
 /* ── Tailwind CSS vars mapping (for shadcn/ui compatibility) ── */
 @layer base {
   :root {
     --background: 240 10% 4%;
-    --foreground: 240 100% 97%;
-    --card: 240 14% 7%;
-    --card-foreground: 240 100% 97%;
-    --popover: 240 14% 9%;
-    --popover-foreground: 240 100% 97%;
-    --primary: 263 70% 50%;
+    --foreground: 0 0% 98%;
+    --card: 240 5% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 5% 9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 199 89% 48%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 10% 12%;
-    --secondary-foreground: 240 100% 97%;
-    --muted: 240 10% 14%;
-    --muted-foreground: 240 15% 55%;
-    --accent: 263 70% 50%;
+    --secondary: 240 4% 11%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 11%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 199 89% 48%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 240 10% 14%;
-    --input: 240 10% 14%;
-    --ring: 263 70% 50%;
+    --border: 240 4% 11%;
+    --input: 240 4% 11%;
+    --ring: 199 89% 48%;
     --radius: 0.5rem;
-    --chart-1: 263 70% 50%;
+    --chart-1: 199 89% 48%;
     --chart-2: 187 85% 43%;
     --chart-3: 142 71% 45%;
     --chart-4: 45 93% 58%;
@@ -192,18 +240,18 @@ body {
     --card-foreground: 240 10% 4%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 4%;
-    --primary: 263 70% 50%;
+    --primary: 199 89% 48%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 5% 94%;
     --secondary-foreground: 240 10% 10%;
     --muted: 240 5% 94%;
     --muted-foreground: 240 4% 46%;
-    --accent: 263 70% 50%;
+    --accent: 199 89% 48%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 240 6% 90%;
     --input: 240 6% 90%;
-    --ring: 263 70% 50%;
+    --ring: 199 89% 48%;
   }
 }

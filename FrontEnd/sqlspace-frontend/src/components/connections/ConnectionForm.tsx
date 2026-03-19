@@ -17,16 +17,24 @@ import { Label } from '@/components/ui/label'
 import { connectionsApi } from '@/api/connections'
 import { useConnectionStore } from '@/stores/connection-store'
 import type { DBProvider } from '@/types'
+import { DB_ICONS } from '@/components/icons/DbIcons'
 
 const PROVIDERS: { value: DBProvider; label: string; defaultPort: number }[] = [
-  { value: 'PostgreSql', label: 'PostgreSQL', defaultPort: 5432 },
-  { value: 'MySql', label: 'MySQL', defaultPort: 3306 },
-  { value: 'SqlServer', label: 'SQL Server', defaultPort: 1433 },
+  { value: 'PostgreSql',  label: 'PostgreSQL',      defaultPort: 5432  },
+  { value: 'MySql',       label: 'MySQL',            defaultPort: 3306  },
+  { value: 'SqlServer',   label: 'SQL Server',       defaultPort: 1433  },
+  { value: 'MariaDb',     label: 'MariaDB',          defaultPort: 3306  },
+  { value: 'CockroachDb', label: 'CockroachDB',      defaultPort: 26257 },
+  { value: 'Supabase',    label: 'Supabase',         defaultPort: 5432  },
+  { value: 'PlanetScale', label: 'PlanetScale',      defaultPort: 3306  },
+  { value: 'Redshift',    label: 'Amazon Redshift',  defaultPort: 5439  },
 ]
+
+const ALL_PROVIDERS = ['PostgreSql', 'MySql', 'SqlServer', 'MariaDb', 'CockroachDb', 'Supabase', 'PlanetScale', 'Redshift'] as const
 
 const schema = z.object({
   connectionName: z.string().min(1, 'Name required'),
-  databaseProvider: z.enum(['PostgreSql', 'MySql', 'SqlServer']),
+  databaseProvider: z.enum(ALL_PROVIDERS),
   host: z.string().optional(),
   port: z.coerce.number().optional(),
   databaseName: z.string().min(1, 'Database required'),
@@ -34,7 +42,8 @@ const schema = z.object({
   password: z.string().optional(),
 })
 
-type FormData = z.infer<typeof schema>
+type FormInput  = z.input<typeof schema>   // raw field values  (port: unknown — coerce accepts anything)
+type FormData   = z.output<typeof schema>  // post-transform values (port: number | undefined)
 type Step = 'provider' | 'fields' | 'test'
 
 interface Props {
@@ -49,19 +58,19 @@ export function ConnectionForm({ open, onOpenChange }: Props) {
   const qc = useQueryClient()
   const { upsertConnection, setActiveConnection } = useConnectionStore()
 
+  const [selectedProvider, setSelectedProvider] = useState<DBProvider>('PostgreSql')
+
   const {
     register,
     handleSubmit,
     setValue,
-    watch,
+    getValues,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({
+  } = useForm<FormInput, unknown, FormData>({
     resolver: zodResolver(schema),
     defaultValues: { databaseProvider: 'PostgreSql', port: 5432 },
   })
-
-  const provider = watch('databaseProvider')
 
   const handleClose = () => {
     reset()
@@ -73,13 +82,13 @@ export function ConnectionForm({ open, onOpenChange }: Props) {
 
   const handleTest = async () => {
     setTestStatus('testing')
-    const values = watch()
+    const values = getValues()
     try {
       const res = await connectionsApi.test({
         databaseProvider: values.databaseProvider,
         inputMode: 'IndividualFields',
         host: values.host,
-        port: values.port,
+        port: values.port as number | undefined,
         databaseName: values.databaseName,
         username: values.username,
         password: values.password,
@@ -124,7 +133,7 @@ export function ConnectionForm({ open, onOpenChange }: Props) {
           <div className="flex items-center gap-2 mt-2">
             {(['provider', 'fields', 'test'] as Step[]).map((s, i) => (
               <div key={s} className="flex items-center gap-2">
-                <span className={`text-xs px-2 py-0.5 rounded-full ${step === s ? 'bg-violet-600/30 text-violet-300 border border-violet-500/40' : 'text-(--text-muted)'}`}>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${step === s ? 'bg-sky-600/30 text-sky-300 border border-sky-500/40' : 'text-(--text-muted)'}`}>
                   {i + 1}. {s.charAt(0).toUpperCase() + s.slice(1)}
                 </span>
                 {i < 2 && <ChevronRight className="w-3 h-3 text-(--text-muted)" />}
@@ -137,19 +146,23 @@ export function ConnectionForm({ open, onOpenChange }: Props) {
           {/* Step 1: Provider */}
           {step === 'provider' && (
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-2">
-                {PROVIDERS.map((p) => (
-                  <button
-                    key={p.value}
-                    type="button"
-                    onClick={() => { setValue('databaseProvider', p.value); setValue('port', p.defaultPort) }}
-                    className={`p-3 rounded-lg border text-sm text-left transition-colors ${provider === p.value ? 'border-violet-500/60 bg-violet-600/15 text-violet-300' : 'border-(--border-default) bg-(--bg-surface) text-(--text-secondary) hover:border-(--border-strong)'}`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {PROVIDERS.map((p) => {
+                  const Icon = DB_ICONS[p.value]
+                  return (
+                    <button
+                      key={p.value}
+                      type="button"
+                      onClick={() => { setSelectedProvider(p.value); setValue('databaseProvider', p.value); setValue('port', p.defaultPort) }}
+                      className={`p-3 rounded-lg border text-sm text-left transition-colors ${selectedProvider === p.value ? 'border-sky-500/60 bg-sky-600/15 text-sky-300' : 'border-(--border-default) bg-(--bg-surface) text-(--text-secondary) hover:border-(--border-strong)'}`}
+                    >
+                      <Icon size={22} className="mb-1.5" />
+                      <div className="text-xs font-medium leading-tight">{p.label}</div>
+                    </button>
+                  )
+                })}
               </div>
-              <Button type="button" className="w-full bg-violet-600 hover:bg-violet-500" onClick={() => setStep('fields')}>
+              <Button type="button" className="w-full bg-sky-600 hover:bg-sky-500" onClick={() => setStep('fields')}>
                 Continue
               </Button>
             </div>
@@ -163,7 +176,7 @@ export function ConnectionForm({ open, onOpenChange }: Props) {
                 <Input placeholder="My Database" className="bg-(--bg-surface) border-(--border-default) text-(--text-primary)" {...register('connectionName')} />
                 {errors.connectionName && <p className="text-xs text-red-400">{errors.connectionName.message}</p>}
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div className="col-span-2 space-y-1">
                   <Label className="text-(--text-secondary) text-sm">Host</Label>
                   <Input placeholder="localhost" className="bg-(--bg-surface) border-(--border-default) text-(--text-primary)" {...register('host')} />
@@ -188,7 +201,7 @@ export function ConnectionForm({ open, onOpenChange }: Props) {
               </div>
               <div className="flex gap-2">
                 <Button type="button" variant="ghost" className="flex-1" onClick={() => setStep('provider')}>Back</Button>
-                <Button type="button" className="flex-1 bg-violet-600 hover:bg-violet-500" onClick={() => setStep('test')}>Continue</Button>
+                <Button type="button" className="flex-1 bg-sky-600 hover:bg-sky-500" onClick={() => setStep('test')}>Continue</Button>
               </div>
             </div>
           )}
@@ -208,7 +221,7 @@ export function ConnectionForm({ open, onOpenChange }: Props) {
               </div>
               <div className="flex gap-2">
                 <Button type="button" variant="ghost" className="flex-1" onClick={() => setStep('fields')}>Back</Button>
-                <Button type="submit" disabled={isSubmitting} className="flex-1 bg-violet-600 hover:bg-violet-500">
+                <Button type="submit" disabled={isSubmitting} className="flex-1 bg-sky-600 hover:bg-sky-500">
                   {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save connection'}
                 </Button>
               </div>

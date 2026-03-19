@@ -44,13 +44,13 @@ export function TopNav() {
   }
 
   return (
-    <header className="h-14 flex items-center gap-2 px-4 border-b border-(--border-default) bg-(--bg-surface) shrink-0">
+    <header className="h-14 flex items-center gap-2 px-4 border-b border-white/10 bg-[#111113] shrink-0">
       {/* Logo */}
       <Link to="/workspace" className="flex items-center gap-2 mr-4">
-        <div className="w-7 h-7 rounded-lg bg-violet-600/20 border border-violet-500/40 flex items-center justify-center">
-          <Database className="w-3.5 h-3.5 text-violet-400" />
+        <div className="w-7 h-7 rounded-lg bg-sky-500 flex items-center justify-center shadow-[0_0_12px_rgba(14,165,233,0.5)]">
+          <Database className="w-3.5 h-3.5 text-white" />
         </div>
-        <span className="font-semibold text-sm text-(--text-primary) hidden sm:block">SqlSpace</span>
+        <span className="font-semibold text-sm text-white hidden sm:block">SqlSpace</span>
       </Link>
 
       {/* Nav tabs */}
@@ -64,8 +64,8 @@ export function TopNav() {
               className={cn(
                 'relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors',
                 active
-                  ? 'text-(--text-primary) bg-(--bg-elevated)'
-                  : 'text-(--text-muted) hover:text-(--text-secondary) hover:bg-(--bg-elevated)'
+                  ? 'text-sky-400 bg-sky-500/10'
+                  : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5'
               )}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -73,7 +73,7 @@ export function TopNav() {
               {active && (
                 <motion.div
                   layoutId="nav-indicator"
-                  className="absolute inset-0 rounded-lg border border-violet-500/30 bg-violet-500/5"
+                  className="absolute inset-0 rounded-lg border border-sky-500/30 bg-sky-500/5"
                   transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
                 />
               )}
@@ -88,23 +88,23 @@ export function TopNav() {
           variant="ghost"
           size="icon"
           onClick={toggleTheme}
-          className="w-8 h-8 text-(--text-muted) hover:text-(--text-primary)"
+          className="w-8 h-8 text-zinc-400 hover:text-zinc-100 hover:bg-white/5"
         >
           {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 px-2 gap-2">
+            <Button variant="ghost" className="h-8 px-2 gap-2 hover:bg-white/5">
               <Avatar className="w-6 h-6">
-                <AvatarFallback className="bg-violet-600/30 text-violet-300 text-xs">
+                <AvatarFallback className="bg-sky-500/20 text-sky-300 text-xs border border-sky-500/30">
                   {user?.username?.[0]?.toUpperCase() ?? 'U'}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm text-(--text-secondary) hidden sm:block">{user?.username}</span>
+              <span className="text-sm text-zinc-400 hidden sm:block">{user?.username}</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-(--bg-elevated) border-(--border-default)">
+          <DropdownMenuContent align="end" className="w-48 bg-[#18181b] border-white/10">
             <DropdownMenuItem
               onClick={handleLogout}
               className="text-red-400 focus:text-red-400 flex items-center gap-2 cursor-pointer"

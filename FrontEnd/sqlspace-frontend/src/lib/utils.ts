@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatMs(ms: number): string {
-  if (ms < 1000) return `${ms}ms`
+  if (ms < 1000) return `${parseFloat(ms.toFixed(2))}ms`
   return `${(ms / 1000).toFixed(2)}s`
 }
 
