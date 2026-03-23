@@ -20,7 +20,7 @@ import { connectionsApi } from '@/api/connections'
 import { useConnectionStore } from '@/stores/connection-store'
 import { cn } from '@/lib/utils'
 import type { DBProvider } from '@/types'
-import { DB_ICONS } from '@/components/icons/DbIcons'
+import { DB_ICONS } from '@/components/icons/dbIconMap'
 
 // ── Providers ─────────────────────────────────────────────────
 

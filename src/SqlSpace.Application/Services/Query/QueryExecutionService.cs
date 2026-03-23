@@ -59,6 +59,9 @@ public class QueryExecutionService(
                 new Error("query_execution.invalid_prompt", "UserPrompt is required.", nameof(userPrompt)));
         }
 
+        _logger.LogInformation("ExecutePrompt started. ConnectionId: {ConnectionId}, UserId: {UserId}, Prompt: {Prompt}",
+            connectionId, userId, userPrompt.Length > 100 ? userPrompt[..100] : userPrompt);
+
         try
         {
             var connection = await _dbcontext.ConnectedDatabases
@@ -69,11 +72,13 @@ public class QueryExecutionService(
 
             if (connection is null)
             {
+                _logger.LogWarning("ExecutePrompt failed: connection not found. ConnectionId: {ConnectionId}", connectionId);
                 return Result<QueryExecutionResult>.Failure(
                     new Error("query_execution.connection_not_found", "Connection not found.", nameof(connectionId)));
             }
 
             var isAdmin = string.Equals(connection.DbAdminId, userId, StringComparison.Ordinal);
+            _logger.LogDebug("ExecutePrompt connection found. ConnectionId: {ConnectionId}, IsAdmin: {IsAdmin}", connectionId, isAdmin);
 
             var accessResult = await _accessControlService.HasAccessToConnectionAsync(
                 connectionId,
@@ -82,30 +87,29 @@ public class QueryExecutionService(
 
             if (accessResult.IsFailure)
             {
+                _logger.LogWarning("ExecutePrompt access check failed. ConnectionId: {ConnectionId}, UserId: {UserId}", connectionId, userId);
                 return Result<QueryExecutionResult>.Failure(accessResult.Errors);
             }
 
             if (accessResult.Value != true)
             {
+                _logger.LogWarning("ExecutePrompt denied: user has no access. ConnectionId: {ConnectionId}, UserId: {UserId}", connectionId, userId);
                 return Result<QueryExecutionResult>.Failure(
                     new Error("query_execution.forbidden", "User does not have access to this connection.", nameof(userId)));
             }
 
-
-        var schemaContext = await _schemaContextService.GetFilteredSchemaForPromptAsync(
-                connectionId,
-                userId,
-                userProvidedSchemaOverride: null,
-                cancellationToken);
+            var schemaContext = await _schemaContextService.GetFilteredSchemaForPromptAsync(
+                    connectionId,
+                    userId,
+                    userProvidedSchemaOverride: null,
+                    cancellationToken);
 
             if (string.IsNullOrWhiteSpace(schemaContext))
             {
+                _logger.LogWarning("ExecutePrompt failed: schema unavailable. ConnectionId: {ConnectionId}, UserId: {UserId}", connectionId, userId);
                 return Result<QueryExecutionResult>.Failure(
                     new Error("query_execution.schema_unavailable", "Schema context is unavailable for this connection."));
             }
-
-
-
 
             var accessibleResult = await _accessControlService.GetAccessibleTableNamesAsync(
                 connectionId,
@@ -141,11 +145,12 @@ public class QueryExecutionService(
             }
             if (accessibleTables.Count == 0)
             {
+                _logger.LogWarning("ExecutePrompt failed: no accessible tables. ConnectionId: {ConnectionId}, UserId: {UserId}", connectionId, userId);
                 return Result<QueryExecutionResult>.Failure(
                     new Error("query_execution.no_accessible_tables", "No accessible tables found for the user."));
             }
 
-           
+            _logger.LogDebug("ExecutePrompt sending to LLM. ConnectionId: {ConnectionId}, AccessibleTables: {TableCount}", connectionId, accessibleTables.Count);
 
             var restrictedSnapshot = await LoadRestrictedTablesSnapshotAsync(
                 connectionId,
@@ -164,6 +169,7 @@ public class QueryExecutionService(
             var llmResult = await _textToSqlClient.SendSqlGenerationRequestAsync(llmRequest, cancellationToken);
             if (llmResult.IsFailure)
             {
+                _logger.LogWarning("ExecutePrompt LLM failed. ConnectionId: {ConnectionId}, UserId: {UserId}, Error: {Error}", connectionId, userId, llmResult.Errors.FirstOrDefault()?.Message);
                 var history = await SaveHistoryAsync(
                     connection,
                     userId,
@@ -184,6 +190,7 @@ public class QueryExecutionService(
             var generatedSql = llmResult.Value?.GeneratedSql ?? string.Empty;
             if (string.IsNullOrWhiteSpace(generatedSql))
             {
+                _logger.LogWarning("ExecutePrompt LLM returned empty SQL. ConnectionId: {ConnectionId}, UserId: {UserId}", connectionId, userId);
                 var history = await SaveHistoryAsync(
                     connection,
                     userId,
@@ -201,6 +208,8 @@ public class QueryExecutionService(
                 return BuildResult(history);
             }
 
+            _logger.LogDebug("ExecutePrompt SQL generated, validating. ConnectionId: {ConnectionId}", connectionId);
+
             var validation = await _sqlValidator.ValidateQueryAsync(
                 generatedSql,
                 accessibleTables,
@@ -211,6 +220,8 @@ public class QueryExecutionService(
                 var status = validation.UnauthorizedTables.Count > 0
                     ? QueryStatus.InsufficientPermissions
                     : QueryStatus.ValidationFailed;
+
+                _logger.LogWarning("ExecutePrompt SQL validation failed. ConnectionId: {ConnectionId}, Status: {Status}, Error: {Error}", connectionId, status, validation.ErrorMessage);
 
                 var history = await SaveHistoryAsync(
                     connection,
@@ -229,12 +240,16 @@ public class QueryExecutionService(
                 return BuildResult(history);
             }
 
+            _logger.LogDebug("ExecutePrompt SQL validated, executing against DB. ConnectionId: {ConnectionId}", connectionId);
+
             var dbResult = await _databaseExecutor.ExecuteQueryAsync(connection, generatedSql, cancellationToken);
             if (!dbResult.Success)
             {
                 var status = dbResult.ErrorMessage?.Contains("cancel", StringComparison.OrdinalIgnoreCase) == true
                     ? QueryStatus.Timeout
                     : QueryStatus.ExecutionFailed;
+
+                _logger.LogWarning("ExecutePrompt DB execution failed. ConnectionId: {ConnectionId}, Status: {Status}, Error: {Error}", connectionId, status, dbResult.ErrorMessage);
 
                 var history = await SaveHistoryAsync(
                     connection,
@@ -252,6 +267,9 @@ public class QueryExecutionService(
 
                 return BuildResult(history);
             }
+
+            _logger.LogInformation("ExecutePrompt succeeded. ConnectionId: {ConnectionId}, UserId: {UserId}, RowsReturned: {Rows}, ExecutionTimeMs: {Ms}",
+                connectionId, userId, dbResult.RowsReturned, dbResult.ExecutionTimeMs);
 
             var successHistory = await SaveHistoryAsync(
                 connection,

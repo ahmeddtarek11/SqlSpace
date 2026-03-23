@@ -16,14 +16,14 @@ const DB_ICON_PATHS: Record<DBProvider, string> = {
   Redshift:    '/db-icons/redshift.svg',
 }
 
-function DbIcon({ provider, size = 24, className }: { provider: DBProvider } & IconProps) {
+export function DbIcon({ provider, size = 24, className }: { provider: DBProvider } & IconProps) {
   return (
     <img
       src={DB_ICON_PATHS[provider]}
       alt={provider}
       width={size}
       height={size}
-      className={className}
+      className={`object-contain ${className ?? ''}`}
       draggable={false}
     />
   )
@@ -191,14 +191,3 @@ export function RedshiftIcon({ className, size = 24 }: IconProps) {
   )
 }
 
-// ── Map ────────────────────────────────────────────────────────
-export const DB_ICONS: Record<DBProvider, React.FC<IconProps>> = {
-  PostgreSql:  (props) => <DbIcon provider="PostgreSql"  {...props} />,
-  MySql:       (props) => <DbIcon provider="MySql"       {...props} />,
-  SqlServer:   (props) => <DbIcon provider="SqlServer"   {...props} />,
-  MariaDb:     (props) => <DbIcon provider="MariaDb"     {...props} />,
-  CockroachDb: (props) => <DbIcon provider="CockroachDb" {...props} />,
-  Supabase:    (props) => <DbIcon provider="Supabase"    {...props} />,
-  PlanetScale: (props) => <DbIcon provider="PlanetScale" {...props} />,
-  Redshift:    (props) => <DbIcon provider="Redshift"    {...props} />,
-}

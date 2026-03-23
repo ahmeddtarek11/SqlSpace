@@ -65,13 +65,14 @@ public sealed class AuthProvider : IAuthProvider
         }
 
         var refreshToken = refreshTokenResult.Value!;
+        _logger.LogInformation("Login succeeded. UserId: {UserId}", user.Id);
         return Result<AuthTokensResult>.Success(new AuthTokensResult
         {
             AccessToken = accessTokenResult.Value!,
             RefreshToken = refreshToken.Token,
             ExpiresAt = refreshToken.ExpiresOnUtc,
             userId = user.Id
-            
+
         });
     }
 
@@ -159,10 +160,11 @@ public sealed class AuthProvider : IAuthProvider
         var identityResult = await _userManager.CreateAsync(user, request.Password);
         if (!identityResult.Succeeded)
         {
-            _logger.LogInformation("Registration failed for email {Email}.", request.Email);
+            _logger.LogWarning("Registration failed for email {Email}. Errors: {Errors}", request.Email, string.Join(", ", identityResult.Errors.Select(e => e.Description)));
             return Result<RegisterResult>.Failure(MapIdentityErrors(identityResult));
         }
 
+        _logger.LogInformation("Registration succeeded. UserId: {UserId}, Email: {Email}", user.Id, user.Email);
         return Result<RegisterResult>.Success(new RegisterResult
         {
             UserId = user.Id

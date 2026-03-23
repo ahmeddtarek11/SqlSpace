@@ -109,6 +109,9 @@ public sealed class TextToSqlClient(
             RoleSchema = roleSchema
         };
 
+        _logger.LogInformation("Sending SQL generation request to LLM. Endpoint: {Endpoint}, DbType: {DbType}, Prompt: {Prompt}",
+            endpoint, dbType, request.UserPrompt.Length > 100 ? request.UserPrompt[..100] : request.UserPrompt);
+
         try
         {
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, endpoint)
@@ -122,10 +125,13 @@ public sealed class TextToSqlClient(
             }
 
             using var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
+            _logger.LogDebug("LLM API responded. StatusCode: {StatusCode}", response.StatusCode);
+
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
 
             if (string.IsNullOrWhiteSpace(body))
             {
+                _logger.LogWarning("LLM API returned an empty response body. StatusCode: {StatusCode}", response.StatusCode);
                 return Result<SqlGenerationResponse>.Failure(
                     new Error("llm.empty_response", "LLM API returned an empty response."));
             }
@@ -134,6 +140,7 @@ public sealed class TextToSqlClient(
 
             if (parsed == TextToSqlResponseKind.Success && !string.IsNullOrWhiteSpace(sql))
             {
+                _logger.LogInformation("LLM SQL generation succeeded. GeneratedSql length: {SqlLength}", sql.Length);
                 return new SqlGenerationResponse
                 {
                     Success = true,
@@ -155,10 +162,12 @@ public sealed class TextToSqlClient(
                     ? "LLM API returned an error."
                     : apiError.Message;
 
+                _logger.LogWarning("LLM API returned an error response. Code: {Code}, Message: {Message}", code, message);
                 return Result<SqlGenerationResponse>.Failure(
                     new Error(code, message, apiError.ErrorSubcode));
             }
 
+            _logger.LogWarning("LLM API response was not recognized. Body snippet: {Body}", body.Length > 200 ? body[..200] : body);
             return Result<SqlGenerationResponse>.Failure(
                 new Error("llm.unexpected_response", "LLM API response was not recognized."));
         }

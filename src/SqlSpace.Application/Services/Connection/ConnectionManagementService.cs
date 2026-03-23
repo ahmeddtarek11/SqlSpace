@@ -381,12 +381,20 @@ public class ConnectionManagementService(
 
    public async Task<Result<IReadOnlyList<ConnectionSummaryDto>>> GetUserConnectionsAsync(string userId,CancellationToken cancellationToken)
 {
+    _logger.LogDebug("GetUserConnections requested. UserId: {UserId}", userId);
+
     if (string.IsNullOrWhiteSpace(userId))
+    {
+        _logger.LogWarning("GetUserConnections failed validation: empty user id.");
         return ConnectionErrors.UserIdRequired();
+    }
 
     var user = await _userRepo.GetByIdAsync(userId, cancellationToken);
     if (user is null)
+    {
+        _logger.LogWarning("GetUserConnections failed: user not found. UserId: {UserId}", userId);
         return ConnectionErrors.InvalidUserId(userId);
+    }
 
     var rows = await _dbContext.ConnectedDatabases
         .AsNoTracking()
@@ -422,6 +430,7 @@ public class ConnectionManagementService(
         ConnectionSummary = x.IsAdmin ? ConnectionSummaryHelper(x.Connection) : string.Empty
     }).ToList();
 
+    _logger.LogDebug("GetUserConnections returned {Count} connections. UserId: {UserId}", result.Count, userId);
     return result;
 }
 

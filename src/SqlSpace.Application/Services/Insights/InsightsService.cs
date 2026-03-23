@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SqlSpace.Application.Abstractions.Access;
 using SqlSpace.Application.Abstractions.Data;
 using SqlSpace.Application.Abstractions.Insights;
@@ -14,7 +15,8 @@ namespace SqlSpace.Application.Services.Insights;
 public sealed class InsightsService(
     IApplicationDbContext dbContext,
     IAccessControlService accessControlService,
-    IUserRepository userRepository) : IInsightsService
+    IUserRepository userRepository,
+    ILogger<InsightsService> logger) : IInsightsService
 {
     private static readonly Regex FromJoinRegex = new(
         @"\b(?:FROM|JOIN)\s+(?<table>[A-Za-z0-9_\.\[\]""`]+)",
@@ -23,6 +25,7 @@ public sealed class InsightsService(
     private readonly IApplicationDbContext _dbContext = dbContext;
     private readonly IAccessControlService _accessControlService = accessControlService;
     private readonly IUserRepository _userRepository = userRepository;
+    private readonly ILogger<InsightsService> _logger = logger;
 
     public async Task<Result<ConnectionInsights>> GetUserInsightsAsync(
         Guid connectionId,
@@ -30,14 +33,18 @@ public sealed class InsightsService(
         InsightsQuery query,
         CancellationToken cancellationToken)
     {
+        _logger.LogInformation("GetUserInsights requested. ConnectionId: {ConnectionId}, UserId: {UserId}", connectionId, userId);
+
         if (connectionId == Guid.Empty)
         {
+            _logger.LogWarning("GetUserInsights failed validation: empty connection id. UserId: {UserId}", userId);
             return Result<ConnectionInsights>.Failure(
                 new Error("insights.invalid_connection_id", "ConnectionId is required.", nameof(connectionId)));
         }
 
         if (string.IsNullOrWhiteSpace(userId))
         {
+            _logger.LogWarning("GetUserInsights failed validation: empty user id. ConnectionId: {ConnectionId}", connectionId);
             return Result<ConnectionInsights>.Failure(
                 new Error("insights.invalid_user_id", "UserId is required.", nameof(userId)));
         }
@@ -49,15 +56,18 @@ public sealed class InsightsService(
 
         if (accessResult.IsFailure)
         {
+            _logger.LogWarning("GetUserInsights access check failed. ConnectionId: {ConnectionId}, UserId: {UserId}", connectionId, userId);
             return Result<ConnectionInsights>.Failure(accessResult.Errors);
         }
 
         if (accessResult.Value != true)
         {
+            _logger.LogWarning("GetUserInsights denied: user has no access. ConnectionId: {ConnectionId}, UserId: {UserId}", connectionId, userId);
             return Result<ConnectionInsights>.Failure(
                 new Error("insights.forbidden", "User does not have access to this connection.", nameof(userId)));
         }
 
+        _logger.LogDebug("GetUserInsights access verified. ConnectionId: {ConnectionId}, UserId: {UserId}", connectionId, userId);
         return await BuildInsightsAsync(connectionId, userId, isAdmin: false, query, cancellationToken);
     }
 
@@ -67,14 +77,18 @@ public sealed class InsightsService(
         InsightsQuery query,
         CancellationToken cancellationToken)
     {
+        _logger.LogInformation("GetAdminInsights requested. ConnectionId: {ConnectionId}, AdminUserId: {AdminUserId}", connectionId, adminUserId);
+
         if (connectionId == Guid.Empty)
         {
+            _logger.LogWarning("GetAdminInsights failed validation: empty connection id. AdminUserId: {AdminUserId}", adminUserId);
             return Result<ConnectionInsights>.Failure(
                 new Error("insights.invalid_connection_id", "ConnectionId is required.", nameof(connectionId)));
         }
 
         if (string.IsNullOrWhiteSpace(adminUserId))
         {
+            _logger.LogWarning("GetAdminInsights failed validation: empty admin user id. ConnectionId: {ConnectionId}", connectionId);
             return Result<ConnectionInsights>.Failure(
                 new Error("insights.invalid_user_id", "UserId is required.", nameof(adminUserId)));
         }
@@ -85,16 +99,19 @@ public sealed class InsightsService(
 
         if (connection is null)
         {
+            _logger.LogWarning("GetAdminInsights failed: connection not found. ConnectionId: {ConnectionId}", connectionId);
             return Result<ConnectionInsights>.Failure(
                 new Error("insights.connection_not_found", "Connection not found.", nameof(connectionId)));
         }
 
         if (!string.Equals(connection.DbAdminId, adminUserId, StringComparison.Ordinal))
         {
+            _logger.LogWarning("GetAdminInsights denied: user is not admin. ConnectionId: {ConnectionId}, AdminUserId: {AdminUserId}", connectionId, adminUserId);
             return Result<ConnectionInsights>.Failure(
                 new Error("insights.forbidden", "User is not authorized to view admin insights.", nameof(adminUserId)));
         }
 
+        _logger.LogDebug("GetAdminInsights access verified. ConnectionId: {ConnectionId}, AdminUserId: {AdminUserId}", connectionId, adminUserId);
         return await BuildInsightsAsync(connectionId, adminUserId, isAdmin: true, query, cancellationToken);
     }
 
@@ -111,6 +128,7 @@ public sealed class InsightsService(
 
         if (connection is null)
         {
+            _logger.LogWarning("BuildInsights failed: connection not found. ConnectionId: {ConnectionId}", connectionId);
             return Result<ConnectionInsights>.Failure(
                 new Error("insights.connection_not_found", "Connection not found.", nameof(connectionId)));
         }
@@ -120,6 +138,7 @@ public sealed class InsightsService(
 
         if (dateFrom > dateTo)
         {
+            _logger.LogWarning("BuildInsights failed: invalid date range. ConnectionId: {ConnectionId}, DateFrom: {DateFrom}, DateTo: {DateTo}", connectionId, dateFrom, dateTo);
             return Result<ConnectionInsights>.Failure(
                 new Error("insights.invalid_date_range", "dateFrom cannot be after dateTo.", nameof(query.DateFrom)));
         }
@@ -136,8 +155,11 @@ public sealed class InsightsService(
 
         var totalQueries = await baseQuery.CountAsync(cancellationToken);
 
+        _logger.LogDebug("BuildInsights query count: {TotalQueries}. ConnectionId: {ConnectionId}, UserId: {UserId}, IsAdmin: {IsAdmin}", totalQueries, connectionId, userId, isAdmin);
+
         if (totalQueries == 0)
         {
+            _logger.LogInformation("BuildInsights: no queries in range. ConnectionId: {ConnectionId}, UserId: {UserId}, DateFrom: {DateFrom}, DateTo: {DateTo}", connectionId, userId, dateFrom, dateTo);
             return new ConnectionInsights
             {
                 Summary = new InsightsSummary

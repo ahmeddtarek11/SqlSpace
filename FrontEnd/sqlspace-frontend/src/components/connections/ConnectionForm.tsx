@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label'
 import { connectionsApi } from '@/api/connections'
 import { useConnectionStore } from '@/stores/connection-store'
 import type { DBProvider } from '@/types'
-import { DB_ICONS } from '@/components/icons/DbIcons'
+import { DB_ICONS } from '@/components/icons/dbIconMap'
 
 const PROVIDERS: { value: DBProvider; label: string; defaultPort: number }[] = [
   { value: 'PostgreSql',  label: 'PostgreSQL',      defaultPort: 5432  },

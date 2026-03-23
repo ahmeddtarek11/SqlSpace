@@ -3,13 +3,14 @@ using SqlSpace.Api;
 using SqlSpace.Application;
 using SqlSpace.Infrastructure;
 using Microsoft.OpenApi;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// builder.Host.UseSerilog((context, loggerConfig) =>
-// {
-//     loggerConfig.ReadFrom.Configuration(context.Configuration);
-// });
+builder.Host.UseSerilog((context, loggerConfig) =>
+{
+    loggerConfig.ReadFrom.Configuration(context.Configuration);
+});
 
 builder.Services.AddApplication().AddInfrastructure(builder.Configuration).AddApi();
 // 1. Add this before builder.Build()

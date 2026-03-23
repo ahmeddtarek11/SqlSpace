@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using SqlSpace.Application.Abstractions.Security;
 using SqlSpace.Application.DTOs.Query;
 
@@ -6,6 +7,13 @@ namespace SqlSpace.Application.Services.Query;
 
 public  class SqlValidatorService : ISqlValidator
 {
+    private readonly ILogger<SqlValidatorService> _logger;
+
+    public SqlValidatorService(ILogger<SqlValidatorService> logger)
+    {
+        _logger = logger;
+    }
+
     private static readonly Regex DangerousKeywordRegex = new(
         @"\b(INSERT|UPDATE|DELETE|DROP|TRUNCATE|ALTER|CREATE|EXEC(?:UTE)?|MERGE|GRANT|REVOKE|DENY)\b",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -27,6 +35,7 @@ public  class SqlValidatorService : ISqlValidator
 
         if (string.IsNullOrWhiteSpace(sql))
         {
+            _logger.LogWarning("SQL validation failed: empty SQL.");
             return Task.FromResult(new SqlValidationResult
             {
                 IsValid = false,
@@ -37,6 +46,7 @@ public  class SqlValidatorService : ISqlValidator
 
         if (!IsSelectOnly(sql) || ContainsDangerousKeywords(sql))
         {
+            _logger.LogWarning("SQL validation failed: non-SELECT or dangerous keywords detected. SQL: {Sql}", sql.Length > 200 ? sql[..200] : sql);
             return Task.FromResult(new SqlValidationResult
             {
                 IsValid = false,
@@ -56,6 +66,7 @@ public  class SqlValidatorService : ISqlValidator
 
             if (unauthorizedTables.Count > 0)
             {
+                _logger.LogWarning("SQL validation failed: unauthorized tables accessed. Tables: {UnauthorizedTables}", string.Join(", ", unauthorizedTables));
                 return Task.FromResult(new SqlValidationResult
                 {
                     IsValid = false,
@@ -67,6 +78,7 @@ public  class SqlValidatorService : ISqlValidator
             }
         }
 
+        _logger.LogDebug("SQL validation passed. TablesReferenced: {Tables}", string.Join(", ", tablesReferenced));
         return Task.FromResult(new SqlValidationResult
         {
             IsValid = true,
