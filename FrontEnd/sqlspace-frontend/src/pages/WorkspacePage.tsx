@@ -10,7 +10,7 @@ import { connectionsApi } from '@/api/connections'
 import { queriesApi } from '@/api/queries'
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import { useConnectionStore } from '@/stores/connection-store'
-import { AlertCircle, Table2, Code2, Sparkles, BarChart3, CheckCircle2, Clock, GripHorizontal, Wifi, WifiOff, ChevronDown, Check } from 'lucide-react'
+import { AlertCircle, Table2, Code2, Sparkles, BarChart3, CheckCircle2, Clock, GripHorizontal, Wifi, WifiOff, ChevronDown, ChevronUp, Check, MessageSquareText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatMs } from '@/lib/utils'
 
@@ -19,6 +19,27 @@ const MAX_TOP = 380
 const DEFAULT_TOP = 170
 
 type WorkspaceTab = 'results' | 'sql' | 'explanation' | 'visualize'
+
+function ExplanationBanner({ explanation }: { explanation: string }) {
+  const [collapsed, setCollapsed] = useState(false)
+  return (
+    <div className="shrink-0 rounded-xl border border-sky-500/20 bg-sky-500/5 mb-3">
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="w-full flex items-center gap-2 px-4 py-2.5 text-left"
+      >
+        <MessageSquareText className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+        <span className="text-xs font-medium text-sky-400 uppercase tracking-wider flex-1">AI Explanation</span>
+        {collapsed ? <ChevronDown className="w-3.5 h-3.5 text-sky-400" /> : <ChevronUp className="w-3.5 h-3.5 text-sky-400" />}
+      </button>
+      {!collapsed && (
+        <div className="px-4 pb-3">
+          <p className="text-sm text-zinc-300 leading-relaxed">{explanation}</p>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const TABS: { id: WorkspaceTab; label: string; icon: ComponentType<{ className?: string }> }[] = [
   { id: 'results',     label: 'Results',     icon: Table2 },
@@ -241,7 +262,10 @@ export default function WorkspacePage() {
                     <p className="text-sm text-red-300">{error}</p>
                   </div>
                 ) : result ? (
-                  <ResultsTable result={result} />
+                  <>
+                    {explanation && <ExplanationBanner explanation={explanation} />}
+                    <ResultsTable result={result} />
+                  </>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-center select-none">
                     <div className="w-16 h-16 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center mb-4">
@@ -259,8 +283,9 @@ export default function WorkspacePage() {
             {activeTab === 'sql' && (
               <div className="h-full min-h-0 overflow-hidden p-4 flex flex-col gap-3">
                 {generatedSQL ? (
-                  <div className="shrink-0">
+                  <div className="shrink-0 space-y-3">
                     <SQLPreview sql={generatedSQL} readOnly />
+                    {explanation && <ExplanationBanner explanation={explanation} />}
                   </div>
                 ) : (
                   <div className="shrink-0 rounded-xl border border-white/10 bg-[#111113] p-6 text-center">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Component, type ReactNode, type ErrorInfo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { BarChart3, RefreshCw, Sparkles, Send, Loader2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -41,7 +41,26 @@ function parseResultsJson(json: string | null): { rows: Record<string, unknown>[
   }
 }
 
-export default function AnalyticsPage() {
+class AnalyticsErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null }
+  static getDerivedStateFromError(error: Error) { return { error } }
+  componentDidCatch(error: Error, info: ErrorInfo) { console.error('AnalyticsPage crash:', error, info) }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="p-8 text-red-400">
+          <h2 className="text-lg font-bold mb-2">Analytics page crashed</h2>
+          <pre className="text-sm bg-red-500/10 p-4 rounded-lg overflow-auto whitespace-pre-wrap">
+            {this.state.error.message}{'\n'}{this.state.error.stack}
+          </pre>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
+function AnalyticsPageInner() {
   const queryClient = useQueryClient()
   const { activeConnectionId, setActiveConnection } = useConnectionStore()
 
@@ -331,5 +350,13 @@ export default function AnalyticsPage() {
         />
       )}
     </div>
+  )
+}
+
+export default function AnalyticsPage() {
+  return (
+    <AnalyticsErrorBoundary>
+      <AnalyticsPageInner />
+    </AnalyticsErrorBoundary>
   )
 }

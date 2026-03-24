@@ -136,7 +136,7 @@ public sealed class TextToSqlClient(
                     new Error("llm.empty_response", "LLM API returned an empty response."));
             }
 
-            var parsed = TextToSqlClientHelpers.ParseResponse(body, out var sql, out var apiError);
+            var parsed = TextToSqlClientHelpers.ParseResponse(body, out var sql, out var explanation, out var apiError);
 
             if (parsed == TextToSqlResponseKind.Success && !string.IsNullOrWhiteSpace(sql))
             {
@@ -145,7 +145,7 @@ public sealed class TextToSqlClient(
                 {
                     Success = true,
                     GeneratedSql = sql,
-                    Explanation = string.Empty,
+                    Explanation = explanation,
                     IsValidSql = true,
                     TablesReferenced = Array.Empty<string>(),
                     ErrorMessage = null

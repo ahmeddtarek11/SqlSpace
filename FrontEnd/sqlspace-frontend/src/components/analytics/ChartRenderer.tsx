@@ -14,7 +14,7 @@ import {
   type ChartData,
   type ChartOptions,
 } from 'chart.js'
-import { Bar, Line, Pie, Doughnut, Scatter, Radar, PolarArea } from 'react-chartjs-2'
+import { Bar, Line, Pie, Doughnut, Scatter, Bubble, Radar, PolarArea } from 'react-chartjs-2'
 import { TreemapController, TreemapElement } from 'chartjs-chart-treemap'
 import type { ChartType, ChartConfig } from '@/types'
 
@@ -128,7 +128,12 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
 
   const xKey = useMemo(() => resolveKey(resolved.xAxis, actualKeys), [resolved.xAxis, actualKeys])
   const yKeys = useMemo(
-    () => (resolved.yAxis ?? []).map((k) => resolveKey(k, actualKeys)),
+    () => {
+      const raw = resolved.yAxis
+      if (!raw) return []
+      const arr = Array.isArray(raw) ? raw : [raw]
+      return arr.map((k) => resolveKey(String(k), actualKeys))
+    },
     [resolved.yAxis, actualKeys],
   )
   const lKey = useMemo(
@@ -198,6 +203,38 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
       return <div className="h-full w-full"><Bar data={chartData} options={baseCartesianOptions('y') as ChartOptions<'bar'>} /></div>
     }
 
+    case 'grouped_bar': {
+      const chartData: ChartData<'bar'> = {
+        labels,
+        datasets: yKeys.map((key, i) => ({
+          label: key,
+          data: data.map((d) => Number(d[key]) || 0),
+          backgroundColor: colors[i % colors.length],
+          borderRadius: 4,
+          borderSkipped: false as const,
+        })),
+      }
+      return <div className="h-full w-full"><Bar data={chartData} options={baseCartesianOptions() as ChartOptions<'bar'>} /></div>
+    }
+
+    case 'floating_bar': {
+      const minK = resolveKey(resolved.minKey, actualKeys) || yKeys[0]
+      const maxK = resolveKey(resolved.maxKey, actualKeys) || yKeys[1] || yKeys[0]
+      const chartData: ChartData<'bar'> = {
+        labels,
+        datasets: [{
+          label: `${minK} – ${maxK}`,
+          data: data.map((d) => [Number(d[minK]) || 0, Number(d[maxK]) || 0] as [number, number]),
+          backgroundColor: colors[0] + '80',
+          borderColor: colors[0],
+          borderWidth: 1,
+          borderRadius: 4,
+          borderSkipped: false as const,
+        }],
+      }
+      return <div className="h-full w-full"><Bar data={chartData} options={baseCartesianOptions() as ChartOptions<'bar'>} /></div>
+    }
+
     case 'line': {
       const chartData: ChartData<'line'> = {
         labels,
@@ -231,6 +268,63 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
       return <div className="h-full w-full"><Line data={chartData} options={baseCartesianOptions() as ChartOptions<'line'>} /></div>
     }
 
+    case 'stepped_line': {
+      const chartData: ChartData<'line'> = {
+        labels,
+        datasets: yKeys.map((key, i) => ({
+          label: key,
+          data: data.map((d) => Number(d[key]) || 0),
+          borderColor: colors[i % colors.length],
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 3,
+          stepped: true as const,
+        })),
+      }
+      return <div className="h-full w-full"><Line data={chartData} options={baseCartesianOptions() as ChartOptions<'line'>} /></div>
+    }
+
+    case 'multi_axis_line': {
+      const chartData: ChartData<'line'> = {
+        labels,
+        datasets: yKeys.map((key, i) => ({
+          label: key,
+          data: data.map((d) => Number(d[key]) || 0),
+          borderColor: colors[i % colors.length],
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 2,
+          tension: 0.3,
+          yAxisID: i === 0 ? 'y' : 'y1',
+        })),
+      }
+      const opts: ChartOptions<'line'> = {
+        ...baseCartesianOptions() as ChartOptions<'line'>,
+        scales: {
+          x: {
+            grid: { color: 'transparent' },
+            ticks: { color: DARK_TICK, font: { size: 11 }, maxRotation: 45 },
+            border: { display: false },
+          },
+          y: {
+            type: 'linear',
+            position: 'left',
+            grid: { color: DARK_GRID },
+            ticks: { color: colors[0], font: { size: 11 } },
+            border: { display: false },
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            grid: { drawOnChartArea: false },
+            ticks: { color: colors[1] ?? DARK_TICK, font: { size: 11 } },
+            border: { display: false },
+          },
+        },
+      }
+      return <div className="h-full w-full"><Line data={chartData} options={opts} /></div>
+    }
+
     case 'pie': {
       const pieLabels = data.map((d) => String(d[lKey] ?? ''))
       const pieValues = data.map((d) => Number(d[vKey]) || 0)
@@ -246,7 +340,7 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
       return <div className="h-full w-full"><Pie data={chartData} options={basePolarOptions() as ChartOptions<'pie'>} /></div>
     }
 
-    case 'donut': {
+    case 'doughnut': {
       const dLabels = data.map((d) => String(d[lKey] ?? ''))
       const dValues = data.map((d) => Number(d[vKey]) || 0)
       const chartData: ChartData<'doughnut'> = {
@@ -284,6 +378,27 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
       return <div className="h-full w-full"><Scatter data={chartData} options={opts} /></div>
     }
 
+    case 'bubble': {
+      const sKey = resolveKey(resolved.sizeKey, actualKeys) || yKeys[1] || yKeys[0]
+      const chartData: ChartData<'bubble'> = {
+        datasets: [{
+          label: `${xKey} vs ${yKeys[0] ?? ''}`,
+          data: data.map((d) => ({
+            x: Number(d[xKey]) || 0,
+            y: Number(d[yKeys[0]]) || 0,
+            r: Math.min(Math.max(Number(d[sKey]) || 3, 2), 30),
+          })),
+          backgroundColor: colors[0] + '60',
+          borderColor: colors[0],
+          borderWidth: 1,
+        }],
+      }
+      const opts: ChartOptions<'bubble'> = {
+        ...(baseCartesianOptions() as unknown as ChartOptions<'bubble'>),
+      }
+      return <div className="h-full w-full"><Bubble data={chartData} options={opts} /></div>
+    }
+
     case 'radar': {
       const radarKeys = resolved.dataKeys?.map((k) => resolveKey(k, actualKeys)) ?? yKeys
       const radarLabels = data.map((d) => String(d[xKey] ?? ''))
@@ -313,15 +428,15 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
       return <div className="h-full w-full"><Radar data={chartData} options={opts} /></div>
     }
 
-    case 'radial_bar': {
-      const rbLabels = data.map((d) => String(d[lKey] ?? ''))
-      const rbKeys = resolved.dataKeys?.map((k) => resolveKey(k, actualKeys)) ?? yKeys
-      const rbKey = rbKeys[0] ?? vKey
-      const rbValues = data.map((d) => Number(d[rbKey]) || 0)
+    case 'polar_area': {
+      const paLabels = data.map((d) => String(d[lKey] ?? ''))
+      const paKeys = resolved.dataKeys?.map((k) => resolveKey(k, actualKeys)) ?? yKeys
+      const paKey = paKeys[0] ?? vKey
+      const paValues = data.map((d) => Number(d[paKey]) || 0)
       const chartData: ChartData<'polarArea'> = {
-        labels: rbLabels,
+        labels: paLabels,
         datasets: [{
-          data: rbValues,
+          data: paValues,
           backgroundColor: data.map((_, i) => colors[i % colors.length] + '80'),
           borderColor: data.map((_, i) => colors[i % colors.length]),
           borderWidth: 2,

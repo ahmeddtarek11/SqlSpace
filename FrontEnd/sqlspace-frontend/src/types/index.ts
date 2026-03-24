@@ -273,13 +273,24 @@ export interface UpdateAccessRestrictionsRequest {
 // ── Analytics Charts ─────────────────────────────────────────────────────────
 
 export type ChartType =
-  | 'bar' | 'line' | 'area' | 'pie' | 'scatter'
-  | 'horizontal_bar' | 'stacked_bar' | 'donut'
-  | 'radar' | 'radial_bar' | 'composed' | 'treemap' | 'funnel'
+  // Bar family
+  | 'bar' | 'horizontal_bar' | 'stacked_bar' | 'grouped_bar' | 'floating_bar'
+  // Line family
+  | 'line' | 'area' | 'stepped_line' | 'multi_axis_line'
+  // Circular family
+  | 'pie' | 'doughnut' | 'polar_area'
+  // Radial
+  | 'radar'
+  // Point-based
+  | 'scatter' | 'bubble'
+  // Mixed
+  | 'composed'
+  // Plugin-based
+  | 'treemap' | 'funnel'
 
 export interface ChartConfig {
   xAxis?: string
-  yAxis?: string[]
+  yAxis?: string[] | string
   colors?: string[]
   stacked?: boolean
   labelKey?: string
@@ -289,6 +300,9 @@ export interface ChartConfig {
   dataKeys?: string[]
   barKeys?: string[]
   lineKeys?: string[]
+  sizeKey?: string
+  minKey?: string
+  maxKey?: string
 }
 
 export interface ChartSuggestion {

@@ -5,7 +5,8 @@
       "Bash(do echo:*)",
       "Read(//c/Users/ahmed/projects/SqlSpace/**)",
       "Bash(done)",
-      "Bash(find c:UsersahmedprojectsSqlSpaceFrontEndsqlspace-frontendnode_moduleschart.js -name *.d.ts -type f)"
+      "Bash(find c:UsersahmedprojectsSqlSpaceFrontEndsqlspace-frontendnode_moduleschart.js -name *.d.ts -type f)",
+      "WebFetch(domain:www.chartjs.org)"
     ]
   }
 }

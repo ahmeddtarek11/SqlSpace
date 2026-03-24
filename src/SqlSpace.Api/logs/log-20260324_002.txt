@@ -1,0 +1,82 @@
+2026-03-24 12:21:33.195 +02:00 [ERR] Hosting failed to start
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5131: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+ ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2026-03-24 13:02:33.373 +02:00 [INF] Now listening on: http://localhost:5131
+2026-03-24 13:02:33.400 +02:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-03-24 13:02:33.402 +02:00 [INF] Hosting environment: Development
+2026-03-24 13:02:33.402 +02:00 [INF] Content root path: C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Api
+2026-03-24 13:04:11.193 +02:00 [WRN] Failed to determine the https port for redirect.
+2026-03-24 13:04:11.424 +02:00 [INF] Login requested. Email: user1@test.com
+2026-03-24 13:04:12.718 +02:00 [DBG] Generating access token for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:04:12.726 +02:00 [DBG] Access token generated successfully for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a, expiresInMinutes: 120
+2026-03-24 13:04:12.731 +02:00 [DBG] Issuing refresh token for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:04:12.894 +02:00 [INF] Refresh token issued successfully for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:04:12.895 +02:00 [INF] Login succeeded. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:04:12.981 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:04:13.096 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:04:42.021 +02:00 [INF] ExecutePrompt started. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, Prompt: all customer with their addressess
+2026-03-24 13:04:42.036 +02:00 [DBG] ExecutePrompt connection found. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", IsAdmin: true
+2026-03-24 13:04:42.086 +02:00 [DBG] ExecutePrompt sending to LLM. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", AccessibleTables: 15
+2026-03-24 13:04:42.099 +02:00 [INF] Sending SQL generation request to LLM. Endpoint: "http://localhost:8000/txt-to-sql", DbType: sqlserver, Prompt: all customer with their addressess
+2026-03-24 13:04:46.558 +02:00 [DBG] LLM API responded. StatusCode: "OK"
+2026-03-24 13:04:46.559 +02:00 [INF] LLM SQL generation succeeded. GeneratedSql length: 666
+2026-03-24 13:04:46.561 +02:00 [DBG] ExecutePrompt SQL generated, validating. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938"
+2026-03-24 13:04:46.580 +02:00 [DBG] SQL validation passed. TablesReferenced: saleslt.customer, saleslt.customeraddress, saleslt.address
+2026-03-24 13:04:46.581 +02:00 [DBG] ExecutePrompt SQL validated, executing against DB. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938"
+2026-03-24 13:04:46.949 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:04:47.008 +02:00 [INF] ExecutePrompt succeeded. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, RowsReturned: 417, ExecutionTimeMs: 413
+2026-03-24 13:05:36.207 +02:00 [INF] GetUserInsights requested. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:05:36.210 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:05:36.212 +02:00 [DBG] GetUserInsights access verified. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:05:36.217 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:05:36.237 +02:00 [DBG] BuildInsights query count: 30. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, IsAdmin: false
+2026-03-24 13:05:42.361 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:42.531 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:42.531 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:42.687 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:42.687 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:42.687 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:42.850 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:48.667 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:05:48.671 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:05:53.304 +02:00 [DBG] GetSavedQueries requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:05:53.317 +02:00 [DBG] GetSavedQueries returned 1 results. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:05:59.259 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:59.261 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:59.263 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:59.265 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:59.266 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:59.268 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:59.271 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:59.299 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:59.300 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:59.302 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:59.304 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:59.305 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:59.307 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:05:59.309 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 13:06:15.054 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:06:15.057 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 13:06:33.147 +02:00 [INF] Application is shutting down...

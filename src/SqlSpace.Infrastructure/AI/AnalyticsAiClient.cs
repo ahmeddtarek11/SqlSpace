@@ -102,17 +102,25 @@ public sealed class AnalyticsAiClient(
                     // Normalize snake_case chart_type (e.g. "horizontal_bar") to
                     // PascalCase-compatible form by stripping underscores so that
                     // Enum.TryParse<ChartType> with ignoreCase works.
+                    // Normalize snake_case chart_type → PascalCase enum → snake_case string
+                    // e.g. "multi_axis_line" → strip underscores → "multiaxisline"
+                    //      → Enum.TryParse → MultiAxisLine → ToSnakeCase → "multi_axis_line"
                     var rawChartType = item.TryGetProperty("chart_type", out var ct)
                         ? ct.GetString() ?? "bar"
                         : "bar";
-                    var normalizedChartType = rawChartType.Replace("_", "");
+                    var strippedChartType = rawChartType.Replace("_", "");
+                    string chartTypeForFrontend;
+                    if (Enum.TryParse<ChartType>(strippedChartType, ignoreCase: true, out var parsedChartType))
+                        chartTypeForFrontend = ToSnakeCase(parsedChartType.ToString());
+                    else
+                        chartTypeForFrontend = rawChartType; // fallback to original
 
                     suggestions.Add(new ChartSuggestionDto
                     {
                         Title = item.TryGetProperty("title", out var t) ? t.GetString() ?? "" : "",
                         Description = item.TryGetProperty("description", out var d) ? d.GetString() ?? "" : "",
                         Sql = item.TryGetProperty("sql", out var s) ? s.GetString() ?? "" : "",
-                        ChartType = normalizedChartType,
+                        ChartType = chartTypeForFrontend,
                         ChartConfigJson = item.TryGetProperty("chart_config", out var cc)
                             ? cc.GetRawText()
                             : "{}",
@@ -139,6 +147,18 @@ public sealed class AnalyticsAiClient(
             return Result<IReadOnlyList<ChartSuggestionDto>>.Failure(
                 new Error("analytics_ai.request_failed", $"Failed to call AI service: {ex.GetType().Name}"));
         }
+    }
+
+    private static string ToSnakeCase(string pascalCase)
+    {
+        var sb = new System.Text.StringBuilder(pascalCase.Length + 4);
+        for (var i = 0; i < pascalCase.Length; i++)
+        {
+            var ch = pascalCase[i];
+            if (i > 0 && char.IsUpper(ch)) sb.Append('_');
+            sb.Append(char.ToLowerInvariant(ch));
+        }
+        return sb.ToString();
     }
 
     private static string NormalizeDbType(string provider)

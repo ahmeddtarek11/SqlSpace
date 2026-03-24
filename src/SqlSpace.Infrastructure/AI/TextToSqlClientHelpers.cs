@@ -124,9 +124,11 @@ internal static class TextToSqlClientHelpers
     internal static TextToSqlResponseKind ParseResponse(
         string responseBody,
         out string sql,
+        out string explanation,
         out TextToSqlErrorPayload? error)
     {
         sql = string.Empty;
+        explanation = string.Empty;
         error = null;
 
         using var document = JsonDocument.Parse(responseBody);
@@ -143,6 +145,11 @@ internal static class TextToSqlClientHelpers
             if (root.TryGetProperty("sql", out var sqlElement))
             {
                 sql = sqlElement.GetString() ?? string.Empty;
+            }
+
+            if (root.TryGetProperty("explanation", out var explanationElement))
+            {
+                explanation = explanationElement.GetString() ?? string.Empty;
             }
 
             return TextToSqlResponseKind.Success;

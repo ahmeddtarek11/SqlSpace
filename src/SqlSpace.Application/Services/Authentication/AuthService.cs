@@ -17,7 +17,7 @@ public sealed class AuthService(IAuthProvider authProvider, ILogger<AuthService>
         CancellationToken cancellationToken)
     {
         _logger.LogInformation("Login requested. Email: {Email}", request?.Email);
-        return _authProvider.LoginAsync(request, cancellationToken);
+        return _authProvider.LoginAsync(request!, cancellationToken);
     }
 
     public Task<Result> LogoutAsync(
@@ -41,6 +41,6 @@ public sealed class AuthService(IAuthProvider authProvider, ILogger<AuthService>
         CancellationToken cancellationToken)
     {
         _logger.LogInformation("Register requested. Email: {Email}, Username: {Username}", request?.Email, request?.Username);
-        return _authProvider.RegisterAsync(request, cancellationToken);
+        return _authProvider.RegisterAsync(request!, cancellationToken);
     }
 }
