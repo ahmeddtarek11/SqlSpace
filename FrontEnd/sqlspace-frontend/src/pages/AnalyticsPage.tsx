@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { BarChart3, RefreshCw, Sparkles, Send, Loader2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartCard } from '@/components/analytics/ChartCard'
+import { ExpandedChartDialog } from '@/components/analytics/ExpandedChartDialog'
 import { analyticsApi } from '@/api/analytics'
 import { connectionsApi } from '@/api/connections'
 import { useConnectionStore } from '@/stores/connection-store'
@@ -47,6 +48,7 @@ export default function AnalyticsPage() {
   const [chartDataMap, setChartDataMap] = useState<ChartDataMap>({})
   const [prompt, setPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
+  const [expandedChartId, setExpandedChartId] = useState<string | null>(null)
 
   const { data: connections = [], isLoading: connectionsLoading } = useQuery({
     queryKey: ['connections'],
@@ -62,6 +64,10 @@ export default function AnalyticsPage() {
     enabled: !!selectedId,
     refetchOnMount: 'always' as const,
   })
+
+  // Expanded chart derived state
+  const expandedChart = expandedChartId ? charts.find((c) => c.id === expandedChartId) : null
+  const expandedData = expandedChartId ? chartDataMap[expandedChartId] : null
 
   // Auto-refresh all charts on load
   const refreshAll = useCallback(async () => {
@@ -108,14 +114,13 @@ export default function AnalyticsPage() {
     }
   }, [charts.length, selectedId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Generate chart from prompt: suggest 1 chart → auto-save → refresh
+  // Generate chart from prompt: suggest charts → auto-save → refresh
   const handleGenerate = useCallback(async (userPrompt?: string) => {
     if (!selectedId || isGenerating) return
     const text = userPrompt?.trim()
     setIsGenerating(true)
     try {
       const suggestions = await analyticsApi.suggestCharts(selectedId, text || undefined, text ? 1 : 3)
-      // Save all returned suggestions
       for (const s of suggestions) {
         const payload: SaveChartRequest = {
           title: s.title,
@@ -123,6 +128,7 @@ export default function AnalyticsPage() {
           sqlQuery: s.sql,
           chartType: s.chartType,
           chartConfigJson: s.chartConfigJson,
+          insight: s.insight,
         }
         await analyticsApi.saveChart(selectedId, payload)
       }
@@ -303,6 +309,7 @@ export default function AnalyticsPage() {
                     executionTimeMs={cd?.executionTimeMs}
                     onRefresh={handleRefreshOne}
                     onDelete={(id) => deleteMutation.mutate(id)}
+                    onExpand={setExpandedChartId}
                   />
                 </div>
               )
@@ -311,6 +318,18 @@ export default function AnalyticsPage() {
         )}
 
       </div>
+
+      {/* Expanded chart dialog */}
+      {expandedChart && (
+        <ExpandedChartDialog
+          open={!!expandedChartId}
+          onOpenChange={(open) => { if (!open) setExpandedChartId(null) }}
+          chart={expandedChart}
+          data={expandedData?.data ?? null}
+          columns={expandedData?.columns ?? []}
+          executionTimeMs={expandedData?.executionTimeMs}
+        />
+      )}
     </div>
   )
 }

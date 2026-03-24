@@ -4,7 +4,8 @@
       "Bash(for f:*)",
       "Bash(do echo:*)",
       "Read(//c/Users/ahmed/projects/SqlSpace/**)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(find c:UsersahmedprojectsSqlSpaceFrontEndsqlspace-frontendnode_moduleschart.js -name *.d.ts -type f)"
     ]
   }
 }

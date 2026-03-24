@@ -17,6 +17,9 @@ public class SavedChart
     public string SqlQuery { get; set; } = string.Empty;
     public string? OriginalPrompt { get; set; }
 
+    // AI-generated insight about what the chart reveals
+    public string? Insight { get; set; }
+
     // Chart rendering config
     public ChartType ChartType { get; set; } = ChartType.Bar;
     public string ChartConfigJson { get; set; } = "{}";

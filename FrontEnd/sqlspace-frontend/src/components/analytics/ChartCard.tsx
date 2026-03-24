@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { RefreshCw, Trash2, AlertCircle, Clock } from 'lucide-react'
+import { RefreshCw, Trash2, AlertCircle, Clock, Maximize2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartRenderer } from './ChartRenderer'
 import type { ChartType, ChartConfig, SavedChartDto } from '@/types'
@@ -13,11 +13,12 @@ interface ChartCardProps {
   executionTimeMs?: number
   onRefresh: (chartId: string) => void
   onDelete: (chartId: string) => void
+  onExpand: (chartId: string) => void
 }
 
 export function ChartCard({
   chart, data, loading, error, executionTimeMs,
-  onRefresh, onDelete,
+  onRefresh, onDelete, onExpand,
 }: ChartCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -33,7 +34,12 @@ export function ChartCard({
       {/* Header */}
       <div className="flex items-start justify-between gap-2 px-5 pt-4 pb-2 shrink-0">
         <div className="min-w-0 flex-1">
-          <h4 className="text-sm font-semibold text-white truncate">{chart.title}</h4>
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-white truncate">{chart.title}</h4>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-400 font-medium shrink-0">
+              {chart.chartType.replace(/_/g, ' ')}
+            </span>
+          </div>
           {chart.description && (
             <p className="text-xs text-zinc-500 mt-0.5 line-clamp-2">{chart.description}</p>
           )}
@@ -45,6 +51,13 @@ export function ChartCard({
               {executionTimeMs}ms
             </span>
           )}
+          <button
+            onClick={() => onExpand(chart.id)}
+            className="p-1.5 rounded-md text-zinc-500 hover:text-sky-400 hover:bg-sky-500/10 transition-colors"
+            title="Expand"
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+          </button>
           <button
             onClick={() => onRefresh(chart.id)}
             className="p-1.5 rounded-md text-zinc-500 hover:text-sky-400 hover:bg-sky-500/10 transition-colors"
@@ -72,8 +85,11 @@ export function ChartCard({
         </div>
       </div>
 
-      {/* Chart body */}
-      <div className="flex-1 min-h-0 px-4 pb-4">
+      {/* Chart body — clickable to expand */}
+      <div
+        className="flex-1 min-h-0 px-4 pb-4 cursor-pointer"
+        onClick={() => onExpand(chart.id)}
+      >
         {loading ? (
           <Skeleton className="w-full h-full rounded-xl bg-white/5" />
         ) : error ? (

@@ -9,6 +9,7 @@ public class SaveChartRequest
     public string? OriginalPrompt { get; set; }
     public string ChartType { get; set; } = "bar";
     public string ChartConfigJson { get; set; } = "{}";
+    public string? Insight { get; set; }
     public int GridX { get; set; } = 0;
     public int GridY { get; set; } = 0;
     public int GridW { get; set; } = 6;

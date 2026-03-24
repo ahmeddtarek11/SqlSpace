@@ -35,6 +35,9 @@ public class SavedChartConfiguration : IEntityTypeConfiguration<SavedChart>
 
         builder.Property(c => c.OriginalPrompt);
 
+        builder.Property(c => c.Insight)
+            .HasMaxLength(2000);
+
         builder.Property(c => c.ChartType)
             .IsRequired()
             .HasConversion<string>()

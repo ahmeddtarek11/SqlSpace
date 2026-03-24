@@ -417,3 +417,39 @@ POSITION: 86
 2026-03-24 10:55:12.066 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
 2026-03-24 10:55:15.527 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
 2026-03-24 11:07:43.794 +02:00 [INF] Application is shutting down...
+2026-03-24 11:22:45.842 +02:00 [INF] Now listening on: http://localhost:5131
+2026-03-24 11:22:45.863 +02:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-03-24 11:22:45.864 +02:00 [INF] Hosting environment: Development
+2026-03-24 11:22:45.865 +02:00 [INF] Content root path: C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Api
+2026-03-24 11:23:26.658 +02:00 [WRN] Failed to determine the https port for redirect.
+2026-03-24 11:23:26.886 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 11:23:28.127 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 11:23:28.379 +02:00 [WRN] Query execution cancelled for connection "143eb9a9-3d09-44f8-826d-32ec4b630938"
+2026-03-24 11:23:28.610 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 11:23:28.621 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 11:23:28.655 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 11:23:48.481 +02:00 [INF] GetUserInsights requested. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 11:23:48.521 +02:00 [DBG] GetUserInsights access verified. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 11:23:48.549 +02:00 [DBG] BuildInsights query count: 29. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, IsAdmin: false
+2026-03-24 11:23:57.159 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 11:23:57.192 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 11:25:09.700 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 1
+2026-03-24 11:25:27.905 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 11:25:27.913 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 11:25:51.876 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 1
+2026-03-24 11:26:14.536 +02:00 [WRN] Analytics AI returned error. Body: {"status":"error","error_code":"SQL_REJECTED","message":"All suggested queries failed validation. The schema may be too restrictive."}
+2026-03-24 11:26:26.377 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 11:26:26.380 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 11:26:48.858 +02:00 [INF] GetUserInsights requested. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 11:26:48.862 +02:00 [DBG] GetUserInsights access verified. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 11:26:48.865 +02:00 [DBG] BuildInsights query count: 29. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, IsAdmin: false
+2026-03-24 11:26:49.796 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 11:26:49.930 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 11:27:11.909 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 1
+2026-03-24 11:27:22.764 +02:00 [INF] Received 1 chart suggestions.
+2026-03-24 11:27:22.906 +02:00 [INF] Chart saved. ChartId: "ac2d3021-4cda-47d0-8a07-7d90520a411f", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 11:27:22.931 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 11:27:22.933 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 11:28:07.282 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 11:28:07.289 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 11:29:59.788 +02:00 [INF] Application is shutting down...

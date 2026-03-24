@@ -12,6 +12,27 @@ using SqlSpace.Domain.Models;
 
 namespace SqlSpace.Application.Services.Analytics;
 
+internal static class ChartTypeExtensions
+{
+    /// <summary>
+    /// Converts a PascalCase ChartType enum value to snake_case for the frontend.
+    /// e.g. HorizontalBar → horizontal_bar, StackedBar → stacked_bar, Bar → bar
+    /// </summary>
+    public static string ToSnakeCase(this ChartType chartType)
+    {
+        var name = chartType.ToString();
+        var sb = new System.Text.StringBuilder(name.Length + 4);
+        for (var i = 0; i < name.Length; i++)
+        {
+            var ch = name[i];
+            if (i > 0 && char.IsUpper(ch))
+                sb.Append('_');
+            sb.Append(char.ToLowerInvariant(ch));
+        }
+        return sb.ToString();
+    }
+}
+
 public sealed class ChartService(
     IApplicationDbContext dbContext,
     IAccessControlService accessControlService,
@@ -85,7 +106,7 @@ public sealed class ChartService(
             return Result<IReadOnlyList<SavedChartDto>>.Failure(
                 new Error("analytics.invalid_user_id", "UserId is required."));
 
-        var charts = await _dbContext.SavedCharts
+        var entities = await _dbContext.SavedCharts
             .AsNoTracking()
             .Include(c => c.DatabaseConnection)
             .Where(c => c.DatabaseConnectionId == connectionId
@@ -94,26 +115,28 @@ public sealed class ChartService(
                         && !c.DatabaseConnection.IsDeleted)
             .OrderBy(c => c.SortOrder)
             .ThenBy(c => c.CreatedAtUtc)
-            .Select(c => new SavedChartDto
-            {
-                Id = c.Id,
-                ConnectionId = c.DatabaseConnectionId,
-                ConnectionName = c.DatabaseConnection.ConnectionName,
-                Title = c.Title,
-                Description = c.Description,
-                SqlQuery = c.SqlQuery,
-                OriginalPrompt = c.OriginalPrompt,
-                ChartType = c.ChartType.ToString().ToLowerInvariant(),
-                ChartConfigJson = c.ChartConfigJson,
-                GridX = c.GridX,
-                GridY = c.GridY,
-                GridW = c.GridW,
-                GridH = c.GridH,
-                SortOrder = c.SortOrder,
-                CreatedAtUtc = c.CreatedAtUtc,
-                UpdatedAtUtc = c.UpdatedAtUtc,
-            })
             .ToListAsync(cancellationToken);
+
+        var charts = entities.Select(c => new SavedChartDto
+        {
+            Id = c.Id,
+            ConnectionId = c.DatabaseConnectionId,
+            ConnectionName = c.DatabaseConnection.ConnectionName,
+            Title = c.Title,
+            Description = c.Description,
+            SqlQuery = c.SqlQuery,
+            OriginalPrompt = c.OriginalPrompt,
+            ChartType = c.ChartType.ToSnakeCase(),
+            ChartConfigJson = c.ChartConfigJson,
+            Insight = c.Insight,
+            GridX = c.GridX,
+            GridY = c.GridY,
+            GridW = c.GridW,
+            GridH = c.GridH,
+            SortOrder = c.SortOrder,
+            CreatedAtUtc = c.CreatedAtUtc,
+            UpdatedAtUtc = c.UpdatedAtUtc,
+        }).ToList();
 
         return charts;
     }
@@ -170,6 +193,7 @@ public sealed class ChartService(
             OriginalPrompt = request.OriginalPrompt?.Trim(),
             ChartType = chartType,
             ChartConfigJson = request.ChartConfigJson ?? "{}",
+            Insight = request.Insight?.Trim(),
             GridX = request.GridX,
             GridY = request.GridY,
             GridW = request.GridW > 0 ? request.GridW : 6,
@@ -192,8 +216,9 @@ public sealed class ChartService(
             Description = chart.Description,
             SqlQuery = chart.SqlQuery,
             OriginalPrompt = chart.OriginalPrompt,
-            ChartType = chart.ChartType.ToString().ToLowerInvariant(),
+            ChartType = chart.ChartType.ToSnakeCase(),
             ChartConfigJson = chart.ChartConfigJson,
+            Insight = chart.Insight,
             GridX = chart.GridX,
             GridY = chart.GridY,
             GridW = chart.GridW,
@@ -246,8 +271,9 @@ public sealed class ChartService(
             Description = chart.Description,
             SqlQuery = chart.SqlQuery,
             OriginalPrompt = chart.OriginalPrompt,
-            ChartType = chart.ChartType.ToString().ToLowerInvariant(),
+            ChartType = chart.ChartType.ToSnakeCase(),
             ChartConfigJson = chart.ChartConfigJson,
+            Insight = chart.Insight,
             GridX = chart.GridX,
             GridY = chart.GridY,
             GridW = chart.GridW,

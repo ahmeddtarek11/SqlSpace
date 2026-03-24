@@ -99,15 +99,24 @@ public sealed class AnalyticsAiClient(
 
                 foreach (var item in suggestionsEl.EnumerateArray())
                 {
+                    // Normalize snake_case chart_type (e.g. "horizontal_bar") to
+                    // PascalCase-compatible form by stripping underscores so that
+                    // Enum.TryParse<ChartType> with ignoreCase works.
+                    var rawChartType = item.TryGetProperty("chart_type", out var ct)
+                        ? ct.GetString() ?? "bar"
+                        : "bar";
+                    var normalizedChartType = rawChartType.Replace("_", "");
+
                     suggestions.Add(new ChartSuggestionDto
                     {
                         Title = item.TryGetProperty("title", out var t) ? t.GetString() ?? "" : "",
                         Description = item.TryGetProperty("description", out var d) ? d.GetString() ?? "" : "",
                         Sql = item.TryGetProperty("sql", out var s) ? s.GetString() ?? "" : "",
-                        ChartType = item.TryGetProperty("chart_type", out var ct) ? ct.GetString() ?? "bar" : "bar",
+                        ChartType = normalizedChartType,
                         ChartConfigJson = item.TryGetProperty("chart_config", out var cc)
                             ? cc.GetRawText()
                             : "{}",
+                        Insight = item.TryGetProperty("insight", out var ins) ? ins.GetString() : null,
                     });
                 }
 

@@ -272,7 +272,10 @@ export interface UpdateAccessRestrictionsRequest {
 
 // ── Analytics Charts ─────────────────────────────────────────────────────────
 
-export type ChartType = 'bar' | 'line' | 'area' | 'pie' | 'scatter'
+export type ChartType =
+  | 'bar' | 'line' | 'area' | 'pie' | 'scatter'
+  | 'horizontal_bar' | 'stacked_bar' | 'donut'
+  | 'radar' | 'radial_bar' | 'composed' | 'treemap' | 'funnel'
 
 export interface ChartConfig {
   xAxis?: string
@@ -281,6 +284,11 @@ export interface ChartConfig {
   stacked?: boolean
   labelKey?: string
   valueKey?: string
+  innerRadius?: string | number
+  outerRadius?: string | number
+  dataKeys?: string[]
+  barKeys?: string[]
+  lineKeys?: string[]
 }
 
 export interface ChartSuggestion {
@@ -289,6 +297,7 @@ export interface ChartSuggestion {
   sql: string
   chartType: ChartType
   chartConfigJson: string
+  insight?: string
 }
 
 export interface SavedChartDto {
@@ -301,6 +310,7 @@ export interface SavedChartDto {
   originalPrompt: string | null
   chartType: ChartType
   chartConfigJson: string
+  insight?: string | null
   gridX: number
   gridY: number
   gridW: number
@@ -317,6 +327,7 @@ export interface SaveChartRequest {
   originalPrompt?: string
   chartType: ChartType
   chartConfigJson: string
+  insight?: string
   gridX?: number
   gridY?: number
   gridW?: number

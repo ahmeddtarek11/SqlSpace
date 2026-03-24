@@ -11,6 +11,7 @@ public class SavedChartDto
     public string? OriginalPrompt { get; set; }
     public string ChartType { get; set; } = "bar";
     public string ChartConfigJson { get; set; } = "{}";
+    public string? Insight { get; set; }
     public int GridX { get; set; }
     public int GridY { get; set; }
     public int GridW { get; set; }
