@@ -21,6 +21,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     public DbSet<SavedQuery> SavedQueries => Set<SavedQuery>();
     public DbSet<AccessAuditLog> AccessAuditLogs => Set<AccessAuditLog>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<SavedChart> SavedCharts => Set<SavedChart>();
 
     //deprecated  // public DbSet<TableRestriction> TableRestrictions => Set<TableRestriction>();
 

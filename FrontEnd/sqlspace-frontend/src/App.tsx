@@ -17,6 +17,7 @@ import ConnectionsPage from '@/pages/ConnectionsPage'
 import ConnectionDetailPage from '@/pages/ConnectionDetailPage'
 import NewConnectionPage from '@/pages/NewConnectionPage'
 import AccessControlPage from '@/pages/AccessControlPage'
+import AnalyticsPage from '@/pages/AnalyticsPage'
 import LandingPage from '@/pages/LandingPage'
 
 const queryClient = new QueryClient({
@@ -55,6 +56,7 @@ export default function App() {
                 <Route path="/history" element={<HistoryPage />} />
                 <Route path="/history/:queryId" element={<HistoryDetailPage />} />
                 <Route path="/saved" element={<SavedQueriesPage />} />
+                <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/connections" element={<ConnectionsPage />} />
                 <Route path="/connections/new" element={<NewConnectionPage />} />
                 <Route path="/connections/:id" element={<ConnectionDetailPage />} />

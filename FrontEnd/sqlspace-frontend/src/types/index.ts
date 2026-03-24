@@ -269,3 +269,65 @@ export interface UpdateAccessRestrictionsRequest {
   hasFullAccess: boolean
   restrictedTables?: TableRestrictionInput[]
 }
+
+// ── Analytics Charts ─────────────────────────────────────────────────────────
+
+export type ChartType = 'bar' | 'line' | 'area' | 'pie' | 'scatter'
+
+export interface ChartConfig {
+  xAxis?: string
+  yAxis?: string[]
+  colors?: string[]
+  stacked?: boolean
+  labelKey?: string
+  valueKey?: string
+}
+
+export interface ChartSuggestion {
+  title: string
+  description: string
+  sql: string
+  chartType: ChartType
+  chartConfigJson: string
+}
+
+export interface SavedChartDto {
+  id: string
+  connectionId: string
+  connectionName: string
+  title: string
+  description: string | null
+  sqlQuery: string
+  originalPrompt: string | null
+  chartType: ChartType
+  chartConfigJson: string
+  gridX: number
+  gridY: number
+  gridW: number
+  gridH: number
+  sortOrder: number
+  createdAtUtc: string
+  updatedAtUtc: string
+}
+
+export interface SaveChartRequest {
+  title: string
+  description?: string
+  sqlQuery: string
+  originalPrompt?: string
+  chartType: ChartType
+  chartConfigJson: string
+  gridX?: number
+  gridY?: number
+  gridW?: number
+  gridH?: number
+}
+
+export interface ChartDataResult {
+  chartId: string
+  success: boolean
+  resultsJson: string | null
+  rowsReturned: number
+  executionTimeMs: number
+  errorMessage: string | null
+}

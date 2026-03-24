@@ -1,0 +1,419 @@
+2026-03-24 01:09:22.156 +02:00 [INF] Now listening on: http://localhost:5131
+2026-03-24 01:09:22.181 +02:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-03-24 01:09:22.182 +02:00 [INF] Hosting environment: Development
+2026-03-24 01:09:22.184 +02:00 [INF] Content root path: C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Api
+2026-03-24 01:09:52.324 +02:00 [WRN] Failed to determine the https port for redirect.
+2026-03-24 01:09:52.518 +02:00 [INF] Login requested. Email: user1@test.com
+2026-03-24 01:09:53.695 +02:00 [DBG] Generating access token for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:09:53.705 +02:00 [DBG] Access token generated successfully for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a, expiresInMinutes: 120
+2026-03-24 01:09:53.710 +02:00 [DBG] Issuing refresh token for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:09:53.854 +02:00 [INF] Refresh token issued successfully for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:09:53.855 +02:00 [INF] Login succeeded. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:09:53.949 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:09:54.075 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:09:57.744 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 5
+2026-03-24 01:10:01.878 +02:00 [ERR] Failed to call analytics AI service.
+System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:8000)
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.SocketsHttpHandler.<SendAsync>g__CreateHandlerAndSendAsync|115_0(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at SqlSpace.Infrastructure.AI.AnalyticsAiClient.GetChartSuggestionsAsync(String schemaContext, String databaseProvider, String userPrompt, String ragContext, Int32 maxSuggestions, CancellationToken cancellationToken) in C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Infrastructure\AI\AnalyticsAiClient.cs:line 83
+2026-03-24 01:10:02.681 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 5
+2026-03-24 01:10:06.783 +02:00 [ERR] Failed to call analytics AI service.
+System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:8000)
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at SqlSpace.Infrastructure.AI.AnalyticsAiClient.GetChartSuggestionsAsync(String schemaContext, String databaseProvider, String userPrompt, String ragContext, Int32 maxSuggestions, CancellationToken cancellationToken) in C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Infrastructure\AI\AnalyticsAiClient.cs:line 83
+2026-03-24 01:10:09.101 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 5
+2026-03-24 01:10:13.176 +02:00 [ERR] Failed to call analytics AI service.
+System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:8000)
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at SqlSpace.Infrastructure.AI.AnalyticsAiClient.GetChartSuggestionsAsync(String schemaContext, String databaseProvider, String userPrompt, String ragContext, Int32 maxSuggestions, CancellationToken cancellationToken) in C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Infrastructure\AI\AnalyticsAiClient.cs:line 83
+2026-03-24 01:11:39.842 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:11:39.896 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:11:40.887 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 5
+2026-03-24 01:11:55.281 +02:00 [INF] Received 4 chart suggestions.
+2026-03-24 01:12:10.325 +02:00 [INF] Chart saved. ChartId: "2a26b662-f68d-4e35-be85-9ac8e40789af", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:12:10.825 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:12:18.881 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:12:24.991 +02:00 [INF] Chart saved. ChartId: "9965e911-5d5d-4682-8742-ef2f802a0901", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:12:25.025 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:12:25.150 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:12:29.677 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:12:29.683 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:12:29.694 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:12:29.696 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:12:46.628 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:12:47.235 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:12:48.209 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:13:27.547 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 5
+2026-03-24 01:13:33.674 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:13:33.676 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:13:41.619 +02:00 [INF] Received 4 chart suggestions.
+2026-03-24 01:13:46.852 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:13:46.859 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:13:57.868 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:13:57.872 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:13:59.137 +02:00 [INF] GetUserInsights requested. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:13:59.140 +02:00 [DBG] GetUserInsights access verified. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:13:59.150 +02:00 [DBG] BuildInsights query count: 29. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, IsAdmin: false
+2026-03-24 01:14:01.537 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:14:01.539 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:14:01.677 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:14:01.677 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:14:15.367 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:14:15.368 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:14:17.285 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:14:17.288 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:14:20.428 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:14:20.430 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:14:20.464 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:14:20.466 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:14:22.295 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 5
+2026-03-24 01:14:37.917 +02:00 [INF] Received 3 chart suggestions.
+2026-03-24 01:15:14.807 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 5
+2026-03-24 01:15:30.610 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:15:30.648 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:15:30.981 +02:00 [INF] Received 3 chart suggestions.
+2026-03-24 01:16:05.021 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:16:23.752 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:16:23.757 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:16:23.785 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:16:23.786 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:17:19.925 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:17:19.929 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:17:19.947 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:17:19.949 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:17:58.806 +02:00 [INF] Login requested. Email: user1@test.com
+2026-03-24 01:17:58.868 +02:00 [DBG] Generating access token for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:17:58.869 +02:00 [DBG] Access token generated successfully for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a, expiresInMinutes: 120
+2026-03-24 01:17:58.870 +02:00 [DBG] Issuing refresh token for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:17:58.877 +02:00 [INF] Refresh token issued successfully for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:17:58.878 +02:00 [INF] Login succeeded. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:17:58.942 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:17:58.945 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:18:01.086 +02:00 [INF] Requesting chart suggestions. DbType: postgres, MaxSuggestions: 5
+2026-03-24 01:18:15.251 +02:00 [INF] Received 5 chart suggestions.
+2026-03-24 01:18:27.032 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:18:27.034 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:18:32.792 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:18:32.794 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:23:14.130 +02:00 [INF] Login requested. Email: user1@test.com
+2026-03-24 01:23:14.223 +02:00 [DBG] Generating access token for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:23:14.225 +02:00 [DBG] Access token generated successfully for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a, expiresInMinutes: 120
+2026-03-24 01:23:14.225 +02:00 [DBG] Issuing refresh token for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:23:14.230 +02:00 [INF] Refresh token issued successfully for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:23:14.230 +02:00 [INF] Login succeeded. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:23:24.858 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:23:24.864 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:23:39.861 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 3
+2026-03-24 01:23:52.662 +02:00 [INF] Received 2 chart suggestions.
+2026-03-24 01:24:04.518 +02:00 [INF] Chart saved. ChartId: "d8e2925f-ac93-43a9-ba7c-6adb932f0df0", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:24:16.030 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:24:22.394 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:24:22.399 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:24:22.454 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:24:22.456 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:24:22.643 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:24:25.244 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:24:25.249 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:24:25.276 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:24:25.278 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:24:25.280 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:24:29.367 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:24:29.370 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:24:29.371 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:25:54.243 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:25:54.247 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:25:55.912 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:25:55.916 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:25:55.940 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:25:55.943 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:25:55.945 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:26:01.810 +02:00 [INF] GetUserInsights requested. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:26:01.813 +02:00 [DBG] GetUserInsights access verified. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:26:01.816 +02:00 [DBG] BuildInsights query count: 29. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, IsAdmin: false
+2026-03-24 01:26:04.158 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:26:04.160 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:26:04.160 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:26:04.285 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:26:04.285 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:26:04.285 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:26:16.329 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:26:16.336 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:26:16.361 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:26:16.362 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:26:16.364 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:26:57.946 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:26:57.949 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:26:57.965 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:26:57.967 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:26:57.968 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:27:02.692 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:27:26.583 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:27:29.778 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 5
+2026-03-24 01:27:40.478 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:27:40.482 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:27:44.888 +02:00 [INF] GetUserInsights requested. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:27:44.891 +02:00 [DBG] GetUserInsights access verified. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:27:44.893 +02:00 [DBG] BuildInsights query count: 29. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, IsAdmin: false
+2026-03-24 01:27:45.301 +02:00 [INF] Received 4 chart suggestions.
+2026-03-24 01:27:46.948 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:27:46.950 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:27:46.952 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:27:46.983 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:27:46.985 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:27:46.986 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:27:50.623 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 5
+2026-03-24 01:28:05.260 +02:00 [INF] Received 4 chart suggestions.
+2026-03-24 01:28:10.171 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 5
+2026-03-24 01:28:28.710 +02:00 [INF] Received 4 chart suggestions.
+2026-03-24 01:29:22.000 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:29:22.008 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:29:36.468 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:29:36.470 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:29:36.471 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:29:39.328 +02:00 [INF] GetUserInsights requested. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:29:39.333 +02:00 [DBG] GetUserInsights access verified. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:29:39.337 +02:00 [DBG] BuildInsights query count: 29. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, IsAdmin: false
+2026-03-24 01:29:45.527 +02:00 [INF] GetAdminInsights requested. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", AdminUserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:29:45.529 +02:00 [DBG] GetAdminInsights access verified. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", AdminUserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:29:45.533 +02:00 [DBG] BuildInsights query count: 30. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, IsAdmin: true
+2026-03-24 01:29:55.437 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:29:55.441 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:29:56.742 +02:00 [INF] GetConnectionById requested. ConnectionId: "e07b8d29-b4d7-45de-b716-0ed95a11d9c5", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:29:56.745 +02:00 [INF] GetConnectionById succeeded. ConnectionId: "e07b8d29-b4d7-45de-b716-0ed95a11d9c5", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, IsAdmin: true
+2026-03-24 01:30:52.314 +02:00 [INF] GetConnectionById requested. ConnectionId: "e07b8d29-b4d7-45de-b716-0ed95a11d9c5", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:30:52.317 +02:00 [INF] GetConnectionById succeeded. ConnectionId: "e07b8d29-b4d7-45de-b716-0ed95a11d9c5", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, IsAdmin: true
+2026-03-24 01:30:55.310 +02:00 [DBG] GetSavedQueries requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:30:55.321 +02:00 [DBG] GetSavedQueries returned 1 results. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:30:56.094 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:30:56.098 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:30:56.099 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:30:56.099 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:30:56.101 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:30:56.102 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:30:56.234 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:30:56.234 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:31:53.784 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:31:53.786 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:31:53.788 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:32:36.698 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:32:36.703 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:32:41.310 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:32:41.310 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:32:41.312 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:32:41.313 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:32:41.315 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:32:41.445 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:32:53.947 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:32:53.948 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:32:53.949 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:33:39.026 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:33:39.035 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:34:11.551 +02:00 [INF] GetUserInsights requested. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:34:11.553 +02:00 [DBG] GetUserInsights access verified. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:34:11.555 +02:00 [DBG] BuildInsights query count: 29. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, IsAdmin: false
+2026-03-24 01:34:12.331 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:34:12.331 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:34:12.332 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:34:12.333 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:34:12.335 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:34:12.336 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:35:06.474 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 1
+2026-03-24 01:35:13.264 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:35:13.267 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:35:18.693 +02:00 [INF] Received 1 chart suggestions.
+2026-03-24 01:35:18.703 +02:00 [INF] Chart saved. ChartId: "169bd7b5-6224-4b5d-9e07-962e648958aa", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:35:18.753 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:35:18.755 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:35:18.757 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:35:18.758 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:36:05.604 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 1
+2026-03-24 01:36:13.268 +02:00 [WRN] Analytics AI returned error. Body: {"status":"error","error_code":"SQL_REJECTED","message":"All suggested queries failed validation. The schema may be too restrictive."}
+2026-03-24 01:36:26.454 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:36:26.458 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:36:38.650 +02:00 [INF] GetUserInsights requested. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:36:38.653 +02:00 [DBG] GetUserInsights access verified. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:36:38.656 +02:00 [DBG] BuildInsights query count: 29. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, IsAdmin: false
+2026-03-24 01:36:40.061 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:36:40.061 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:36:40.063 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:36:40.064 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:36:40.065 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:36:40.066 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:36:40.198 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:36:40.198 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:36:51.987 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 1
+2026-03-24 01:36:59.157 +02:00 [INF] Received 1 chart suggestions.
+2026-03-24 01:36:59.169 +02:00 [INF] Chart saved. ChartId: "29efb179-b811-48fc-bf95-cb276ff89620", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:36:59.218 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:36:59.220 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:36:59.221 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:36:59.223 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:36:59.225 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:37:11.547 +02:00 [INF] Chart deleted. ChartId: "29efb179-b811-48fc-bf95-cb276ff89620", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:37:11.616 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:37:11.617 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:37:11.618 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:37:11.619 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:37:13.153 +02:00 [INF] Chart deleted. ChartId: "d8e2925f-ac93-43a9-ba7c-6adb932f0df0", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:37:13.217 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:37:13.218 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:37:13.219 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:37:13.918 +02:00 [INF] Chart deleted. ChartId: "169bd7b5-6224-4b5d-9e07-962e648958aa", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:37:13.944 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:37:13.945 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:37:14.848 +02:00 [INF] Chart deleted. ChartId: "2a26b662-f68d-4e35-be85-9ac8e40789af", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:37:14.880 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:37:16.066 +02:00 [INF] Chart deleted. ChartId: "9965e911-5d5d-4682-8742-ef2f802a0901", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:37:25.100 +02:00 [INF] Requesting chart suggestions. DbType: sqlserver, MaxSuggestions: 1
+2026-03-24 01:37:35.149 +02:00 [INF] Received 1 chart suggestions.
+2026-03-24 01:37:35.162 +02:00 [INF] Chart saved. ChartId: "5b4ee475-5b34-4069-adb0-66152242037f", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:37:35.178 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:37:43.031 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:37:43.039 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:37:57.846 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 01:38:20.578 +02:00 [INF] Requesting chart suggestions. DbType: postgres, MaxSuggestions: 1
+2026-03-24 01:38:27.478 +02:00 [INF] Received 1 chart suggestions.
+2026-03-24 01:38:27.490 +02:00 [INF] Chart saved. ChartId: "678f09d5-555c-4d15-aa61-341d023d0aed", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:38:27.551 +02:00 [DBG] Successfully opened a connection to "PostgreSql" database SqlSpace for connection "e07b8d29-b4d7-45de-b716-0ed95a11d9c5" .
+2026-03-24 01:38:27.562 +02:00 [ERR] Failed to execute query for connection "e07b8d29-b4d7-45de-b716-0ed95a11d9c5"
+Npgsql.PostgresException (0x80004005): 42P01: relation "public.queryhistories" does not exist
+
+POSITION: 86
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at SqlSpace.Infrastructure.integration.DatabaseExecutor.ExecuteQueryAsync(ConnectedDatabase connection, String sql, CancellationToken cancellationToken) in C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Infrastructure\integration\DatabaseExecutor.cs:line 54
+   at SqlSpace.Infrastructure.integration.DatabaseExecutor.ExecuteQueryAsync(ConnectedDatabase connection, String sql, CancellationToken cancellationToken) in C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Infrastructure\integration\DatabaseExecutor.cs:line 99
+   at SqlSpace.Infrastructure.integration.DatabaseExecutor.ExecuteQueryAsync(ConnectedDatabase connection, String sql, CancellationToken cancellationToken) in C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Infrastructure\integration\DatabaseExecutor.cs:line 99
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "public.queryhistories" does not exist
+    Position: 86
+    File: parse_relation.c
+    Line: 1448
+    Routine: parserOpenTable
+2026-03-24 01:38:33.183 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:38:33.189 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 01:38:33.248 +02:00 [DBG] Successfully opened a connection to "PostgreSql" database SqlSpace for connection "e07b8d29-b4d7-45de-b716-0ed95a11d9c5" .
+2026-03-24 01:38:33.250 +02:00 [ERR] Failed to execute query for connection "e07b8d29-b4d7-45de-b716-0ed95a11d9c5"
+Npgsql.PostgresException (0x80004005): 42P01: relation "public.queryhistories" does not exist
+
+POSITION: 86
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at SqlSpace.Infrastructure.integration.DatabaseExecutor.ExecuteQueryAsync(ConnectedDatabase connection, String sql, CancellationToken cancellationToken) in C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Infrastructure\integration\DatabaseExecutor.cs:line 54
+   at SqlSpace.Infrastructure.integration.DatabaseExecutor.ExecuteQueryAsync(ConnectedDatabase connection, String sql, CancellationToken cancellationToken) in C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Infrastructure\integration\DatabaseExecutor.cs:line 99
+   at SqlSpace.Infrastructure.integration.DatabaseExecutor.ExecuteQueryAsync(ConnectedDatabase connection, String sql, CancellationToken cancellationToken) in C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Infrastructure\integration\DatabaseExecutor.cs:line 99
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "public.queryhistories" does not exist
+    Position: 86
+    File: parse_relation.c
+    Line: 1448
+    Routine: parserOpenTable
+2026-03-24 01:38:34.962 +02:00 [DBG] Successfully opened a connection to "PostgreSql" database SqlSpace for connection "e07b8d29-b4d7-45de-b716-0ed95a11d9c5" .
+2026-03-24 01:38:34.964 +02:00 [ERR] Failed to execute query for connection "e07b8d29-b4d7-45de-b716-0ed95a11d9c5"
+Npgsql.PostgresException (0x80004005): 42P01: relation "public.queryhistories" does not exist
+
+POSITION: 86
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+   at SqlSpace.Infrastructure.integration.DatabaseExecutor.ExecuteQueryAsync(ConnectedDatabase connection, String sql, CancellationToken cancellationToken) in C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Infrastructure\integration\DatabaseExecutor.cs:line 54
+   at SqlSpace.Infrastructure.integration.DatabaseExecutor.ExecuteQueryAsync(ConnectedDatabase connection, String sql, CancellationToken cancellationToken) in C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Infrastructure\integration\DatabaseExecutor.cs:line 99
+   at SqlSpace.Infrastructure.integration.DatabaseExecutor.ExecuteQueryAsync(ConnectedDatabase connection, String sql, CancellationToken cancellationToken) in C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Infrastructure\integration\DatabaseExecutor.cs:line 99
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P01
+    MessageText: relation "public.queryhistories" does not exist
+    Position: 86
+    File: parse_relation.c
+    Line: 1448
+    Routine: parserOpenTable
+2026-03-24 01:38:38.031 +02:00 [INF] Chart deleted. ChartId: "678f09d5-555c-4d15-aa61-341d023d0aed", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 10:54:27.219 +02:00 [INF] Now listening on: http://localhost:5131
+2026-03-24 10:54:27.246 +02:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-03-24 10:54:27.247 +02:00 [INF] Hosting environment: Development
+2026-03-24 10:54:27.247 +02:00 [INF] Content root path: C:\Users\ahmed\projects\SqlSpace\src\SqlSpace.Api
+2026-03-24 10:54:39.209 +02:00 [WRN] Failed to determine the https port for redirect.
+2026-03-24 10:54:39.445 +02:00 [INF] Login requested. Email: user1@test.com
+2026-03-24 10:54:40.559 +02:00 [DBG] Generating access token for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 10:54:40.568 +02:00 [DBG] Access token generated successfully for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a, expiresInMinutes: 120
+2026-03-24 10:54:40.572 +02:00 [DBG] Issuing refresh token for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 10:54:40.699 +02:00 [INF] Refresh token issued successfully for userId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 10:54:40.701 +02:00 [INF] Login succeeded. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 10:54:40.787 +02:00 [DBG] GetUserConnections requested. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 10:54:40.905 +02:00 [DBG] GetUserConnections returned 2 connections. UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 10:54:44.539 +02:00 [INF] GetUserInsights requested. ConnectionId: "e07b8d29-b4d7-45de-b716-0ed95a11d9c5", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 10:54:44.607 +02:00 [DBG] GetUserInsights access verified. ConnectionId: "e07b8d29-b4d7-45de-b716-0ed95a11d9c5", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 10:54:44.637 +02:00 [DBG] BuildInsights query count: 1. ConnectionId: "e07b8d29-b4d7-45de-b716-0ed95a11d9c5", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, IsAdmin: false
+2026-03-24 10:54:48.069 +02:00 [INF] GetUserInsights requested. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 10:54:48.073 +02:00 [DBG] GetUserInsights access verified. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 10:54:48.075 +02:00 [DBG] BuildInsights query count: 29. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, IsAdmin: false
+2026-03-24 10:55:00.714 +02:00 [INF] GetAdminInsights requested. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", AdminUserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 10:55:00.717 +02:00 [DBG] GetAdminInsights access verified. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", AdminUserId: 97c8eeee-ce5f-4d84-a373-599351e3683a
+2026-03-24 10:55:00.723 +02:00 [DBG] BuildInsights query count: 30. ConnectionId: "143eb9a9-3d09-44f8-826d-32ec4b630938", UserId: 97c8eeee-ce5f-4d84-a373-599351e3683a, IsAdmin: true
+2026-03-24 10:55:12.066 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 10:55:15.527 +02:00 [DBG] Successfully opened a connection to "SqlServer" database  for connection "143eb9a9-3d09-44f8-826d-32ec4b630938" .
+2026-03-24 11:07:43.794 +02:00 [INF] Application is shutting down...

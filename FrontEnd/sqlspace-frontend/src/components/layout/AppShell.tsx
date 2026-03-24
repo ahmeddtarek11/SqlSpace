@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import {
   Database,
   LayoutDashboard,
+  BarChart3,
   History,
   Bookmark,
   LogOut,
@@ -18,6 +19,7 @@ import {
 const NAV_ITEMS = [
   { to: '/workspace',   label: 'Workspace',     icon: Database },
   { to: '/dashboard',   label: 'Dashboard',     icon: LayoutDashboard },
+  { to: '/analytics',   label: 'Analytics',     icon: BarChart3 },
   { to: '/connections', label: 'Connections',   icon: Settings },
   { to: '/history',     label: 'History',       icon: History },
   { to: '/saved',       label: 'Saved Queries', icon: Bookmark },

@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SqlSpace.Application.Abstractions.AI;
+using SqlSpace.Application.Abstractions.Analytics;
 using SqlSpace.Application.Abstractions.Audit;
 using SqlSpace.Application.Abstractions.Auth;
 using SqlSpace.Application.Abstractions.Data;
@@ -52,6 +53,20 @@ public static class DependencyInjection
             if (options.TimeoutSeconds > 0)
             {
                 client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
+            }
+        });
+        services.AddHttpClient<IAnalyticsAiClient, AnalyticsAiClient>((sp, client) =>
+        {
+            var llmOptions = sp.GetRequiredService<IOptions<llmApi>>().Value;
+            if (!string.IsNullOrWhiteSpace(llmOptions.BaseLink) &&
+                Uri.TryCreate(llmOptions.BaseLink, UriKind.Absolute, out var baseUri))
+            {
+                client.BaseAddress = baseUri;
+            }
+
+            if (llmOptions.TimeoutSeconds > 0)
+            {
+                client.Timeout = TimeSpan.FromSeconds(llmOptions.TimeoutSeconds);
             }
         });
         services.AddAuthentication(options =>
