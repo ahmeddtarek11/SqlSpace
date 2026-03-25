@@ -4,6 +4,8 @@
 **/bin/
 **/obj/
 **/out/
+.claude
+.dotnet
 
 # =========================
 # Visual Studio / IDE
