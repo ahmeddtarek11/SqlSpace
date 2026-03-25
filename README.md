@@ -2,6 +2,8 @@
 
 AI-powered business intelligence platform for small business owners. Connect your database or store, ask questions in plain language, and get insights, charts, and reports — no SQL knowledge required.
 
+> **⚠️ Work in Progress**: This project is **not finished**. It is under continuous development — many features are still being built, some functionality is incomplete, and there will be bugs. Expect breaking changes as the codebase evolves.
+
 ## What It Does
 
 - **Natural Language Queries** — Ask business questions in plain English, get SQL-backed answers with AI explanations

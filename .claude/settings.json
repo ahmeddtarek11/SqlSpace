@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.chartjs.org)",
+      "Bash(curl -s -X POST http://localhost:5000/api/auth/login -H \"Content-Type: application/json\" -d '{\"\"\"\"email\"\"\"\":\"\"\"\"user1@test.com\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"1234\"\"\"\"}')",
+      "Bash(curl -s -X POST http://localhost:5173/api/auth/login -H \"Content-Type: application/json\" -d '{\"\"\"\"email\"\"\"\":\"\"\"\"user1@test.com\"\"\"\",\"\"\"\"password\"\"\"\":\"\"\"\"1234\"\"\"\"}')",
+      "Bash(curl -v -X POST http://localhost:5000/api/auth/login -H \"Content-Type: application/json\" -d \"{\"\"email\"\":\"\"user1@test.com\"\",\"\"password\"\":\"\"1234\"\"}\")",
+      "Bash(powershell -Command \"Get-Process -Id 10144 | Select-Object Id,ProcessName,Path\")",
+      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter ''ProcessId=10144'' | Select-Object CommandLine\")",
+      "Bash(curl -s -X POST http://localhost:8000/schema-to-analytics -H \"Content-Type: application/json\" -d '{:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5N2M4ZWVlZS1jZTVmLTRkODQtYTM3My01OTkzNTFlMzY4M2EiLCJlbWFpbCI6InVzZXIxQHRlc3QuY29tIiwibmFtZSI6InVzZXIxIiwianRpIjoiYTdjYTQyOTAtMTYzOS00MzAxLTkwYmEtNzdmNDc1NzQ3ZDRlIiwibmJmIjoxNzc0MzQ3MjU3LCJleHAiOjE3NzQzNTQ0NTcsImlhdCI6MTc3NDM0NzI1NywiaXNzIjoiU3FsU3BhY2VIb3N0IiwiYXVkIjoiU3FsU3BhY2VVc2VycyJ9.KngfrGxjtygStzjS8nYi2w65m4bHrhVDYWhyZBqJbbQ\" CONN=\"143eb9a9-3d09-44f8-826d-32ec4b630938\" curl -s -X POST \"http://localhost:5131/api/analytics/$CONN/suggest\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"\"\"\"userPrompt\"\"\"\":\"\"\"\"Compare total revenue on left axis and order count on right axis by month as a multi axis line\"\"\"\",\"\"\"\"maxSuggestions\"\"\"\":1}')",
+      "Bash(python -m json.tool)",
+      "Read(//c/Users/ahmed/AppData/Local/Temp/claude/c--Users-ahmed-projects-SqlSpace/bb05c330-d77e-43fe-9304-625d09e4a31a/tasks/**)"
+    ]
+  }
+}
