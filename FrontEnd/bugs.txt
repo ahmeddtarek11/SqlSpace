@@ -1,3 +1,0 @@
-1- when i execute a query the rows doesn't show on the frontend , it says rows returned but their is nothing visible 
-2- on query history , ALL queries has the failed red icon , even the successfull queries 
-3- there is no button or action to save a query from the query history list 
