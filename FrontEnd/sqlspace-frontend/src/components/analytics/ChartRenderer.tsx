@@ -65,7 +65,30 @@ function autoDetectConfig(data: Record<string, unknown>[], config: ChartConfig):
 const DARK_GRID = 'rgba(255,255,255,0.06)'
 const DARK_TICK = '#71717a'
 
-function baseCartesianOptions(indexAxis: 'x' | 'y' = 'x'): ChartOptions<'bar' | 'line'> {
+function baseCartesianOptions(indexAxis: 'x' | 'y' = 'x', compact = false): ChartOptions<'bar' | 'line'> {
+  if (compact) {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#18181b',
+          titleColor: '#fff',
+          bodyColor: '#d4d4d8',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          cornerRadius: 8,
+          padding: 8,
+        },
+      },
+      scales: {
+        x: { display: false },
+        y: { display: false },
+      },
+    }
+  }
   return {
     responsive: true,
     maintainAspectRatio: false,
@@ -97,12 +120,14 @@ function baseCartesianOptions(indexAxis: 'x' | 'y' = 'x'): ChartOptions<'bar' | 
   }
 }
 
-function basePolarOptions(): ChartOptions<'pie' | 'doughnut' | 'radar' | 'polarArea'> {
+function basePolarOptions(compact = false): ChartOptions<'pie' | 'doughnut' | 'radar' | 'polarArea'> {
   return {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { display: true, position: 'bottom', labels: { color: '#a1a1aa', font: { size: 11 }, boxWidth: 10, padding: 12 } },
+      legend: compact
+        ? { display: false }
+        : { display: true, position: 'bottom', labels: { color: '#a1a1aa', font: { size: 11 }, boxWidth: 10, padding: 12 } },
       tooltip: {
         backgroundColor: '#18181b',
         titleColor: '#fff',
@@ -120,9 +145,10 @@ interface ChartRendererProps {
   chartType: ChartType
   config: ChartConfig
   data: Record<string, unknown>[]
+  compact?: boolean
 }
 
-export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
+export function ChartRenderer({ chartType, config, data, compact = false }: ChartRendererProps) {
   const resolved = useMemo(() => autoDetectConfig(data, config), [data, config])
   const actualKeys = useMemo(() => (data.length > 0 ? Object.keys(data[0]) : []), [data])
 
@@ -170,7 +196,7 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
           borderSkipped: false as const,
         })),
       }
-      const opts = baseCartesianOptions() as ChartOptions<'bar'>
+      const opts = baseCartesianOptions('x', compact) as ChartOptions<'bar'>
       if (chartType === 'stacked_bar' || resolved.stacked) {
         opts.scales = {
           ...opts.scales,
@@ -200,7 +226,7 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
           borderSkipped: false as const,
         })),
       }
-      return <div className="h-full w-full"><Bar data={chartData} options={baseCartesianOptions('y') as ChartOptions<'bar'>} /></div>
+      return <div className="h-full w-full"><Bar data={chartData} options={baseCartesianOptions('y', compact) as ChartOptions<'bar'>} /></div>
     }
 
     case 'grouped_bar': {
@@ -214,7 +240,7 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
           borderSkipped: false as const,
         })),
       }
-      return <div className="h-full w-full"><Bar data={chartData} options={baseCartesianOptions() as ChartOptions<'bar'>} /></div>
+      return <div className="h-full w-full"><Bar data={chartData} options={baseCartesianOptions('x', compact) as ChartOptions<'bar'>} /></div>
     }
 
     case 'floating_bar': {
@@ -232,7 +258,7 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
           borderSkipped: false as const,
         }],
       }
-      return <div className="h-full w-full"><Bar data={chartData} options={baseCartesianOptions() as ChartOptions<'bar'>} /></div>
+      return <div className="h-full w-full"><Bar data={chartData} options={baseCartesianOptions('x', compact) as ChartOptions<'bar'>} /></div>
     }
 
     case 'line': {
@@ -248,7 +274,7 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
           tension: 0.3,
         })),
       }
-      return <div className="h-full w-full"><Line data={chartData} options={baseCartesianOptions() as ChartOptions<'line'>} /></div>
+      return <div className="h-full w-full"><Line data={chartData} options={baseCartesianOptions('x', compact) as ChartOptions<'line'>} /></div>
     }
 
     case 'area': {
@@ -265,7 +291,7 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
           tension: 0.3,
         })),
       }
-      return <div className="h-full w-full"><Line data={chartData} options={baseCartesianOptions() as ChartOptions<'line'>} /></div>
+      return <div className="h-full w-full"><Line data={chartData} options={baseCartesianOptions('x', compact) as ChartOptions<'line'>} /></div>
     }
 
     case 'stepped_line': {
@@ -281,7 +307,7 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
           stepped: true as const,
         })),
       }
-      return <div className="h-full w-full"><Line data={chartData} options={baseCartesianOptions() as ChartOptions<'line'>} /></div>
+      return <div className="h-full w-full"><Line data={chartData} options={baseCartesianOptions('x', compact) as ChartOptions<'line'>} /></div>
     }
 
     case 'multi_axis_line': {
@@ -299,28 +325,30 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
         })),
       }
       const opts: ChartOptions<'line'> = {
-        ...baseCartesianOptions() as ChartOptions<'line'>,
-        scales: {
-          x: {
-            grid: { color: 'transparent' },
-            ticks: { color: DARK_TICK, font: { size: 11 }, maxRotation: 45 },
-            border: { display: false },
+        ...baseCartesianOptions('x', compact) as ChartOptions<'line'>,
+        ...(compact ? {} : {
+          scales: {
+            x: {
+              grid: { color: 'transparent' },
+              ticks: { color: DARK_TICK, font: { size: 11 }, maxRotation: 45 },
+              border: { display: false },
+            },
+            y: {
+              type: 'linear',
+              position: 'left',
+              grid: { color: DARK_GRID },
+              ticks: { color: colors[0], font: { size: 11 } },
+              border: { display: false },
+            },
+            y1: {
+              type: 'linear',
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              ticks: { color: colors[1] ?? DARK_TICK, font: { size: 11 } },
+              border: { display: false },
+            },
           },
-          y: {
-            type: 'linear',
-            position: 'left',
-            grid: { color: DARK_GRID },
-            ticks: { color: colors[0], font: { size: 11 } },
-            border: { display: false },
-          },
-          y1: {
-            type: 'linear',
-            position: 'right',
-            grid: { drawOnChartArea: false },
-            ticks: { color: colors[1] ?? DARK_TICK, font: { size: 11 } },
-            border: { display: false },
-          },
-        },
+        }),
       }
       return <div className="h-full w-full"><Line data={chartData} options={opts} /></div>
     }
@@ -337,7 +365,7 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
           borderWidth: 2,
         }],
       }
-      return <div className="h-full w-full"><Pie data={chartData} options={basePolarOptions() as ChartOptions<'pie'>} /></div>
+      return <div className="h-full w-full"><Pie data={chartData} options={basePolarOptions(compact) as ChartOptions<'pie'>} /></div>
     }
 
     case 'doughnut': {
@@ -353,7 +381,7 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
         }],
       }
       const opts: ChartOptions<'doughnut'> = {
-        ...(basePolarOptions() as ChartOptions<'doughnut'>),
+        ...(basePolarOptions(compact) as ChartOptions<'doughnut'>),
         cutout: '60%',
       }
       return <div className="h-full w-full"><Doughnut data={chartData} options={opts} /></div>
@@ -373,7 +401,7 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
         }],
       }
       const opts: ChartOptions<'scatter'> = {
-        ...(baseCartesianOptions() as unknown as ChartOptions<'scatter'>),
+        ...(baseCartesianOptions('x', compact) as unknown as ChartOptions<'scatter'>),
       }
       return <div className="h-full w-full"><Scatter data={chartData} options={opts} /></div>
     }
@@ -394,7 +422,7 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
         }],
       }
       const opts: ChartOptions<'bubble'> = {
-        ...(baseCartesianOptions() as unknown as ChartOptions<'bubble'>),
+        ...(baseCartesianOptions('x', compact) as unknown as ChartOptions<'bubble'>),
       }
       return <div className="h-full w-full"><Bubble data={chartData} options={opts} /></div>
     }
@@ -415,15 +443,17 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
         })),
       }
       const opts: ChartOptions<'radar'> = {
-        ...(basePolarOptions() as ChartOptions<'radar'>),
-        scales: {
-          r: {
-            grid: { color: DARK_GRID },
-            angleLines: { color: DARK_GRID },
-            pointLabels: { color: DARK_TICK, font: { size: 10 } },
-            ticks: { display: false },
+        ...(basePolarOptions(compact) as ChartOptions<'radar'>),
+        ...(compact ? {} : {
+          scales: {
+            r: {
+              grid: { color: DARK_GRID },
+              angleLines: { color: DARK_GRID },
+              pointLabels: { color: DARK_TICK, font: { size: 10 } },
+              ticks: { display: false },
+            },
           },
-        },
+        }),
       }
       return <div className="h-full w-full"><Radar data={chartData} options={opts} /></div>
     }
@@ -443,13 +473,15 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
         }],
       }
       const opts: ChartOptions<'polarArea'> = {
-        ...(basePolarOptions() as ChartOptions<'polarArea'>),
-        scales: {
-          r: {
-            grid: { color: DARK_GRID },
-            ticks: { display: false },
+        ...(basePolarOptions(compact) as ChartOptions<'polarArea'>),
+        ...(compact ? {} : {
+          scales: {
+            r: {
+              grid: { color: DARK_GRID },
+              ticks: { display: false },
+            },
           },
-        },
+        }),
       }
       return <div className="h-full w-full"><PolarArea data={chartData} options={opts} /></div>
     }
@@ -479,7 +511,7 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
         }
       })
       const chartData = { labels, datasets }
-      return <div className="h-full w-full"><Bar data={chartData as ChartData<'bar'>} options={baseCartesianOptions() as ChartOptions<'bar'>} /></div>
+      return <div className="h-full w-full"><Bar data={chartData as ChartData<'bar'>} options={baseCartesianOptions('x', compact) as ChartOptions<'bar'>} /></div>
     }
 
     case 'treemap': {
@@ -501,7 +533,7 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
           borderSkipped: false as const,
         }],
       }
-      return <div className="h-full w-full"><Bar data={fallbackData} options={baseCartesianOptions('y') as ChartOptions<'bar'>} /></div>
+      return <div className="h-full w-full"><Bar data={fallbackData} options={baseCartesianOptions('y', compact) as ChartOptions<'bar'>} /></div>
     }
 
     case 'funnel': {
@@ -524,7 +556,7 @@ export function ChartRenderer({ chartType, config, data }: ChartRendererProps) {
           borderSkipped: false as const,
         }],
       }
-      return <div className="h-full w-full"><Bar data={chartData} options={baseCartesianOptions('y') as ChartOptions<'bar'>} /></div>
+      return <div className="h-full w-full"><Bar data={chartData} options={baseCartesianOptions('y', compact) as ChartOptions<'bar'>} /></div>
     }
 
     default:

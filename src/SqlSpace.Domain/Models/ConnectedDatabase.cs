@@ -45,6 +45,7 @@ public class ConnectedDatabase
     public  ICollection<QueryHistory> Queries { get; set; } = new List<QueryHistory>();
     public  ICollection<AccessAuditLog> AuditLogs { get; set; } = new List<AccessAuditLog>();
     public  ICollection<SavedChart> SavedCharts { get; set; } = new List<SavedChart>();
+    public ICollection<KnowledgeDocument> KnowledgeDocuments { get; set; } = new List<KnowledgeDocument>();
 
 }
 

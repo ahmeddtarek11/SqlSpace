@@ -1,1 +1,0 @@
-- Email sender service = send email after events like grant access ,update access ,revoke access , signup 

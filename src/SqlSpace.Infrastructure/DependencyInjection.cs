@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SqlSpace.Application.Abstractions.AI;
 using SqlSpace.Application.Abstractions.Analytics;
+using SqlSpace.Application.Abstractions.SecurityAndLLM;
 using SqlSpace.Application.Abstractions.Audit;
 using SqlSpace.Application.Abstractions.Auth;
 using SqlSpace.Application.Abstractions.Data;
@@ -41,6 +42,21 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
         services.AddHttpContextAccessor();
         services.Configure<llmApi>(configuration.GetSection("LlmApi"));
+        services.Configure<RagApiOptions>(configuration.GetSection("RagApi"));
+        services.AddHttpClient<IRagClient, RagClient>((sp, client) =>
+        {
+            var ragOptions = sp.GetRequiredService<IOptions<RagApiOptions>>().Value;
+            if (!string.IsNullOrWhiteSpace(ragOptions.BaseUrl) &&
+                Uri.TryCreate(ragOptions.BaseUrl, UriKind.Absolute, out var baseUri))
+            {
+                client.BaseAddress = baseUri;
+            }
+
+            if (ragOptions.TimeoutSeconds > 0)
+            {
+                client.Timeout = TimeSpan.FromSeconds(ragOptions.TimeoutSeconds);
+            }
+        });
         services.AddHttpClient<ITextToSqlClient, TextToSqlClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<IOptions<llmApi>>().Value;
