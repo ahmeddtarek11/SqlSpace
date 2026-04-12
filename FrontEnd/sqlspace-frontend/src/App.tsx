@@ -18,6 +18,7 @@ import ConnectionDetailPage from '@/pages/ConnectionDetailPage'
 import NewConnectionPage from '@/pages/NewConnectionPage'
 import AccessControlPage from '@/pages/AccessControlPage'
 import AnalyticsPage from '@/pages/AnalyticsPage'
+import KnowledgeBasePage from '@/pages/KnowledgeBasePage'
 import LandingPage from '@/pages/LandingPage'
 
 const queryClient = new QueryClient({
@@ -61,6 +62,7 @@ export default function App() {
                 <Route path="/connections/new" element={<NewConnectionPage />} />
                 <Route path="/connections/:id" element={<ConnectionDetailPage />} />
                 <Route path="/access" element={<AccessControlPage />} />
+                <Route path="/knowledge" element={<KnowledgeBasePage />} />
               </Route>
             </Route>
 

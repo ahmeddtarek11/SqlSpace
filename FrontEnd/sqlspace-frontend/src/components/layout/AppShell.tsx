@@ -14,6 +14,7 @@ import {
   Sun,
   Shield,
   Settings,
+  BookOpen,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { to: '/history',     label: 'History',       icon: History },
   { to: '/saved',       label: 'Saved Queries', icon: Bookmark },
   { to: '/access',      label: 'Access Control',icon: Shield },
+  { to: '/knowledge',   label: 'Knowledge Base',icon: BookOpen },
 ]
 
 export function AppShell() {

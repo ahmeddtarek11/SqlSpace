@@ -270,6 +270,42 @@ export interface UpdateAccessRestrictionsRequest {
   restrictedTables?: TableRestrictionInput[]
 }
 
+// ── Knowledge Base ────────────────────────────────────────────
+export interface KnowledgeDocument {
+  documentId: string
+  connectionId: string
+  uploadedByUserId: string
+  fileName: string
+  sourceType: string
+  status: 'Pending' | 'Processing' | 'Indexed' | 'Failed'
+  pythonFileId: string | null
+  chunksCreated: number
+  errorMessage: string | null
+  createdAt: string
+  processedAt: string | null
+}
+
+export interface RagIngestResult {
+  fileId: string
+  fileName: string
+  chunksCreated: number
+  status: string
+}
+
+export interface RagQuerySource {
+  fileId: string
+  fileName: string
+  chunkId: string
+  relevanceScore: number
+  excerpt: string
+}
+
+export interface RagQueryResult {
+  answer: string
+  sources: RagQuerySource[]
+  tokensUsed: number
+}
+
 // ── Analytics Charts ─────────────────────────────────────────────────────────
 
 export type ChartType =

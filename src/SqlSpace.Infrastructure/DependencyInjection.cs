@@ -9,7 +9,9 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SqlSpace.Application.Abstractions.AI;
 using SqlSpace.Application.Abstractions.Analytics;
+using SqlSpace.Application.Abstractions.KnowledgeBase;
 using SqlSpace.Application.Abstractions.SecurityAndLLM;
+using SqlSpace.Application.Services.KnowledgeBase;
 using SqlSpace.Application.Abstractions.Audit;
 using SqlSpace.Application.Abstractions.Auth;
 using SqlSpace.Application.Abstractions.Data;
@@ -135,6 +137,7 @@ public static class DependencyInjection
             services.AddScoped<IConnectionStringBuilder , ConnectionStringBuilderService>();
             services.AddScoped<IDatabaseExecutor, DatabaseExecutor>();
             services.AddScoped<ISchemaExtractor , SchemaExtractor>();
+            services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
 
         return services;
     }
