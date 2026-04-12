@@ -86,4 +86,16 @@ Copy the example configs and fill in your values:
 - **AI Service**: `AI-based_DSS/.env` — `GEMINI_API_KEY`
 - **Frontend**: `FrontEnd/sqlspace-frontend/.env` — API base URL
 
+<<<<<<< HEAD
 
+=======
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md) for the full product roadmap including:
+
+1. RAG-powered knowledge base (connection-scoped)
+2. Auto-generated business reports with PDF/Excel export
+3. Shopify and external integrations
+4. Smart alerts and goal tracking
+5. AI business advisor and forecasting
+>>>>>>> be45a14 (fixed staging mistake)
