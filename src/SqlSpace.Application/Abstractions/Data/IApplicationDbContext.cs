@@ -23,6 +23,7 @@ public interface IApplicationDbContext
     DbSet<AccessAuditLog> AccessAuditLogs { get; }
     DbSet<RefreshToken> RefreshTokens { get; }
     DbSet<SavedChart> SavedCharts { get; }
+    DbSet<KnowledgeDocument> KnowledgeDocuments { get; }
 
     //DbSet<TableRestriction> TableRestrictions { get; }
     // deprecated
