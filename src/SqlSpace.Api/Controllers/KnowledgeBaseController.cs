@@ -111,6 +111,7 @@ public class KnowledgeBaseController(
         var result = await _knowledgeBaseService.GetChatHistoryAsync(
             connectionId, userId, take, cancellationToken);
 
+
         return ToApiResponse(result, StatusCodes.Status200OK, "Chat history retrieved.");
     }
 }
