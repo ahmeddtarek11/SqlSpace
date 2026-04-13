@@ -306,6 +306,24 @@ export interface RagQueryResult {
   tokensUsed: number
 }
 
+export interface ChatMessageSource {
+  fileId: string
+  fileName: string
+  chunkId: string
+  relevanceScore: number
+  excerpt: string
+}
+
+export interface ChatMessage {
+  messageId: string
+  role: 'user' | 'assistant'
+  content: string
+  sources?: ChatMessageSource[]
+  tokensUsed?: number
+  errorMessage?: string
+  createdAt: string
+}
+
 // ── Analytics Charts ─────────────────────────────────────────────────────────
 
 export type ChartType =

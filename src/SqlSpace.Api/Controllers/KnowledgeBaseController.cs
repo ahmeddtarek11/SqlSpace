@@ -92,6 +92,27 @@ public class KnowledgeBaseController(
 
         return ToApiResponse(result, StatusCodes.Status200OK, "Query answered.");
     }
+
+    [HttpGet("chat")]
+    [EndpointSummary("Get the user's chat history for this connection")]
+    [EndpointDescription("Returns the persisted chat thread for the current user on this connection, ordered oldest first. One rolling thread per (connection, user).")]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<KnowledgeChatMessageDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<KnowledgeChatMessageDto>>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<KnowledgeChatMessageDto>>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<KnowledgeChatMessageDto>>>> GetChatHistory(
+        Guid connectionId,
+        [FromQuery] int take = 100,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = _currentUserService.GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return UnauthorizedResponse<IReadOnlyList<KnowledgeChatMessageDto>>();
+
+        var result = await _knowledgeBaseService.GetChatHistoryAsync(
+            connectionId, userId, take, cancellationToken);
+
+        return ToApiResponse(result, StatusCodes.Status200OK, "Chat history retrieved.");
+    }
 }
 
 public class KnowledgeAskRequest

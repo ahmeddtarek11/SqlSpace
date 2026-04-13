@@ -1,7 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
 import { useAuthStore } from '@/stores/auth-store'
-import { useThemeStore } from '@/stores/theme-store'
 import { cn } from '@/lib/utils'
 import {
   Database,
@@ -10,29 +9,27 @@ import {
   History,
   Bookmark,
   LogOut,
-  Moon,
-  Sun,
   Shield,
   Settings,
   BookOpen,
+  ChevronRight,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { to: '/workspace',   label: 'Workspace',     icon: Database },
-  { to: '/dashboard',   label: 'Dashboard',     icon: LayoutDashboard },
-  { to: '/analytics',   label: 'Analytics',     icon: BarChart3 },
-  { to: '/connections', label: 'Connections',   icon: Settings },
-  { to: '/history',     label: 'History',       icon: History },
-  { to: '/saved',       label: 'Saved Queries', icon: Bookmark },
-  { to: '/access',      label: 'Access Control',icon: Shield },
-  { to: '/knowledge',   label: 'Knowledge Base',icon: BookOpen },
+  { to: '/workspace',   label: 'Workspace',      icon: Database },
+  { to: '/dashboard',   label: 'Dashboard',      icon: LayoutDashboard },
+  { to: '/analytics',   label: 'Analytics',      icon: BarChart3 },
+  { to: '/connections', label: 'Connections',    icon: Settings },
+  { to: '/history',     label: 'History',        icon: History },
+  { to: '/saved',       label: 'Saved Queries',  icon: Bookmark },
+  { to: '/access',      label: 'Access Control', icon: Shield },
+  { to: '/knowledge',   label: 'Knowledge Base', icon: BookOpen },
 ]
 
 export function AppShell() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
-  const { theme, toggleTheme } = useThemeStore()
 
   const handleLogout = () => {
     logout()
@@ -45,22 +42,41 @@ export function AppShell() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-[#080809]">
-      {/* ── LEFT SIDEBAR ─────────────────────────────────────────────────── */}
-      <aside className="w-64 shrink-0 flex flex-col bg-[#111113] border-r border-white/10 z-20">
-
-        {/* Logo Header */}
-        <div className="h-16 flex items-center gap-3 px-6 border-b border-white/10 shrink-0">
-          <Link to="/workspace" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center shadow-[0_0_12px_rgba(14,165,233,0.5)] shrink-0">
-              <Database className="w-4 h-4 text-white" />
+    <div className="flex h-screen w-full" style={{ background: 'var(--bg-base)' }}>
+      {/* ── LEFT SIDEBAR ─────────────────────────────────────────── */}
+      <aside
+        className="w-[260px] shrink-0 flex flex-col z-20"
+        style={{
+          background: 'var(--bg-surface)',
+          borderRight: '1px solid var(--border-subtle)',
+        }}
+      >
+        {/* Logo */}
+        <div
+          className="h-[72px] flex items-center gap-3 px-6 shrink-0"
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}
+        >
+          <Link to="/workspace" className="flex items-center gap-3 group">
+            <div
+              className="w-9 h-9 flex items-center justify-center shrink-0"
+              style={{
+                background: 'var(--accent)',
+                borderRadius: 'var(--radius-md)',
+              }}
+            >
+              <Database className="w-[18px] h-[18px] text-white" strokeWidth={2} />
             </div>
-            <span className="font-semibold text-sm text-white">SqlSpace</span>
+            <span
+              className="text-[15px] font-bold tracking-tight"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              SqlSpace
+            </span>
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1">
+        <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-5 space-y-0.5">
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => {
             const active = isActive(to)
             return (
@@ -68,16 +84,34 @@ export function AppShell() {
                 key={to}
                 to={to}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                  'group flex items-center gap-3 px-3 py-2.5 text-[13px] font-medium transition-all duration-200',
                   active
-                    ? 'bg-sky-500/10 text-sky-400'
-                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5'
+                    ? 'text-white'
+                    : 'hover:text-[var(--text-primary)]'
                 )}
+                style={{
+                  borderRadius: 'var(--radius-md)',
+                  color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  background: active ? 'var(--accent-subtle)' : 'transparent',
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) e.currentTarget.style.background = 'var(--bg-hover)'
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) e.currentTarget.style.background = 'transparent'
+                }}
               >
-                <Icon className="w-4 h-4 shrink-0" />
+                <Icon
+                  className="w-[18px] h-[18px] shrink-0"
+                  strokeWidth={1.75}
+                  style={{ color: active ? 'var(--accent)' : 'var(--text-tertiary)' }}
+                />
                 <span className="flex-1">{label}</span>
                 {active && (
-                  <div className="w-1 h-4 rounded-full bg-sky-500 shrink-0" />
+                  <ChevronRight
+                    className="w-3.5 h-3.5 shrink-0 opacity-50"
+                    style={{ color: 'var(--accent)' }}
+                  />
                 )}
               </Link>
             )
@@ -85,39 +119,68 @@ export function AppShell() {
         </nav>
 
         {/* User Footer */}
-        <div className="border-t border-white/10 px-3 py-3 shrink-0 space-y-2">
-          <div className="flex items-center gap-2 px-1">
-            <div className="w-7 h-7 rounded-full bg-sky-500/20 border border-sky-500/30 flex items-center justify-center text-xs font-medium text-sky-300 shrink-0">
+        <div
+          className="px-4 py-4 shrink-0"
+          style={{ borderTop: '1px solid var(--border-subtle)' }}
+        >
+          <div className="flex items-center gap-3 mb-3 px-1">
+            <div
+              className="w-8 h-8 flex items-center justify-center text-xs font-bold shrink-0"
+              style={{
+                borderRadius: 'var(--radius-pill)',
+                background: 'var(--accent-subtle)',
+                color: 'var(--accent)',
+              }}
+            >
               {user?.username?.[0]?.toUpperCase() ?? 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-zinc-200 truncate">{user?.username}</p>
-              <p className="text-[10px] text-zinc-500 truncate">{user?.email}</p>
+              <p
+                className="text-[13px] font-semibold truncate"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                {user?.username}
+              </p>
+              <p
+                className="text-[11px] truncate"
+                style={{ color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}
+              >
+                {user?.email}
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={toggleTheme}
-              className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-white/5 rounded-md transition-colors"
-            >
-              {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-              <span>{theme === 'dark' ? 'Light' : 'Dark'}</span>
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Sign out</span>
-            </button>
-          </div>
+
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-[12px] font-medium transition-all duration-200"
+            style={{
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--text-tertiary)',
+              border: '1px solid var(--border-subtle)',
+              background: 'transparent',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--danger-subtle)'
+              e.currentTarget.style.color = 'var(--danger)'
+              e.currentTarget.style.borderColor = 'rgba(248, 113, 113, 0.2)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = 'var(--text-tertiary)'
+              e.currentTarget.style.borderColor = 'var(--border-subtle)'
+            }}
+          >
+            <LogOut className="w-3.5 h-3.5" strokeWidth={2} />
+            <span>Sign out</span>
+          </button>
         </div>
       </aside>
 
-      {/* ── MAIN CONTENT ─────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        {/* Decorative glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-100 bg-sky-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
+      {/* ── MAIN CONTENT ──────────────────────────────────────────── */}
+      <main
+        className="flex-1 flex flex-col min-w-0 overflow-hidden relative"
+        style={{ background: 'var(--bg-base)' }}
+      >
         <div className="flex-1 min-h-0 overflow-hidden relative z-10">
           <Outlet />
         </div>

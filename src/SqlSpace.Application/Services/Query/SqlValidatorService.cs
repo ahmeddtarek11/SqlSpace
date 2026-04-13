@@ -14,6 +14,7 @@ public  class SqlValidatorService : ISqlValidator
         _logger = logger;
     }
 
+
     private static readonly Regex DangerousKeywordRegex = new(
         @"\b(INSERT|UPDATE|DELETE|DROP|TRUNCATE|ALTER|CREATE|EXEC(?:UTE)?|MERGE|GRANT|REVOKE|DENY)\b",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);

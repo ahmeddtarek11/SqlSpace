@@ -317,7 +317,7 @@ function DashboardContent({
 // ── Page ───────────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { activeConnectionId, setActiveConnection } = useConnectionStore()
-  const [range, setRange] = useState<RangeKey>('7')
+  const [range, setRange] = useState<RangeKey>('all')
   const [viewMode, setViewMode] = useState<'mine' | 'all'>('mine')
 
   const { data: connections = [], isLoading: connectionsLoading } = useQuery({

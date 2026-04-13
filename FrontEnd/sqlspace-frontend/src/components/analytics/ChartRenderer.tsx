@@ -167,11 +167,51 @@ export function ChartRenderer({ chartType, config, data, compact = false }: Char
     [resolved.labelKey, resolved.xAxis, actualKeys],
   )
   const vKey = useMemo(
-    () => resolveKey(resolved.valueKey ?? resolved.yAxis?.[0], actualKeys),
+    () => {
+      const primaryY = Array.isArray(resolved.yAxis) ? resolved.yAxis[0] : resolved.yAxis
+      return resolveKey(resolved.valueKey ?? primaryY, actualKeys)
+    },
     [resolved.valueKey, resolved.yAxis, actualKeys],
   )
 
   const colors = resolved.colors ?? DEFAULT_COLORS
+
+  const isNumericColumn = (key: string): boolean => {
+    if (!key) return false
+    let nonNull = 0
+    let numeric = 0
+    for (const row of data) {
+      const value = row[key]
+      if (value == null) continue
+      nonNull += 1
+      if (typeof value === 'number') {
+        numeric += 1
+        continue
+      }
+      if (typeof value === 'string' && value.trim().length > 0 && Number.isFinite(Number(value.replace(/,/g, '')))) {
+        numeric += 1
+      }
+    }
+    return nonNull > 0 && numeric / nonNull >= 0.7
+  }
+
+  const safeYKeys = yKeys.filter((k) => isNumericColumn(k))
+
+  const safeXKey = (!xKey || isNumericColumn(xKey))
+    ? (actualKeys.find((k) => !isNumericColumn(k) && k !== safeYKeys[0]) ?? xKey)
+    : xKey
+
+  const fallbackYKeys = safeYKeys.length > 0
+    ? safeYKeys
+    : actualKeys.filter((k) => isNumericColumn(k) && k !== safeXKey)
+
+  const safeLabelKey = (lKey && !isNumericColumn(lKey))
+    ? lKey
+    : (actualKeys.find((k) => !isNumericColumn(k) && k !== vKey) ?? safeXKey)
+
+  const safeValueKey = (vKey && isNumericColumn(vKey))
+    ? vKey
+    : (fallbackYKeys[0] ?? vKey)
 
   if (!data || data.length === 0) {
     return (
@@ -181,14 +221,14 @@ export function ChartRenderer({ chartType, config, data, compact = false }: Char
     )
   }
 
-  const labels = data.map((d) => String(d[xKey] ?? d[lKey] ?? ''))
+  const labels = data.map((d) => String(d[safeXKey] ?? d[safeLabelKey] ?? ''))
 
   switch (chartType) {
     case 'bar':
     case 'stacked_bar': {
       const chartData: ChartData<'bar'> = {
         labels,
-        datasets: yKeys.map((key, i) => ({
+        datasets: (fallbackYKeys.length > 0 ? fallbackYKeys : yKeys).map((key, i) => ({
           label: key,
           data: data.map((d) => Number(d[key]) || 0),
           backgroundColor: colors[i % colors.length],
@@ -210,10 +250,8 @@ export function ChartRenderer({ chartType, config, data, compact = false }: Char
     case 'horizontal_bar': {
       // For horizontal bars, ensure labels are the category (string) column
       // and data values are the numeric column — even if the AI swapped them.
-      const sample = data[0]
-      const catKey = typeof sample[xKey] === 'string' ? xKey : yKeys.find((k) => typeof sample[k] === 'string') ?? xKey
-      const valKeys = yKeys.filter((k) => typeof sample[k] === 'number')
-      const effectiveValKeys = valKeys.length > 0 ? valKeys : (typeof sample[xKey] === 'number' ? [xKey] : yKeys)
+      const catKey = safeXKey
+      const effectiveValKeys = fallbackYKeys.length > 0 ? fallbackYKeys : yKeys
 
       const hLabels = data.map((d) => String(d[catKey] ?? ''))
       const chartData: ChartData<'bar'> = {
@@ -232,7 +270,7 @@ export function ChartRenderer({ chartType, config, data, compact = false }: Char
     case 'grouped_bar': {
       const chartData: ChartData<'bar'> = {
         labels,
-        datasets: yKeys.map((key, i) => ({
+        datasets: (fallbackYKeys.length > 0 ? fallbackYKeys : yKeys).map((key, i) => ({
           label: key,
           data: data.map((d) => Number(d[key]) || 0),
           backgroundColor: colors[i % colors.length],
@@ -264,7 +302,7 @@ export function ChartRenderer({ chartType, config, data, compact = false }: Char
     case 'line': {
       const chartData: ChartData<'line'> = {
         labels,
-        datasets: yKeys.map((key, i) => ({
+        datasets: (fallbackYKeys.length > 0 ? fallbackYKeys : yKeys).map((key, i) => ({
           label: key,
           data: data.map((d) => Number(d[key]) || 0),
           borderColor: colors[i % colors.length],
@@ -280,7 +318,7 @@ export function ChartRenderer({ chartType, config, data, compact = false }: Char
     case 'area': {
       const chartData: ChartData<'line'> = {
         labels,
-        datasets: yKeys.map((key, i) => ({
+        datasets: (fallbackYKeys.length > 0 ? fallbackYKeys : yKeys).map((key, i) => ({
           label: key,
           data: data.map((d) => Number(d[key]) || 0),
           borderColor: colors[i % colors.length],
@@ -297,7 +335,7 @@ export function ChartRenderer({ chartType, config, data, compact = false }: Char
     case 'stepped_line': {
       const chartData: ChartData<'line'> = {
         labels,
-        datasets: yKeys.map((key, i) => ({
+        datasets: (fallbackYKeys.length > 0 ? fallbackYKeys : yKeys).map((key, i) => ({
           label: key,
           data: data.map((d) => Number(d[key]) || 0),
           borderColor: colors[i % colors.length],
@@ -311,9 +349,10 @@ export function ChartRenderer({ chartType, config, data, compact = false }: Char
     }
 
     case 'multi_axis_line': {
+      const multiKeys = fallbackYKeys.length > 0 ? fallbackYKeys : yKeys
       const chartData: ChartData<'line'> = {
         labels,
-        datasets: yKeys.map((key, i) => ({
+        datasets: multiKeys.map((key, i) => ({
           label: key,
           data: data.map((d) => Number(d[key]) || 0),
           borderColor: colors[i % colors.length],
@@ -354,8 +393,8 @@ export function ChartRenderer({ chartType, config, data, compact = false }: Char
     }
 
     case 'pie': {
-      const pieLabels = data.map((d) => String(d[lKey] ?? ''))
-      const pieValues = data.map((d) => Number(d[vKey]) || 0)
+      const pieLabels = data.map((d) => String(d[safeLabelKey] ?? ''))
+      const pieValues = data.map((d) => Number(d[safeValueKey]) || 0)
       const chartData: ChartData<'pie'> = {
         labels: pieLabels,
         datasets: [{
@@ -369,8 +408,8 @@ export function ChartRenderer({ chartType, config, data, compact = false }: Char
     }
 
     case 'doughnut': {
-      const dLabels = data.map((d) => String(d[lKey] ?? ''))
-      const dValues = data.map((d) => Number(d[vKey]) || 0)
+      const dLabels = data.map((d) => String(d[safeLabelKey] ?? ''))
+      const dValues = data.map((d) => Number(d[safeValueKey]) || 0)
       const chartData: ChartData<'doughnut'> = {
         labels: dLabels,
         datasets: [{
@@ -428,8 +467,8 @@ export function ChartRenderer({ chartType, config, data, compact = false }: Char
     }
 
     case 'radar': {
-      const radarKeys = resolved.dataKeys?.map((k) => resolveKey(k, actualKeys)) ?? yKeys
-      const radarLabels = data.map((d) => String(d[xKey] ?? ''))
+      const radarKeys = resolved.dataKeys?.map((k) => resolveKey(k, actualKeys)) ?? (fallbackYKeys.length > 0 ? fallbackYKeys : yKeys)
+      const radarLabels = data.map((d) => String(d[safeXKey] ?? ''))
       const chartData: ChartData<'radar'> = {
         labels: radarLabels,
         datasets: radarKeys.map((key, i) => ({
@@ -459,9 +498,9 @@ export function ChartRenderer({ chartType, config, data, compact = false }: Char
     }
 
     case 'polar_area': {
-      const paLabels = data.map((d) => String(d[lKey] ?? ''))
-      const paKeys = resolved.dataKeys?.map((k) => resolveKey(k, actualKeys)) ?? yKeys
-      const paKey = paKeys[0] ?? vKey
+      const paLabels = data.map((d) => String(d[safeLabelKey] ?? ''))
+      const paKeys = resolved.dataKeys?.map((k) => resolveKey(k, actualKeys)) ?? (fallbackYKeys.length > 0 ? fallbackYKeys : yKeys)
+      const paKey = paKeys[0] ?? safeValueKey
       const paValues = data.map((d) => Number(d[paKey]) || 0)
       const chartData: ChartData<'polarArea'> = {
         labels: paLabels,
@@ -491,8 +530,9 @@ export function ChartRenderer({ chartType, config, data, compact = false }: Char
       const lnKeys = (resolved.lineKeys ?? []).map((k) => resolveKey(k, actualKeys))
       const allKeys = bKeys.length > 0 || lnKeys.length > 0
         ? [...bKeys, ...lnKeys]
-        : yKeys
-      const barSet = new Set(bKeys.length > 0 ? bKeys : yKeys.slice(0, Math.ceil(yKeys.length / 2)))
+        : (fallbackYKeys.length > 0 ? fallbackYKeys : yKeys)
+      const defaultKeys = fallbackYKeys.length > 0 ? fallbackYKeys : yKeys
+      const barSet = new Set(bKeys.length > 0 ? bKeys : defaultKeys.slice(0, Math.ceil(defaultKeys.length / 2)))
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const datasets: any[] = allKeys.map((key, i) => {
         const isBar = barSet.has(key)
@@ -516,15 +556,15 @@ export function ChartRenderer({ chartType, config, data, compact = false }: Char
 
     case 'treemap': {
       const tmData = data.map((d, i) => ({
-        label: String(d[lKey] ?? d[xKey] ?? `Item ${i}`),
-        value: Number(d[vKey] ?? d[yKeys[0]]) || 0,
+        label: String(d[safeLabelKey] ?? d[safeXKey] ?? `Item ${i}`),
+        value: Number(d[safeValueKey] ?? d[fallbackYKeys[0]]) || 0,
         color: colors[i % colors.length],
       }))
       // Render as horizontal bar — more readable than treemap for most data
       const fallbackData: ChartData<'bar'> = {
         labels: tmData.map((d) => d.label),
         datasets: [{
-          label: vKey || yKeys[0] || 'Value',
+          label: safeValueKey || fallbackYKeys[0] || 'Value',
           data: tmData.map((d) => d.value),
           backgroundColor: tmData.map((d) => d.color + '80'),
           borderColor: tmData.map((d) => d.color),
@@ -540,14 +580,14 @@ export function ChartRenderer({ chartType, config, data, compact = false }: Char
       // Funnel rendered as horizontal bar sorted by value (largest at top)
       const funnelData = data
         .map((d) => ({
-          label: String(d[lKey] ?? d[xKey] ?? ''),
-          value: Number(d[vKey] ?? d[yKeys[0]]) || 0,
+          label: String(d[safeLabelKey] ?? d[safeXKey] ?? ''),
+          value: Number(d[safeValueKey] ?? d[fallbackYKeys[0]]) || 0,
         }))
         .sort((a, b) => b.value - a.value)
       const chartData: ChartData<'bar'> = {
         labels: funnelData.map((d) => d.label),
         datasets: [{
-          label: vKey || yKeys[0] || 'Value',
+          label: safeValueKey || fallbackYKeys[0] || 'Value',
           data: funnelData.map((d) => d.value),
           backgroundColor: funnelData.map((_, i) => colors[i % colors.length] + '80'),
           borderColor: funnelData.map((_, i) => colors[i % colors.length]),

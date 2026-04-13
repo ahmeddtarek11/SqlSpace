@@ -7,8 +7,6 @@ import {
   Bookmark,
   Settings,
   LogOut,
-  Moon,
-  Sun,
   Shield,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -20,7 +18,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useAuthStore } from '@/stores/auth-store'
-import { useThemeStore } from '@/stores/theme-store'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
@@ -36,7 +33,6 @@ export function TopNav() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
-  const { theme, toggleTheme } = useThemeStore()
 
   const handleLogout = () => {
     logout()
@@ -44,13 +40,28 @@ export function TopNav() {
   }
 
   return (
-    <header className="h-14 flex items-center gap-2 px-4 border-b border-white/10 bg-[#111113] shrink-0">
+    <header
+      className="h-14 flex items-center gap-2 px-4 shrink-0"
+      style={{
+        background: 'var(--bg-surface)',
+        borderBottom: '1px solid var(--border-subtle)',
+      }}
+    >
       {/* Logo */}
       <Link to="/workspace" className="flex items-center gap-2 mr-4">
-        <div className="w-7 h-7 rounded-lg bg-sky-500 flex items-center justify-center shadow-[0_0_12px_rgba(14,165,233,0.5)]">
+        <div
+          className="w-7 h-7 flex items-center justify-center"
+          style={{
+            borderRadius: 'var(--radius-md)',
+            background: 'var(--accent)',
+            boxShadow: '0 0 12px var(--accent-glow)',
+          }}
+        >
           <Database className="w-3.5 h-3.5 text-white" />
         </div>
-        <span className="font-semibold text-sm text-white hidden sm:block">SqlSpace</span>
+        <span className="font-semibold text-[14px] hidden sm:block" style={{ color: 'var(--text-primary)' }}>
+          SqlSpace
+        </span>
       </Link>
 
       {/* Nav tabs */}
@@ -62,18 +73,37 @@ export function TopNav() {
               key={to}
               to={to}
               className={cn(
-                'relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors',
-                active
-                  ? 'text-sky-400 bg-sky-500/10'
-                  : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5'
+                'relative flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium transition-colors',
               )}
+              style={{
+                borderRadius: 'var(--radius-md)',
+                color: active ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                background: active ? 'var(--accent-subtle)' : 'transparent',
+              }}
+              onMouseEnter={(e) => {
+                if (!active) {
+                  e.currentTarget.style.background = 'var(--bg-hover)'
+                  e.currentTarget.style.color = 'var(--text-primary)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!active) {
+                  e.currentTarget.style.background = 'transparent'
+                  e.currentTarget.style.color = 'var(--text-tertiary)'
+                }
+              }}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
               <span className="hidden md:block">{label}</span>
               {active && (
                 <motion.div
                   layoutId="nav-indicator"
-                  className="absolute inset-0 rounded-lg border border-sky-500/30 bg-sky-500/5"
+                  className="absolute inset-0"
+                  style={{
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid rgba(77, 104, 235, 0.2)',
+                    background: 'var(--accent-subtle)',
+                  }}
                   transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
                 />
               )}
@@ -84,30 +114,42 @@ export function TopNav() {
 
       {/* Right actions */}
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleTheme}
-          className="w-8 h-8 text-zinc-400 hover:text-zinc-100 hover:bg-white/5"
-        >
-          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-        </Button>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 px-2 gap-2 hover:bg-white/5">
+            <Button
+              variant="ghost"
+              className="h-8 px-2 gap-2"
+              style={{ color: 'var(--text-secondary)' }}
+            >
               <Avatar className="w-6 h-6">
-                <AvatarFallback className="bg-sky-500/20 text-sky-300 text-xs border border-sky-500/30">
+                <AvatarFallback
+                  className="text-[11px] font-bold"
+                  style={{
+                    background: 'var(--accent-subtle)',
+                    color: 'var(--accent)',
+                    border: '1px solid rgba(77, 104, 235, 0.2)',
+                  }}
+                >
                   {user?.username?.[0]?.toUpperCase() ?? 'U'}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm text-zinc-400 hidden sm:block">{user?.username}</span>
+              <span className="text-[13px] hidden sm:block" style={{ color: 'var(--text-secondary)' }}>
+                {user?.username}
+              </span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-[#18181b] border-white/10">
+          <DropdownMenuContent
+            align="end"
+            className="w-48"
+            style={{
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-default)',
+            }}
+          >
             <DropdownMenuItem
               onClick={handleLogout}
-              className="text-red-400 focus:text-red-400 flex items-center gap-2 cursor-pointer"
+              className="flex items-center gap-2 cursor-pointer"
+              style={{ color: 'var(--danger)' }}
             >
               <LogOut className="w-4 h-4" />
               Sign out

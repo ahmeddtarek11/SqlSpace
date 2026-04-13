@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SqlSpace.Application.Abstractions.Access;
@@ -22,6 +24,8 @@ public class KnowledgeBaseService(ILogger<KnowledgeBaseService> logger , IRagCli
     private readonly IAccessControlService _accessControlService = accessControlService;
 
 
+    private const int ChatContextMessageCount = 10;
+
     public async Task<Result<RagQueryResultDto>> AskAsync(Guid connectionId, string userId, string query, int topK = 5, CancellationToken cancellationToken = default)
     {
         // 1. verify the user has access to this connection
@@ -34,9 +38,6 @@ public class KnowledgeBaseService(ILogger<KnowledgeBaseService> logger , IRagCli
                 new Error("rag.forbidden", "You do not have access to this connection."));
 
         // 2. derive the user's role for the Python RAG service
-        //    admin  → "admin"
-        //    full access granted → "full_access"
-        //    restricted access → "restricted"
         var isAdmin = await _accessControlService.IsAdmin(connectionId, userId);
         string userRole;
 
@@ -56,17 +57,167 @@ public class KnowledgeBaseService(ILogger<KnowledgeBaseService> logger , IRagCli
             userRole = access?.HasFullAccess is true ? "full_access" : "restricted";
         }
 
-        // 3. forward the question to the Python RAG service
-        _logger.LogInformation(
-            "RAG query. ConnectionId: {ConnectionId}, Role: {Role}, TopK: {TopK}",
-            connectionId, userRole, topK);
+        // 3. load recent chat history (for multi-turn context)
+        var recentMessages = await _dbContext.KnowledgeChatMessages
+            .Where(m => m.ConnectionId == connectionId && m.UserId == userId)
+            .OrderByDescending(m => m.CreatedAt)
+            .ThenByDescending(m => m.MessageId)
+            .Take(ChatContextMessageCount)
+            .ToListAsync(cancellationToken);
 
-        return await _ragClient.QueryAsync(
+        recentMessages = OrderMessagesChronologically(recentMessages);
+
+        var composedQuery = BuildComposedQuery(recentMessages, query);
+
+        // 4. forward to the Python RAG service
+        _logger.LogInformation(
+            "RAG query. ConnectionId: {ConnectionId}, Role: {Role}, TopK: {TopK}, PriorMessages: {Prior}",
+            connectionId, userRole, topK, recentMessages.Count);
+
+        var ragResult = await _ragClient.QueryAsync(
             tenantId: connectionId.ToString(),
             userRole: userRole,
-            query: query,
+            query: composedQuery,
             topK: topK,
             cancellationToken: cancellationToken);
+
+        // 5. persist the user question + assistant reply as a pair
+        var now = DateTime.UtcNow;
+
+        var userMessage = new KnowledgeChatMessage
+        {
+            MessageId    = Guid.NewGuid(),
+            ConnectionId = connectionId,
+            UserId       = userId,
+            Role         = ChatMessageRole.User,
+            Content      = query,
+            CreatedAt    = now,
+        };
+
+        var assistantMessage = new KnowledgeChatMessage
+        {
+            MessageId    = Guid.NewGuid(),
+            ConnectionId = connectionId,
+            UserId       = userId,
+            Role         = ChatMessageRole.Assistant,
+            CreatedAt    = now.AddTicks(1),
+        };
+
+        if (ragResult.IsSuccess && ragResult.Value is not null)
+        {
+            assistantMessage.Content     = ragResult.Value.Answer ?? string.Empty;
+            assistantMessage.TokensUsed  = ragResult.Value.TokensUsed;
+            assistantMessage.SourcesJson = ragResult.Value.Sources is { Count: > 0 }
+                ? JsonSerializer.Serialize(ragResult.Value.Sources)
+                : null;
+        }
+        else
+        {
+            assistantMessage.Content      = string.Empty;
+            assistantMessage.ErrorMessage = ragResult.Errors.Count > 0
+                ? ragResult.Errors[0].Message
+                : "Unknown RAG error.";
+        }
+
+        _dbContext.KnowledgeChatMessages.Add(userMessage);
+        _dbContext.KnowledgeChatMessages.Add(assistantMessage);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return ragResult;
+    }
+
+    private static IReadOnlyList<ChatMessageSourceDto>? DeserializeSources(string? sourcesJson)
+    {
+        if (string.IsNullOrWhiteSpace(sourcesJson))
+            return null;
+
+        try
+        {
+            var raw = JsonSerializer.Deserialize<List<RagQuerySourceDto>>(sourcesJson);
+            if (raw is null || raw.Count == 0)
+                return null;
+
+            return raw.Select(s => new ChatMessageSourceDto
+            {
+                FileId         = s.FileId,
+                FileName       = s.FileName,
+                ChunkId        = s.ChunkId,
+                RelevanceScore = s.RelevanceScore,
+                Excerpt        = s.Excerpt,
+            }).ToList();
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string BuildComposedQuery(IReadOnlyList<KnowledgeChatMessage> history, string currentQuery)
+    {
+        if (history.Count == 0)
+            return currentQuery;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("Prior conversation (for context, do not repeat):");
+        foreach (var msg in history)
+        {
+            if (string.IsNullOrWhiteSpace(msg.Content))
+                continue;
+
+            var label = msg.Role == ChatMessageRole.User ? "User" : "Assistant";
+            sb.Append(label).Append(": ").AppendLine(msg.Content);
+        }
+        sb.AppendLine();
+        sb.Append("Current question: ").Append(currentQuery);
+        return sb.ToString();
+    }
+
+    private static List<KnowledgeChatMessage> OrderMessagesChronologically(IEnumerable<KnowledgeChatMessage> messages)
+    {
+        return messages
+            .OrderBy(m => m.CreatedAt)
+            .ThenBy(m => m.Role == ChatMessageRole.User ? 0 : 1)
+            .ThenBy(m => m.MessageId)
+            .ToList();
+    }
+
+    public async Task<Result<IReadOnlyList<KnowledgeChatMessageDto>>> GetChatHistoryAsync(
+        Guid connectionId,
+        string userId,
+        int take = 100,
+        CancellationToken cancellationToken = default)
+    {
+        var hasAccess = await _accessControlService.HasAccessToConnectionAsync(connectionId, userId, cancellationToken);
+        if (hasAccess.IsFailure)
+            return Result<IReadOnlyList<KnowledgeChatMessageDto>>.Failure(hasAccess.Errors);
+
+        if (!hasAccess.Value)
+            return Result<IReadOnlyList<KnowledgeChatMessageDto>>.Failure(
+                new Error("rag.forbidden", "You do not have access to this connection."));
+
+        var safeTake = Math.Clamp(take, 1, 500);
+
+        var messages = await _dbContext.KnowledgeChatMessages
+            .Where(m => m.ConnectionId == connectionId && m.UserId == userId)
+            .OrderByDescending(m => m.CreatedAt)
+            .ThenByDescending(m => m.MessageId)
+            .Take(safeTake)
+            .ToListAsync(cancellationToken);
+
+        messages = OrderMessagesChronologically(messages);
+
+        var dtos = messages.Select(m => new KnowledgeChatMessageDto
+        {
+            MessageId    = m.MessageId,
+            Role         = m.Role == ChatMessageRole.User ? "user" : "assistant",
+            Content      = m.Content,
+            TokensUsed   = m.TokensUsed,
+            ErrorMessage = m.ErrorMessage,
+            CreatedAt    = m.CreatedAt,
+            Sources      = DeserializeSources(m.SourcesJson),
+        }).ToList();
+
+        return Result<IReadOnlyList<KnowledgeChatMessageDto>>.Success(dtos);
     }
 
     public async Task<Result<RagIngestResultDto>> IngestDocumentAsync(Guid connectionId, string userId, string[] allowedRoles, RagFileUploadDto file, CancellationToken cancellationToken)

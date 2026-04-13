@@ -49,4 +49,18 @@ public interface IKnowledgeBaseService
         Guid connectionId,
         string userId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Returns the persisted chat thread for the given (connection, user), ordered
+    /// oldest first. Enforces the same access check as <see cref="AskAsync"/>.
+    /// </summary>
+    /// <param name="connectionId">The connection whose chat thread is fetched.</param>
+    /// <param name="userId">Authenticated user's ID — scopes the thread.</param>
+    /// <param name="take">Max messages to return. Default 100.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<Result<IReadOnlyList<KnowledgeChatMessageDto>>> GetChatHistoryAsync(
+        Guid connectionId,
+        string userId,
+        int take = 100,
+        CancellationToken cancellationToken = default);
 }

@@ -1,5 +1,11 @@
 import { apiClient } from './client'
-import type { ApiResponse, KnowledgeDocument, RagIngestResult, RagQueryResult } from '@/types'
+import type {
+  ApiResponse,
+  ChatMessage,
+  KnowledgeDocument,
+  RagIngestResult,
+  RagQueryResult,
+} from '@/types'
 
 export const knowledgeBaseApi = {
   listDocuments: async (connectionId: string): Promise<KnowledgeDocument[]> => {
@@ -38,5 +44,13 @@ export const knowledgeBaseApi = {
     )
     if (!data.success) throw new Error(data.errors?.[0]?.message ?? 'Query failed')
     return data.data
+  },
+
+  getChatHistory: async (connectionId: string, take = 100): Promise<ChatMessage[]> => {
+    const { data } = await apiClient.get<ApiResponse<ChatMessage[]>>(
+      `/api/connections/${connectionId}/knowledge/chat`,
+      { params: { take } }
+    )
+    return data.data ?? []
   },
 }

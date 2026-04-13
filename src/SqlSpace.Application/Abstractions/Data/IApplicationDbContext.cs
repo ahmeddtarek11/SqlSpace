@@ -24,6 +24,7 @@ public interface IApplicationDbContext
     DbSet<RefreshToken> RefreshTokens { get; }
     DbSet<SavedChart> SavedCharts { get; }
     DbSet<KnowledgeDocument> KnowledgeDocuments { get; }
+    DbSet<KnowledgeChatMessage> KnowledgeChatMessages { get; }
 
     //DbSet<TableRestriction> TableRestrictions { get; }
     // deprecated
