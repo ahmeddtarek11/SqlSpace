@@ -25,6 +25,8 @@ public interface IApplicationDbContext
     DbSet<SavedChart> SavedCharts { get; }
     DbSet<KnowledgeDocument> KnowledgeDocuments { get; }
     DbSet<KnowledgeChatMessage> KnowledgeChatMessages { get; }
+    DbSet<Report> Reports { get; }
+    DbSet<ReportSection> ReportSections { get; }
 
     //DbSet<TableRestriction> TableRestrictions { get; }
     // deprecated

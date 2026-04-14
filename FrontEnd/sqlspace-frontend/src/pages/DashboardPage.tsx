@@ -81,7 +81,7 @@ function StatCard({
 
 // ── Progress list (tables / users / connections) ───────────────────────────────
 function ProgressList({
-  title, icon: Icon, items, nameKey, countKey, emptyMsg, accentClass = 'bg-sky-500',
+  title, icon: Icon, items, nameKey, countKey, emptyMsg, accentClass = 'bg-sky-500', scaleMax,
 }: {
   title: string
   icon: React.ComponentType<{ className?: string }>
@@ -90,8 +90,18 @@ function ProgressList({
   countKey: string
   emptyMsg: string
   accentClass?: string
+  scaleMax?: number
 }) {
-  const max = (items[0]?.[countKey] as number) ?? 1
+  const counts = items.map((item) => {
+    const raw = item[countKey]
+    const numeric = typeof raw === 'number' ? raw : Number(raw ?? 0)
+    return Number.isFinite(numeric) && numeric > 0 ? numeric : 0
+  })
+
+  const derivedMax = counts.length > 0 ? Math.max(...counts) : 1
+  const max = typeof scaleMax === 'number' && Number.isFinite(scaleMax) && scaleMax > 0
+    ? scaleMax
+    : derivedMax
   return (
     <div className="bg-[#111113] border border-white/10 rounded-2xl p-6 shadow-sm hover:border-white/20 transition-colors flex flex-col">
       <h3 className="text-base font-semibold text-white mb-5 flex items-center gap-2 shrink-0">
@@ -104,8 +114,9 @@ function ProgressList({
         <div className="space-y-4 flex-1">
           {items.map((item, i) => {
             const name  = String(item[nameKey] ?? '—')
-            const count = item[countKey] as number
-            const pct   = Math.round((count / max) * 100)
+            const count = counts[i] ?? 0
+            const pct = max > 0 ? (count / max) * 100 : 0
+            const widthPct = count > 0 ? Math.max(2, Math.min(100, pct)) : 0
             return (
               <div key={i} className="group">
                 <div className="flex items-end justify-between mb-1.5">
@@ -116,8 +127,8 @@ function ProgressList({
                 </div>
                 <div className="w-full h-1.5 bg-[#18181b] rounded-full overflow-hidden">
                   <div
-                    style={{ width: `${pct}%` }}
-                    className={`h-full rounded-full transition-all duration-700 ${i === 0 ? accentClass : `${accentClass}/50`}`}
+                    style={{ width: `${widthPct}%`, opacity: i === 0 ? 1 : 0.55 }}
+                    className={`h-full rounded-full transition-all duration-700 ${accentClass}`}
                   />
                 </div>
               </div>
@@ -155,6 +166,39 @@ function DashboardContent({
   const topUsers       = insight.topUsers       ?? []
   const topConnections = insight.topConnections ?? []
 
+  const topTablesItems = [...topTables].sort((a, b) => b.queryCount - a.queryCount)
+
+  const topUsersItems = topUsers
+    .map((u) => ({
+      displayName: u.userName || u.userEmail || u.userId.slice(0, 8),
+      queryCount: u.queryCount,
+    }))
+    .sort((a, b) => b.queryCount - a.queryCount)
+
+  const topConnectionsItems = [...topConnections].sort((a, b) => b.queryCount - a.queryCount)
+
+  const showTopConnections = isAdmin && viewMode === 'all' && topConnections.length > 0
+
+  const topTablesMax = Math.max(
+    0,
+    ...topTablesItems.map((item) => Number(item.queryCount) || 0),
+  )
+  const topUsersMax = Math.max(
+    0,
+    ...topUsersItems.map((item) => Number(item.queryCount) || 0),
+  )
+  const topConnectionsMax = Math.max(
+    0,
+    ...topConnectionsItems.map((item) => Number(item.queryCount) || 0),
+  )
+
+  const sharedScaleMax = Math.max(
+    1,
+    topTablesMax,
+    topUsersMax,
+    showTopConnections ? topConnectionsMax : 0,
+  )
+
   const successRate = s.totalQueries > 0
     ? Math.round((s.successfulQueries / s.totalQueries) * 100)
     : 0
@@ -167,8 +211,6 @@ function DashboardContent({
     { label: 'Avg. Execution',     value: formatMs(s.averageExecutionTimeMs),  icon: Clock,         color: 'text-amber-400',  bg: 'bg-amber-500/10'  },
     { label: 'Total Rows',         value: formatNumber(s.totalRowsReturned),   icon: Rows3,         color: 'text-pink-400',   bg: 'bg-pink-500/10'   },
   ]
-
-  const showTopConnections = isAdmin && viewMode === 'all' && topConnections.length > 0
 
   return (
     <div className="space-y-8">
@@ -255,35 +297,35 @@ function DashboardContent({
         <ProgressList
           title="Most Queried Tables"
           icon={Database}
-          items={topTables as unknown as Record<string, unknown>[]}
+          items={topTablesItems as unknown as Record<string, unknown>[]}
           nameKey="tableName"
           countKey="queryCount"
           emptyMsg="No table usage data yet."
           accentClass="bg-sky-500"
+          scaleMax={sharedScaleMax}
         />
 
         <ProgressList
           title="Top Users"
           icon={Users}
-          items={topUsers.map((u) => ({
-            displayName: u.userName || u.userEmail || u.userId.slice(0, 8),
-            queryCount:  u.queryCount,
-          }))}
+          items={topUsersItems}
           nameKey="displayName"
           countKey="queryCount"
           emptyMsg={isAdmin ? 'No user data yet.' : 'Admin view required to see user breakdown.'}
           accentClass="bg-cyan-500"
+          scaleMax={sharedScaleMax}
         />
 
         {showTopConnections && (
           <ProgressList
             title="Top Connections"
             icon={Server}
-            items={topConnections as unknown as Record<string, unknown>[]}
+            items={topConnectionsItems as unknown as Record<string, unknown>[]}
             nameKey="connectionName"
             countKey="queryCount"
             emptyMsg="No connection data yet."
             accentClass="bg-amber-500"
+            scaleMax={sharedScaleMax}
           />
         )}
       </div>

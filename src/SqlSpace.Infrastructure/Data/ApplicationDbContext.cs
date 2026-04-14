@@ -24,6 +24,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     public DbSet<SavedChart> SavedCharts => Set<SavedChart>();
     public DbSet<KnowledgeDocument> KnowledgeDocuments => Set<KnowledgeDocument>();
     public DbSet<KnowledgeChatMessage> KnowledgeChatMessages => Set<KnowledgeChatMessage>();
+    public DbSet<Report> Reports => Set<Report>();
+    public DbSet<ReportSection> ReportSections => Set<ReportSection>();
 
     //deprecated  // public DbSet<TableRestriction> TableRestrictions => Set<TableRestriction>();
 

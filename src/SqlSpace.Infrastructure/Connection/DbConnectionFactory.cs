@@ -116,7 +116,7 @@ public class DbConnectionFactory(IEncryptionService encryptionService,
         {
             await dbConnection.OpenAsync(cancellationToken);
 
-            _logger.LogDebug("Successfully opened a connection to {provider} database {database} for connection {connectionId} .",
+            _logger.LogTrace("Successfully opened a connection to {provider} database {database} for connection {connectionId} .",
                              connection.DatabaseProvider,
                              connection.DatabaseName,
                              connection.ConnectionId);

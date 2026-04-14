@@ -87,6 +87,20 @@ public static class DependencyInjection
                 client.Timeout = TimeSpan.FromSeconds(llmOptions.TimeoutSeconds);
             }
         });
+        services.AddHttpClient<IReportAiClient, ReportAiClient>((sp, client) =>
+        {
+            var llmOptions = sp.GetRequiredService<IOptions<llmApi>>().Value;
+            if (!string.IsNullOrWhiteSpace(llmOptions.BaseLink) &&
+                Uri.TryCreate(llmOptions.BaseLink, UriKind.Absolute, out var baseUri))
+            {
+                client.BaseAddress = baseUri;
+            }
+
+            if (llmOptions.TimeoutSeconds > 0)
+            {
+                client.Timeout = TimeSpan.FromSeconds(llmOptions.TimeoutSeconds);
+            }
+        });
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

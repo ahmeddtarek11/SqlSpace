@@ -4,9 +4,11 @@ import { BarChart3, RefreshCw, Sparkles, Send, Loader2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartCard } from '@/components/analytics/ChartCard'
 import { ExpandedChartDialog } from '@/components/analytics/ExpandedChartDialog'
+import { ReportsTab } from '@/components/analytics/reports/ReportsTab'
 import { analyticsApi } from '@/api/analytics'
 import { connectionsApi } from '@/api/connections'
 import { useConnectionStore } from '@/stores/connection-store'
+import { useReportsStore, selectConnectionReports } from '@/stores/reports-store'
 import type { ChartDataResult, SaveChartRequest } from '@/types'
 
 interface ChartDataMap {
@@ -64,6 +66,7 @@ function AnalyticsPageInner() {
   const queryClient = useQueryClient()
   const { activeConnectionId, setActiveConnection } = useConnectionStore()
 
+  const [generationMode, setGenerationMode] = useState<'chart' | 'report'>('chart')
   const [chartDataMap, setChartDataMap] = useState<ChartDataMap>({})
   const [prompt, setPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -76,6 +79,8 @@ function AnalyticsPageInner() {
   })
 
   const selectedId = activeConnectionId ?? connections[0]?.connectionId ?? ''
+  const reportsState = useReportsStore((s) => selectConnectionReports(selectedId)(s))
+  const { generateDraft } = useReportsStore()
 
   const { data: charts = [], isLoading: chartsLoading } = useQuery({
     queryKey: ['analytics-charts', selectedId],
@@ -160,6 +165,21 @@ function AnalyticsPageInner() {
     }
   }, [selectedId, isGenerating, queryClient])
 
+  const isPromptBusy = generationMode === 'chart' ? isGenerating : reportsState.isGenerating
+
+  const handleSubmitPrompt = useCallback(async () => {
+    if (!selectedId || isPromptBusy) return
+    const trimmed = prompt.trim()
+    if (!trimmed) return
+
+    if (generationMode === 'chart') {
+      await handleGenerate(trimmed)
+      return
+    }
+
+    await generateDraft(selectedId, trimmed)
+  }, [selectedId, isPromptBusy, prompt, generationMode, handleGenerate, generateDraft])
+
   const deleteMutation = useMutation({
     mutationFn: (chartId: string) => analyticsApi.deleteChart(selectedId, chartId),
     onSuccess: () => {
@@ -222,120 +242,162 @@ function AnalyticsPageInner() {
   }
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="p-8 max-w-7xl mx-auto">
+    <div className="h-full flex flex-col overflow-hidden">
 
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Analytics</h1>
-            <p className="text-zinc-400 mt-1 text-sm">
-              AI-powered data insights for your database
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            {charts.length > 0 && (
-              <button
-                onClick={refreshAll}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-200 bg-white/5 hover:bg-white/10 transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Refresh All
-              </button>
-            )}
-
-            <select
-              value={selectedId}
-              onChange={(e) => {
-                setActiveConnection(e.target.value)
-              }}
-              className="bg-[#111113] border border-white/10 rounded-lg py-2 pl-3 pr-8 text-sm text-white focus:outline-none focus:border-sky-500 appearance-none"
-            >
-              {connections.map((c) => (
-                <option key={c.connectionId} value={c.connectionId}>{c.connectionName}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Prompt input — always visible */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 relative">
-              <Sparkles className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 pointer-events-none" />
-              <input
-                type="text"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !isGenerating) {
-                    handleGenerate(prompt)
-                  }
-                }}
-                placeholder="Describe a chart you want (e.g. 'revenue by month', 'top customers')... or leave empty to auto-suggest"
-                className="w-full bg-[#111113] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-sky-500 transition-colors"
-                disabled={isGenerating}
-              />
+      {/* Header */}
+      <div className="shrink-0 px-8 pt-6 pb-0 border-b border-white/10">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <div>
+              <h1 className="text-2xl font-bold text-white tracking-tight">Analytics</h1>
+              <p className="text-zinc-400 mt-1 text-sm">AI-powered data insights for your database</p>
             </div>
-            <button
-              onClick={() => handleGenerate(prompt)}
-              disabled={isGenerating}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors shrink-0"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  Generate Chart
-                </>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {charts.length > 0 && (
+                <button
+                  onClick={refreshAll}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-200 bg-white/5 hover:bg-white/10 transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Refresh All
+                </button>
               )}
-            </button>
+
+              <select
+                value={selectedId}
+                onChange={(e) => setActiveConnection(e.target.value)}
+                className="bg-[#111113] border border-white/10 rounded-lg py-2 pl-3 pr-8 text-sm text-white focus:outline-none focus:border-sky-500 appearance-none"
+              >
+                {connections.map((c) => (
+                  <option key={c.connectionId} value={c.connectionId}>{c.connectionName}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Charts grid */}
-        {chartsLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-72 rounded-2xl bg-white/5" />)}
-          </div>
-        ) : charts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-16 h-16 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center mb-5">
-              <BarChart3 className="w-8 h-8 text-sky-400" />
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-8 max-w-7xl mx-auto space-y-10">
+
+          {/* Shared prompt input */}
+          <div className="space-y-3">
+            <div className="inline-flex rounded-lg border border-white/10 bg-[#111113] p-1">
+              <button
+                type="button"
+                onClick={() => setGenerationMode('chart')}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  generationMode === 'chart'
+                    ? 'bg-sky-500/20 text-sky-200'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                Quick Report
+              </button>
+              <button
+                type="button"
+                onClick={() => setGenerationMode('report')}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  generationMode === 'report'
+                    ? 'bg-sky-500/20 text-sky-200'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                Full Report
+              </button>
             </div>
-            <p className="text-zinc-200 font-medium text-lg">No charts yet</p>
-            <p className="text-zinc-500 text-sm mt-1 mb-5 max-w-md text-center">
-              Type a prompt above to generate your first chart, or leave it empty to let AI auto-suggest.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {charts.map((chart) => {
-              const cd = chartDataMap[chart.id]
-              return (
-                <div key={chart.id} className="h-80">
-                  <ChartCard
-                    chart={chart}
-                    data={cd?.data ?? null}
-                    columns={cd?.columns ?? []}
-                    loading={cd?.loading ?? true}
-                    error={cd?.error ?? null}
-                    executionTimeMs={cd?.executionTimeMs}
-                    onRefresh={handleRefreshOne}
-                    onDelete={(id) => deleteMutation.mutate(id)}
-                    onExpand={setExpandedChartId}
-                  />
-                </div>
-              )
-            })}
-          </div>
-        )}
 
+            <div className="flex items-center gap-3">
+              <div className="flex-1 relative">
+                <Sparkles className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 pointer-events-none" />
+                <input
+                  type="text"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !isPromptBusy) {
+                      void handleSubmitPrompt()
+                    }
+                  }}
+                  placeholder={
+                    generationMode === 'chart'
+                      ? "Describe a chart you want (e.g. 'revenue by month', 'top customers')"
+                      : "Describe the full report you want (e.g. 'overall sales health and actions for this quarter')"
+                  }
+                  className="w-full bg-[#111113] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-sky-500 transition-colors"
+                  disabled={isPromptBusy}
+                />
+              </div>
+              <button
+                onClick={() => void handleSubmitPrompt()}
+                disabled={isPromptBusy || !prompt.trim()}
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors shrink-0"
+              >
+                {isPromptBusy ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    {generationMode === 'chart' ? 'Generate Chart' : 'Generate Full Report'}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Charts section */}
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold text-zinc-200">Charts</h2>
+            {chartsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-72 rounded-2xl bg-white/5" />)}
+              </div>
+            ) : charts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 rounded-2xl border border-white/10 bg-white/2">
+                <div className="w-14 h-14 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center mb-4">
+                  <BarChart3 className="w-7 h-7 text-sky-400" />
+                </div>
+                <p className="text-zinc-200 font-medium">No charts yet</p>
+                <p className="text-zinc-500 text-sm mt-1 max-w-md text-center px-6">
+                  Use the prompt bar above in chart mode to generate your first visual.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {charts.map((chart) => {
+                  const cd = chartDataMap[chart.id]
+                  return (
+                    <div key={chart.id} className="h-80">
+                      <ChartCard
+                        chart={chart}
+                        data={cd?.data ?? null}
+                        columns={cd?.columns ?? []}
+                        loading={cd?.loading ?? true}
+                        error={cd?.error ?? null}
+                        executionTimeMs={cd?.executionTimeMs}
+                        onRefresh={handleRefreshOne}
+                        onDelete={(id) => deleteMutation.mutate(id)}
+                        onExpand={setExpandedChartId}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* Reports section */}
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold text-zinc-200">Reports</h2>
+            <div className="h-190 min-h-130 rounded-2xl border border-white/10 overflow-hidden bg-[#0a0a0c]">
+              <ReportsTab connectionId={selectedId} hidePromptInput />
+            </div>
+          </section>
+        </div>
       </div>
 
       {/* Expanded chart dialog */}
@@ -349,6 +411,7 @@ function AnalyticsPageInner() {
           executionTimeMs={expandedData?.executionTimeMs}
         />
       )}
+
     </div>
   )
 }

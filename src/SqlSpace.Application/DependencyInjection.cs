@@ -18,6 +18,8 @@ using SqlSpace.Application.Services.schema;
 using SqlSpace.Application.Services.SavedQueries;
 using SqlSpace.Application.Abstractions.KnowledgeBase;
 using SqlSpace.Application.Services.KnowledgeBase;
+using SqlSpace.Application.Abstractions.Reports;
+using SqlSpace.Application.Services.Reports;
 
 namespace SqlSpace.Application;
 
@@ -36,6 +38,7 @@ public static class DependencyInjection
         services.AddSingleton<ISqlValidator, SqlValidatorService>();
         services.AddScoped<IChartService, ChartService>();
         services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
+        services.AddScoped<IReportService, ReportService>();
         return services;
     }
 }

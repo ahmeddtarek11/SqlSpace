@@ -410,3 +410,70 @@ export interface ChartDataResult {
   executionTimeMs: number
   errorMessage: string | null
 }
+
+// ── Reports ──────────────────────────────────────────────────────────────────
+
+export interface ReportSectionDto {
+  sectionId: string
+  sortOrder: number
+  heading: string
+  narrativeText: string
+  chartType: ChartType | null
+  chartConfigJson: string | null
+  sqlQuery: string | null
+  resultsJson: string | null
+  rowsReturned: number | null
+  executionTimeMs: number | null
+  executionSuccess: boolean | null
+  executionErrorMessage: string | null
+  executedAtUtc: string | null
+}
+
+export interface ReportDraftDto {
+  title: string
+  summary: string | null
+  originalPrompt: string
+  sections: ReportSectionDto[]
+}
+
+export interface ReportDto {
+  reportId: string
+  connectionId: string
+  title: string
+  originalPrompt: string
+  summary: string | null
+  sections: ReportSectionDto[]
+  createdAtUtc: string
+  updatedAtUtc: string
+}
+
+export interface ReportHeaderDto {
+  reportId: string
+  connectionId: string
+  title: string
+  originalPrompt: string
+  sectionCount: number
+  createdAtUtc: string
+  updatedAtUtc: string
+}
+
+export interface CreateReportSectionRequest {
+  sortOrder: number
+  heading: string
+  narrativeText: string
+  chartType: ChartType | null
+  chartConfigJson: string | null
+  sqlQuery: string | null
+  resultsJson: string | null
+  rowsReturned: number | null
+  executionTimeMs: number | null
+  executionSuccess: boolean | null
+  executionErrorMessage: string | null
+}
+
+export interface CreateReportRequest {
+  title: string
+  originalPrompt: string
+  summary: string | null
+  sections: CreateReportSectionRequest[]
+}
