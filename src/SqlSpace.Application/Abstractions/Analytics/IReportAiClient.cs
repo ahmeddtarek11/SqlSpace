@@ -26,4 +26,15 @@ public interface IReportAiClient
         string? sql,
         string? sampleRowsJson,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Calls Python /narrate-report once for all sections in a report draft.
+    /// Returns one narrative entry per requested section.
+    /// </summary>
+    Task<Result<IReadOnlyList<NarratedSectionDto>>> NarrateReportAsync(
+        string title,
+        string userPrompt,
+        string? summary,
+        IReadOnlyList<NarrateReportSectionInputDto> sections,
+        CancellationToken cancellationToken);
 }

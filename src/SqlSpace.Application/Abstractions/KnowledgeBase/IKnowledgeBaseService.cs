@@ -51,6 +51,20 @@ public interface IKnowledgeBaseService
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// Deletes one ingested document from the connection knowledge base.
+    /// Only connection admins are allowed to delete documents.
+    /// </summary>
+    /// <param name="connectionId">The connection that owns the document.</param>
+    /// <param name="userId">Authenticated user's ID — used for admin check.</param>
+    /// <param name="documentId">The local tracked knowledge document id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<Result<bool>> DeleteDocumentAsync(
+        Guid connectionId,
+        string userId,
+        Guid documentId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// Returns the persisted chat thread for the given (connection, user), ordered
     /// oldest first. Enforces the same access check as <see cref="AskAsync"/>.
     /// </summary>

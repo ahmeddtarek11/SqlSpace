@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
+import { GlobalRagChatPopup } from '@/components/workspace/GlobalRagChatPopup'
 import { useAuthStore } from '@/stores/auth-store'
 import { cn } from '@/lib/utils'
 import {
@@ -186,6 +187,7 @@ export function AppShell() {
         </div>
       </main>
 
+      <GlobalRagChatPopup />
       <Toaster richColors position="top-right" />
     </div>
   )

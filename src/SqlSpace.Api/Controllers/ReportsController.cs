@@ -89,13 +89,13 @@ public sealed class ReportsController(
     }
 
     [HttpPost("{reportId:guid}/refresh")]
-    [EndpointSummary("Re-execute all sections' SQL and optionally regenerate narrative")]
+    [EndpointSummary("Re-execute all sections' SQL and regenerate narrative")]
     [ProducesResponseType(typeof(ApiResponse<ReportDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<ReportDto>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<ReportDto>>> Refresh(
         Guid connectionId,
         Guid reportId,
-        [FromQuery] bool regenerateNarrative = false,
+        [FromQuery] bool regenerateNarrative = true,
         CancellationToken cancellationToken = default)
     {
         var userId = _currentUserService.GetUserId();

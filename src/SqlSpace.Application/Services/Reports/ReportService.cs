@@ -29,7 +29,7 @@ public sealed class ReportService(
     private readonly IDatabaseExecutor _databaseExecutor = databaseExecutor;
     private readonly ILogger<ReportService> _logger = logger;
 
-    private const int MaxSections = 4;
+    private const int MaxSections = 6;
     private const int MaxRowsForNarrative = 20;
 
     public async Task<Result<ReportDraftDto>> DraftAsync(
@@ -63,12 +63,9 @@ public sealed class ReportService(
 
         var plan = planResult.Value!;
 
-        // 2. Execute SQL for each section that has it
-        var sections = new List<ReportSectionDto>();
-        for (var i = 0; i < plan.Sections.Count; i++)
-        {
-            var planned = plan.Sections[i];
-            var section = new ReportSectionDto
+        // 2. Materialize planned sections
+        var sections = plan.Sections
+            .Select((planned, i) => new ReportSectionDto
             {
                 SectionId = Guid.NewGuid(),
                 SortOrder = i,
@@ -76,38 +73,57 @@ public sealed class ReportService(
                 ChartType = planned.ChartType,
                 ChartConfigJson = planned.ChartConfig,
                 SqlQuery = planned.Sql,
-            };
+            })
+            .ToList();
 
-            if (!string.IsNullOrWhiteSpace(planned.Sql))
+        // 3. Execute SQL for query-backed sections in parallel.
+        var sqlExecutionTasks = sections
+            .Where(s => !string.IsNullOrWhiteSpace(s.SqlQuery))
+            .Select(async section =>
             {
-                var queryResult = await _databaseExecutor.ExecuteQueryAsync(connection, planned.Sql, cancellationToken);
+                var queryResult = await _databaseExecutor.ExecuteQueryAsync(connection, section.SqlQuery!, cancellationToken);
                 section.ExecutionSuccess = queryResult.Success;
                 section.ResultsJson = queryResult.ResultsJson;
                 section.RowsReturned = queryResult.RowsReturned;
                 section.ExecutionTimeMs = queryResult.ExecutionTimeMs;
                 section.ExecutionErrorMessage = queryResult.ErrorMessage;
                 section.ExecutedAtUtc = DateTime.UtcNow;
-            }
+            });
 
-            sections.Add(section);
-        }
+        await Task.WhenAll(sqlExecutionTasks);
 
-        // 3. Narrate each section using real data
-        foreach (var section in sections)
-        {
-            var isSqlBackedSection = !string.IsNullOrWhiteSpace(section.SqlQuery);
-            var hasNarratableSqlResult = section.ExecutionSuccess == true && section.RowsReturned.GetValueOrDefault() > 0;
-            if (isSqlBackedSection && !hasNarratableSqlResult)
+        // 4. Narrate all sections with one AI round-trip.
+        var narrateInputs = sections
+            .OrderBy(s => s.SortOrder)
+            .Select(s => new NarrateReportSectionInputDto
             {
-                section.NarrativeText = string.Empty;
-                continue;
+                Heading = s.Heading,
+                Sql = s.SqlQuery,
+                ChartType = s.ChartType,
+                SampleRowsJson = ExtractSampleRows(s.ResultsJson, MaxRowsForNarrative),
+            })
+            .ToList();
+
+        var narrateResult = await _reportAiClient.NarrateReportAsync(
+            plan.Title,
+            prompt,
+            plan.Summary,
+            narrateInputs,
+            cancellationToken);
+
+        if (narrateResult.IsSuccess)
+        {
+            var narratives = narrateResult.Value ?? [];
+            for (var i = 0; i < sections.Count; i++)
+            {
+                sections[i].NarrativeText = i < narratives.Count ? narratives[i].Narrative ?? string.Empty : string.Empty;
             }
-
-            var sampleJson = ExtractSampleRows(section.ResultsJson, MaxRowsForNarrative);
-            var narrateResult = await _reportAiClient.NarrateSectionAsync(
-                section.Heading, prompt, section.SqlQuery, sampleJson, cancellationToken);
-
-            section.NarrativeText = narrateResult.IsSuccess ? narrateResult.Value ?? string.Empty : string.Empty;
+        }
+        else
+        {
+            _logger.LogWarning("NarrateReportAsync failed. Falling back to empty narratives for draft. ConnectionId: {ConnectionId}", connectionId);
+            foreach (var section in sections)
+                section.NarrativeText = string.Empty;
         }
 
         _logger.LogInformation("Report draft generated. ConnectionId: {ConnectionId}, Sections: {Count}",
@@ -256,31 +272,57 @@ public sealed class ReportService(
 
         var executedAt = DateTime.UtcNow;
 
-        foreach (var section in report.Sections)
-        {
-            if (string.IsNullOrWhiteSpace(section.SqlQuery)) continue;
-
-            var queryResult = await _databaseExecutor.ExecuteQueryAsync(connection, section.SqlQuery, cancellationToken);
-            section.CachedResultsJson = queryResult.ResultsJson;
-            section.CachedResultsRowsReturned = queryResult.RowsReturned;
-            section.CachedResultsExecutionTimeMs = queryResult.ExecutionTimeMs;
-            section.CachedResultsSuccess = queryResult.Success;
-            section.CachedResultsErrorMessage = queryResult.ErrorMessage;
-            section.CachedResultsExecutedAtUtc = executedAt;
-
-            if (regenerateNarrative)
+        var sqlRefreshTasks = report.Sections
+            .Where(s => !string.IsNullOrWhiteSpace(s.SqlQuery))
+            .Select(async section =>
             {
-                if (!queryResult.Success || queryResult.RowsReturned == 0)
-                {
-                    section.NarrativeText = string.Empty;
-                    continue;
-                }
+                var queryResult = await _databaseExecutor.ExecuteQueryAsync(connection, section.SqlQuery!, cancellationToken);
+                section.CachedResultsJson = queryResult.ResultsJson;
+                section.CachedResultsRowsReturned = queryResult.RowsReturned;
+                section.CachedResultsExecutionTimeMs = queryResult.ExecutionTimeMs;
+                section.CachedResultsSuccess = queryResult.Success;
+                section.CachedResultsErrorMessage = queryResult.ErrorMessage;
+                section.CachedResultsExecutedAtUtc = executedAt;
+            });
 
-                var sampleJson = ExtractSampleRows(queryResult.ResultsJson, MaxRowsForNarrative);
-                var narrateResult = await _reportAiClient.NarrateSectionAsync(
-                    section.Heading, report.OriginalPrompt, section.SqlQuery, sampleJson, cancellationToken);
-                if (narrateResult.IsSuccess && !string.IsNullOrEmpty(narrateResult.Value))
-                    section.NarrativeText = narrateResult.Value;
+        await Task.WhenAll(sqlRefreshTasks);
+
+        if (regenerateNarrative)
+        {
+            var orderedSections = report.Sections.OrderBy(s => s.SortOrder).ToList();
+            var narrateInputs = orderedSections
+                .Select(s => new NarrateReportSectionInputDto
+                {
+                    Heading = s.Heading,
+                    Sql = s.SqlQuery,
+                    ChartType = s.ChartType?.ToString()?.ToSnakeCase(),
+                    SampleRowsJson = ExtractSampleRows(s.CachedResultsJson, MaxRowsForNarrative),
+                })
+                .ToList();
+
+            var narrateResult = await _reportAiClient.NarrateReportAsync(
+                report.Title,
+                report.OriginalPrompt,
+                report.Summary,
+                narrateInputs,
+                cancellationToken);
+
+            if (narrateResult.IsSuccess)
+            {
+                var narratives = narrateResult.Value ?? [];
+                for (var i = 0; i < orderedSections.Count; i++)
+                {
+                    orderedSections[i].NarrativeText = i < narratives.Count ? narratives[i].Narrative ?? string.Empty : string.Empty;
+                }
+            }
+            else
+            {
+                foreach (var section in orderedSections)
+                    section.NarrativeText = string.Empty;
+
+                _logger.LogWarning(
+                    "NarrateReportAsync failed during refresh. Cleared narratives to avoid stale text/data mismatch. ReportId: {ReportId}",
+                    reportId);
             }
         }
 
@@ -349,21 +391,34 @@ public sealed class ReportService(
     }
 
     /// <summary>
-    /// Extracts the first N rows from a ResultsJson array string, for use as LLM narrative context.
+    /// Extracts at most N rows from query results and returns them as a JSON array string.
+    /// Supports both raw array payloads and the { columns, rows } envelope format.
     /// </summary>
-    private static string? ExtractSampleRows(string? resultsJson, int maxRows)
+    private static string ExtractSampleRows(string? resultsJson, int maxRows)
     {
-        if (string.IsNullOrWhiteSpace(resultsJson)) return null;
+        if (string.IsNullOrWhiteSpace(resultsJson)) return "[]";
         try
         {
             using var doc = JsonDocument.Parse(resultsJson);
-            if (doc.RootElement.ValueKind != JsonValueKind.Array) return resultsJson;
-            var items = doc.RootElement.EnumerateArray().Take(maxRows).ToList();
-            return JsonSerializer.Serialize(items);
+            if (doc.RootElement.ValueKind == JsonValueKind.Array)
+            {
+                var items = doc.RootElement.EnumerateArray().Take(maxRows).Select(x => x.Clone()).ToList();
+                return JsonSerializer.Serialize(items);
+            }
+
+            if (doc.RootElement.ValueKind == JsonValueKind.Object &&
+                doc.RootElement.TryGetProperty("rows", out var rowsEl) &&
+                rowsEl.ValueKind == JsonValueKind.Array)
+            {
+                var rows = rowsEl.EnumerateArray().Take(maxRows).Select(x => x.Clone()).ToList();
+                return JsonSerializer.Serialize(rows);
+            }
+
+            return "[]";
         }
         catch
         {
-            return null;
+            return "[]";
         }
     }
 }

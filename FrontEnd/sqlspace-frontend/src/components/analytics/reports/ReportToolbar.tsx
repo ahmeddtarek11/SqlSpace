@@ -3,9 +3,10 @@ import {
   RefreshCw,
   Trash2,
   Plus,
-  Loader2,
   Download,
+  Loader2,
 } from 'lucide-react'
+import { AskAiButton } from '@/components/ui/ask-ai-button'
 
 interface ReportToolbarProps {
   isDraft: boolean
@@ -15,6 +16,8 @@ interface ReportToolbarProps {
   onRefresh?: () => void
   onDelete?: () => void
   onExportPdf?: () => void
+  onAskAi?: () => void
+  isAskingAi?: boolean
   onNewReport: () => void
 }
 
@@ -26,6 +29,8 @@ export function ReportToolbar({
   onRefresh,
   onDelete,
   onExportPdf,
+  onAskAi,
+  isAskingAi = false,
   onNewReport,
 }: ReportToolbarProps) {
   return (
@@ -40,6 +45,15 @@ export function ReportToolbar({
       </button>
 
       <div className="ml-auto flex items-center gap-2">
+        {onAskAi && (
+          <AskAiButton
+            size="pill"
+            onClick={onAskAi}
+            loading={isAskingAi}
+            className="h-8 px-3 text-xs"
+          />
+        )}
+
         {!isDraft && onExportPdf && (
           <button
             type="button"

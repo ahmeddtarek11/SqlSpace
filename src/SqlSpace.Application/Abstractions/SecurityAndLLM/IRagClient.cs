@@ -40,4 +40,15 @@ public interface IRagClient
         int topK = 5,
         string[]? fileIds = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes one ingested file (and all its chunks) from the Python RAG service.
+    /// </summary>
+    /// <param name="tenantId">connectionId.ToString() — scopes the delete to one tenant.</param>
+    /// <param name="fileId">Python RAG file id to delete.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<Result<bool>> DeleteFileAsync(
+        string tenantId,
+        string fileId,
+        CancellationToken cancellationToken = default);
 }

@@ -231,25 +231,11 @@ public class KnowledgeBaseService(ILogger<KnowledgeBaseService> logger , IRagCli
             return Result<RagIngestResultDto>.Failure(
                 new Error("rag.forbidden", "Only connection admins can upload documents."));
 
-        // 2. create a tracking record before calling Python
-        //    so we always have a row even if Python fails mid-flight
-        var document = new KnowledgeDocument
-        {
-            DocumentId        = Guid.NewGuid(),
-            ConnectionId      = connectionId,
-            UploadedByUserId  = userId,
-            FileName          = file.FileName,
-            Status            = KnowledgeDocumentStatus.Processing,
-        };
-
-        _dbContext.KnowledgeDocuments.Add(document);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
+        // 2. call the Python RAG service
         _logger.LogInformation(
-            "Ingesting document. DocumentId: {DocumentId}, File: {FileName}, ConnectionId: {ConnectionId}",
-            document.DocumentId, file.FileName, connectionId);
+            "Ingesting document. File: {FileName}, ConnectionId: {ConnectionId}",
+            file.FileName, connectionId);
 
-        // 3. call the Python RAG service
         var ragResult = await _ragClient.IngestDocumentAsync(
             tenantId:     connectionId.ToString(),
             uploadedBy:   userId,
@@ -258,19 +244,56 @@ public class KnowledgeBaseService(ILogger<KnowledgeBaseService> logger , IRagCli
             file:         file,
             cancellationToken: cancellationToken);
 
-        // 4. update the tracking record with the outcome
-        if (ragResult.IsSuccess)
+        // 3. upsert the tracking record with the outcome
+        if (ragResult.IsSuccess && ragResult.Value is not null)
         {
-            document.Status        = KnowledgeDocumentStatus.Indexed;
-            document.PythonFileId  = ragResult.Value!.FileId;
-            document.ChunksCreated = ragResult.Value!.ChunksCreated;
-            document.ProcessedAt   = DateTime.UtcNow;
+            var now = DateTime.UtcNow;
+            var existingDocument = await _dbContext.KnowledgeDocuments
+                .Where(d => d.ConnectionId == connectionId &&
+                            !d.IsDeleted &&
+                            d.PythonFileId == ragResult.Value.FileId)
+                .OrderByDescending(d => d.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (existingDocument is null)
+            {
+                var indexedDocument = new KnowledgeDocument
+                {
+                    DocumentId       = Guid.NewGuid(),
+                    ConnectionId     = connectionId,
+                    UploadedByUserId = userId,
+                    FileName         = ragResult.Value.FileName,
+                    Status           = KnowledgeDocumentStatus.Indexed,
+                    PythonFileId     = ragResult.Value.FileId,
+                    ChunksCreated    = ragResult.Value.ChunksCreated,
+                    ProcessedAt      = now,
+                };
+
+                _dbContext.KnowledgeDocuments.Add(indexedDocument);
+            }
+            else
+            {
+                existingDocument.FileName = ragResult.Value.FileName;
+                existingDocument.Status = KnowledgeDocumentStatus.Indexed;
+                existingDocument.ErrorMessage = null;
+                existingDocument.ChunksCreated = ragResult.Value.ChunksCreated;
+                existingDocument.ProcessedAt = now;
+            }
         }
         else
         {
-            document.Status       = KnowledgeDocumentStatus.Failed;
-            document.ErrorMessage = ragResult.Errors[0].Message;
-            document.ProcessedAt  = DateTime.UtcNow;
+            var failedDocument = new KnowledgeDocument
+            {
+                DocumentId       = Guid.NewGuid(),
+                ConnectionId     = connectionId,
+                UploadedByUserId = userId,
+                FileName         = file.FileName,
+                Status           = KnowledgeDocumentStatus.Failed,
+                ErrorMessage     = ragResult.Errors[0].Message,
+                ProcessedAt      = DateTime.UtcNow,
+            };
+
+            _dbContext.KnowledgeDocuments.Add(failedDocument);
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -289,13 +312,63 @@ public class KnowledgeBaseService(ILogger<KnowledgeBaseService> logger , IRagCli
             return Result<IReadOnlyList<KnowledgeDocument>>.Failure(
                 new Error("rag.forbidden", "You do not have access to this connection."));
 
-        // 2. query documents — EF global query filter already excludes IsDeleted = true
+        // 2. query active documents only
         var documents = await _dbContext.KnowledgeDocuments
-            .Where(d => d.ConnectionId == connectionId)
+            .Where(d => d.ConnectionId == connectionId && !d.IsDeleted)
             .OrderByDescending(d => d.CreatedAt)
             .ToListAsync(cancellationToken);
 
         return Result<IReadOnlyList<KnowledgeDocument>>.Success(documents);
+    }
+
+    public async Task<Result<bool>> DeleteDocumentAsync(
+        Guid connectionId,
+        string userId,
+        Guid documentId,
+        CancellationToken cancellationToken)
+    {
+        var isAdmin = await _accessControlService.IsAdmin(connectionId, userId);
+        if (isAdmin.IsFailure)
+            return Result<bool>.Failure(isAdmin.Errors);
+
+        if (!isAdmin.Value)
+            return Result<bool>.Failure(
+                new Error("rag.forbidden", "Only connection admins can delete documents."));
+
+        var document = await _dbContext.KnowledgeDocuments
+            .FirstOrDefaultAsync(
+                d => d.DocumentId == documentId &&
+                     d.ConnectionId == connectionId &&
+                     !d.IsDeleted,
+                cancellationToken);
+
+        if (document is null)
+            return Result<bool>.Failure(
+                new Error("rag.not_found", "Document not found."));
+
+        if (!string.IsNullOrWhiteSpace(document.PythonFileId))
+        {
+            var ragDelete = await _ragClient.DeleteFileAsync(
+                tenantId: connectionId.ToString(),
+                fileId: document.PythonFileId,
+                cancellationToken: cancellationToken);
+
+            var remoteFileMissing = ragDelete.IsFailure && ragDelete.Errors.Any(
+                e => string.Equals(e.Code, "rag.not_found", StringComparison.OrdinalIgnoreCase));
+
+            if (ragDelete.IsFailure && !remoteFileMissing)
+                return Result<bool>.Failure(ragDelete.Errors);
+        }
+
+        document.IsDeleted = true;
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "Knowledge document deleted. DocumentId: {DocumentId}, ConnectionId: {ConnectionId}",
+            documentId,
+            connectionId);
+
+        return Result<bool>.Success(true);
     }
 
 }

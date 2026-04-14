@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { queriesApi } from '@/api/queries'
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import { useConnectionStore } from '@/stores/connection-store'
+import { formatSqlForDisplay } from '@/lib/utils'
 
 type DetailTab = 'sql' | 'explain'
 
@@ -25,6 +26,7 @@ export default function HistoryDetailPage() {
   const { setPrompt, setGeneratedSQL, setExplanation, setResult } = useWorkspaceStore()
   const { setActiveConnection } = useConnectionStore()
   const [activeTab, setActiveTab] = useState<DetailTab>('sql')
+  const [sqlDisplayMode, setSqlDisplayMode] = useState<'pretty' | 'raw'>('pretty')
 
   const { data: detail, isLoading } = useQuery({
     queryKey: ['history-detail', queryId],
@@ -65,6 +67,12 @@ export default function HistoryDetailPage() {
       hour12: false,
     }).format(new Date(detail.executedAt))
   }, [detail?.executedAt])
+
+  const renderedSql = useMemo(() => {
+    const sql = detail?.generatedSql ?? ''
+    if (!sql) return ''
+    return sqlDisplayMode === 'pretty' ? formatSqlForDisplay(sql) : sql
+  }, [detail?.generatedSql, sqlDisplayMode])
 
   if (isLoading) {
     return (
@@ -160,25 +168,46 @@ export default function HistoryDetailPage() {
         )}
 
         <div className="bg-[#111113] border border-white/10 rounded-2xl overflow-hidden shadow-sm flex flex-col">
-          <div className="flex border-b border-white/10 bg-[#18181b] px-4">
-            <button
-              onClick={() => setActiveTab('sql')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 flex items-center gap-2 transition-colors ${activeTab === 'sql' ? 'border-sky-500 text-sky-400 bg-sky-500/5' : 'border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-white/5'}`}
-            >
-              <Code2 className="w-4 h-4" /> Generated SQL
-            </button>
-            <button
-              onClick={() => setActiveTab('explain')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 flex items-center gap-2 transition-colors ${activeTab === 'explain' ? 'border-sky-500 text-sky-400 bg-sky-500/5' : 'border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-white/5'}`}
-            >
-              <Info className="w-4 h-4" /> AI Explanation
-            </button>
+          <div className="flex items-center justify-between border-b border-white/10 bg-[#18181b] px-4">
+            <div className="flex">
+              <button
+                onClick={() => setActiveTab('sql')}
+                className={`px-4 py-3 text-sm font-medium border-b-2 flex items-center gap-2 transition-colors ${activeTab === 'sql' ? 'border-sky-500 text-sky-400 bg-sky-500/5' : 'border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-white/5'}`}
+              >
+                <Code2 className="w-4 h-4" /> Generated SQL
+              </button>
+              <button
+                onClick={() => setActiveTab('explain')}
+                className={`px-4 py-3 text-sm font-medium border-b-2 flex items-center gap-2 transition-colors ${activeTab === 'explain' ? 'border-sky-500 text-sky-400 bg-sky-500/5' : 'border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-white/5'}`}
+              >
+                <Info className="w-4 h-4" /> AI Explanation
+              </button>
+            </div>
+
+            {activeTab === 'sql' && (
+              <div className="inline-flex items-center rounded-md border border-white/10 bg-[#111113] p-0.5">
+                <button
+                  type="button"
+                  className={`h-6 px-2 text-[11px] rounded ${sqlDisplayMode === 'pretty' ? 'bg-white/10 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  onClick={() => setSqlDisplayMode('pretty')}
+                >
+                  Pretty
+                </button>
+                <button
+                  type="button"
+                  className={`h-6 px-2 text-[11px] rounded ${sqlDisplayMode === 'raw' ? 'bg-white/10 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  onClick={() => setSqlDisplayMode('raw')}
+                >
+                  Raw
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="p-6 bg-[#0d0d0f]">
             {activeTab === 'sql' && (
               <pre className="font-mono text-sm leading-relaxed text-zinc-300 overflow-x-auto whitespace-pre-wrap">
-                {detail.generatedSql || 'No SQL generated'}
+                {renderedSql || 'No SQL generated'}
               </pre>
             )}
 

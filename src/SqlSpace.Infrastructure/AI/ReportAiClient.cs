@@ -174,6 +174,126 @@ public sealed class ReportAiClient(
         }
     }
 
+    public async Task<Result<IReadOnlyList<NarratedSectionDto>>> NarrateReportAsync(
+        string title,
+        string userPrompt,
+        string? summary,
+        IReadOnlyList<NarrateReportSectionInputDto> sections,
+        CancellationToken cancellationToken)
+    {
+        if (sections.Count == 0)
+            return Result<IReadOnlyList<NarratedSectionDto>>.Success(Array.Empty<NarratedSectionDto>());
+
+        if (!TryGetBaseUri(out var baseUri))
+            return Result<IReadOnlyList<NarratedSectionDto>>.Failure(
+                new Error("report_ai.config_missing", "LlmApi BaseLink is not configured."));
+
+        var payload = new
+        {
+            title,
+            user_prompt = userPrompt,
+            summary,
+            sections = sections.Select(s => new
+            {
+                heading = s.Heading,
+                sql = s.Sql ?? string.Empty,
+                chart_type = s.ChartType ?? string.Empty,
+                sample_rows_json = s.SampleRowsJson ?? "[]",
+            }).ToList(),
+        };
+
+        try
+        {
+            var endpoint = new Uri(baseUri, "/narrate-report");
+            using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
+            {
+                Content = JsonContent.Create(payload, options: JsonOptions)
+            };
+            AddApiKey(request);
+
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (string.IsNullOrWhiteSpace(body))
+                return Result<IReadOnlyList<NarratedSectionDto>>.Success(BuildEmptyNarratives(sections));
+
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+
+            var status = root.TryGetProperty("status", out var statusEl) ? statusEl.GetString() : null;
+            if (!string.Equals(status, "success", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning("Narrate report returned non-success. Body: {Body}", body.Length > 300 ? body[..300] : body);
+                return Result<IReadOnlyList<NarratedSectionDto>>.Success(BuildEmptyNarratives(sections));
+            }
+
+            return Result<IReadOnlyList<NarratedSectionDto>>.Success(ParseNarratedSections(root, sections));
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to call narrate-report AI service. Falling back to empty narratives.");
+            return Result<IReadOnlyList<NarratedSectionDto>>.Success(BuildEmptyNarratives(sections));
+        }
+    }
+
+    private static IReadOnlyList<NarratedSectionDto> BuildEmptyNarratives(IReadOnlyList<NarrateReportSectionInputDto> sections)
+        => sections.Select(s => new NarratedSectionDto
+        {
+            Heading = s.Heading,
+            Narrative = string.Empty,
+        }).ToList();
+
+    private static IReadOnlyList<NarratedSectionDto> ParseNarratedSections(
+        JsonElement root,
+        IReadOnlyList<NarrateReportSectionInputDto> requestedSections)
+    {
+        var fallback = BuildEmptyNarratives(requestedSections).ToList();
+        if (!root.TryGetProperty("sections", out var sectionsEl) || sectionsEl.ValueKind != JsonValueKind.Array)
+            return fallback;
+
+        var parsedItems = new List<NarratedSectionDto>();
+        foreach (var item in sectionsEl.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.Object) continue;
+
+            var heading = item.TryGetProperty("heading", out var h) ? h.GetString() : null;
+            var narrative = item.TryGetProperty("narrative", out var n) ? n.GetString() : null;
+            if (string.IsNullOrWhiteSpace(heading)) continue;
+
+            parsedItems.Add(new NarratedSectionDto
+            {
+                Heading = heading,
+                Narrative = narrative ?? string.Empty,
+            });
+        }
+
+        if (parsedItems.Count == 0)
+            return fallback;
+
+        var byHeading = parsedItems
+            .GroupBy(x => x.Heading.Trim(), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First().Narrative, StringComparer.OrdinalIgnoreCase);
+
+        for (var i = 0; i < requestedSections.Count; i++)
+        {
+            var requestedHeading = requestedSections[i].Heading.Trim();
+            if (byHeading.TryGetValue(requestedHeading, out var matched))
+            {
+                fallback[i].Narrative = matched;
+                continue;
+            }
+
+            if (i < parsedItems.Count)
+                fallback[i].Narrative = parsedItems[i].Narrative;
+        }
+
+        return fallback;
+    }
+
     private bool TryGetBaseUri(out Uri baseUri)
     {
         baseUri = null!;

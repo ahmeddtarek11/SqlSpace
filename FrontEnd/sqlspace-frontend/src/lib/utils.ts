@@ -21,6 +21,71 @@ export function formatDate(iso: string): string {
   }).format(new Date(iso))
 }
 
+const SIMPLE_SQL_SERVER_IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_$#]*$/
+
+const SQL_CLAUSE_BREAKS = [
+  'UNION ALL',
+  'ORDER BY',
+  'GROUP BY',
+  'LEFT OUTER JOIN',
+  'RIGHT OUTER JOIN',
+  'FULL OUTER JOIN',
+  'LEFT JOIN',
+  'RIGHT JOIN',
+  'FULL JOIN',
+  'INNER JOIN',
+  'CROSS JOIN',
+  'OUTER JOIN',
+  'SELECT',
+  'FROM',
+  'WHERE',
+  'HAVING',
+  'JOIN',
+  'ON',
+  'UNION',
+  'LIMIT',
+  'OFFSET',
+  'WITH',
+] as const
+
+export function stripSimpleSqlServerBrackets(sql: string): string {
+  return sql.replace(/\[([^\]\r\n]+)\]/g, (fullMatch, identifier: string) => {
+    const trimmed = identifier.trim()
+    return SIMPLE_SQL_SERVER_IDENTIFIER.test(trimmed) ? trimmed : fullMatch
+  })
+}
+
+export function formatSqlForDisplay(sql: string): string {
+  if (!sql) return ''
+
+  const normalized = stripSimpleSqlServerBrackets(sql)
+    .replace(/\r\n/g, '\n')
+    .replace(/\n+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+
+  if (!normalized) return ''
+
+  let pretty = normalized
+
+  for (const clause of SQL_CLAUSE_BREAKS) {
+    const clausePattern = clause.replace(/\s+/g, '\\s+')
+    const atStart = new RegExp(`^${clausePattern}(?=\\s|$)`, 'i')
+    const withLeadingWhitespace = new RegExp(`\\s+${clausePattern}(?=\\s|$)`, 'gi')
+    pretty = pretty.replace(atStart, clause)
+    pretty = pretty.replace(withLeadingWhitespace, `\n${clause}`)
+  }
+
+  return pretty.replace(/\n{2,}/g, '\n').trim()
+}
+
+export function formatSqlSingleLineForDisplay(sql: string): string {
+  return formatSqlForDisplay(sql)
+    .replace(/\s*\n+\s*/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
 export function truncate(str: string, max = 80): string {
   return str.length <= max ? str : str.slice(0, max) + '…'
 }

@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Editor from '@monaco-editor/react'
 import { Copy, Check, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { motion, AnimatePresence } from 'framer-motion'
+import { formatSqlForDisplay } from '@/lib/utils'
 
 interface Props {
   sql: string
@@ -15,9 +16,15 @@ interface Props {
 export function SQLPreview({ sql, explanation, onChange, readOnly = false }: Props) {
   const [copied, setCopied] = useState(false)
   const [showExplanation, setShowExplanation] = useState(false)
+  const [displayMode, setDisplayMode] = useState<'pretty' | 'raw'>(readOnly ? 'pretty' : 'raw')
+
+  const renderedSql = useMemo(() => {
+    if (!readOnly || displayMode === 'raw') return sql
+    return formatSqlForDisplay(sql)
+  }, [displayMode, readOnly, sql])
 
   const handleCopy = () => {
-    void navigator.clipboard.writeText(sql)
+    void navigator.clipboard.writeText(renderedSql)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -35,6 +42,24 @@ export function SQLPreview({ sql, explanation, onChange, readOnly = false }: Pro
           )}
         </div>
         <div className="flex items-center gap-1">
+          {readOnly && (
+            <div className="mr-1 inline-flex items-center rounded-md border border-white/10 bg-[#111113] p-0.5">
+              <button
+                type="button"
+                className={`h-6 px-2 text-[11px] rounded ${displayMode === 'pretty' ? 'bg-white/10 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                onClick={() => setDisplayMode('pretty')}
+              >
+                Pretty
+              </button>
+              <button
+                type="button"
+                className={`h-6 px-2 text-[11px] rounded ${displayMode === 'raw' ? 'bg-white/10 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                onClick={() => setDisplayMode('raw')}
+              >
+                Raw
+              </button>
+            </div>
+          )}
           {explanation && (
             <Button
               variant="ghost"
@@ -77,7 +102,7 @@ export function SQLPreview({ sql, explanation, onChange, readOnly = false }: Pro
       <Editor
         height="160px"
         language="sql"
-        value={sql}
+        value={renderedSql}
         onChange={(v) => onChange?.(v ?? '')}
         options={{
           readOnly,

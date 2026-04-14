@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -8,13 +8,16 @@ import {
   Code2, Sparkles, Clock, Database, CheckCircle2, XCircle, ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AskAiButton } from '@/components/ui/ask-ai-button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { queriesApi } from '@/api/queries'
+import { accessApi } from '@/api/insights'
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import { useConnectionStore } from '@/stores/connection-store'
-import { formatDate, truncate, formatMs } from '@/lib/utils'
+import { formatDate, truncate, formatMs, formatSqlForDisplay, formatSqlSingleLineForDisplay } from '@/lib/utils'
+import { ingestArtifactForAskAi, parseRowsFromResultsJson } from '@/lib/ask-ai'
 import type { SavedQueryDto } from '@/types'
 
 // ── Detail Modal ────────────────────────────────────────────────────────────────
@@ -162,7 +165,7 @@ function QueryDetailModal({ query, onClose }: { query: SavedQueryDto; onClose: (
             <div className="p-4 max-h-64 overflow-y-auto">
               {activeTab === 'sql' && (
                 <pre className="font-mono text-xs text-cyan-600 leading-relaxed whitespace-pre-wrap break-all">
-                  {query.generatedSql ?? 'No SQL available'}
+                  {query.generatedSql ? formatSqlForDisplay(query.generatedSql) : 'No SQL available'}
                 </pre>
               )}
               {activeTab === 'explain' && (
@@ -214,12 +217,16 @@ function SavedCard({
   query,
   onOpen,
   onDelete,
-  onRename,
+  onAskAi,
+  isAskingAi,
+  canAskAi,
 }: {
   query: SavedQueryDto
   onOpen: () => void
   onDelete: () => void
-  onRename: (name: string) => void
+  onAskAi: () => void
+  isAskingAi: boolean
+  canAskAi: boolean
 }) {
   const navigate = useNavigate()
   const { setPrompt, setGeneratedSQL, setExplanation, setResult } = useWorkspaceStore()
@@ -329,6 +336,15 @@ function SavedCard({
           >
             <Play className="w-3.5 h-3.5" />
           </Button>
+          {canAskAi && (
+            <AskAiButton
+              size="icon"
+              onClick={onAskAi}
+              loading={isAskingAi}
+              ariaLabel="Ask AI about this saved query"
+              className="w-8 h-8"
+            />
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -346,7 +362,7 @@ function SavedCard({
 
       <p className="text-xs text-zinc-600 italic">{truncate(query.userPrompt ?? '', 80)}</p>
       <pre className="text-xs font-mono text-cyan-600 bg-[#0d0d0f] border border-white/5 rounded-xl px-3 py-2 truncate">
-        {truncate(query.generatedSql ?? '', 100)}
+        {truncate(formatSqlSingleLineForDisplay(query.generatedSql ?? ''), 100)}
       </pre>
 
       <div className="flex items-center justify-between">
@@ -365,6 +381,7 @@ function SavedCard({
 export default function SavedQueriesPage() {
   const [search, setSearch] = useState('')
   const [selectedQuery, setSelectedQuery] = useState<SavedQueryDto | null>(null)
+  const [askingAiSavedQueryId, setAskingAiSavedQueryId] = useState<string | null>(null)
   const qc = useQueryClient()
 
   const { data = [], isLoading } = useQuery({
@@ -383,6 +400,57 @@ export default function SavedQueriesPage() {
       (q.name ?? '').toLowerCase().includes(search.toLowerCase()) ||
       (q.userPrompt ?? '').toLowerCase().includes(search.toLowerCase())
   )
+
+  const visibleConnectionIds = useMemo(() => {
+    return [...new Set(filtered.map((query) => query.connectionId))]
+  }, [filtered])
+
+  const adminQueryResults = useQueries({
+    queries: visibleConnectionIds.map((connectionId) => ({
+      queryKey: ['connection-is-admin', connectionId],
+      queryFn: () => accessApi.isAdmin(connectionId),
+      staleTime: 60_000,
+      retry: false,
+    })),
+  })
+
+  const adminByConnectionId = useMemo(() => {
+    const map = new Map<string, boolean>()
+    visibleConnectionIds.forEach((connectionId, index) => {
+      map.set(connectionId, adminQueryResults[index]?.data === true)
+    })
+    return map
+  }, [visibleConnectionIds, adminQueryResults])
+
+  const handleAskAi = async (query: SavedQueryDto) => {
+    if (askingAiSavedQueryId) return
+
+    setAskingAiSavedQueryId(query.id)
+    try {
+      const detail = query.queryHistoryId
+        ? await queriesApi.historyById(query.queryHistoryId)
+        : null
+
+      await ingestArtifactForAskAi({
+        source: 'saved-query',
+        connectionId: detail?.connectionId ?? query.connectionId,
+        title: query.name?.trim() || query.userPrompt?.trim() || `Saved query ${query.id}`,
+        prompt: query.userPrompt ?? detail?.userPrompt,
+        sql: query.generatedSql ?? detail?.generatedSql,
+        explanation: detail?.llmResponse,
+        rows: parseRowsFromResultsJson(detail?.resultsJson),
+        metadata: {
+          savedQueryId: query.id,
+          queryHistoryId: query.queryHistoryId,
+          connectionName: query.connectionName,
+          status: detail?.status,
+          rowsReturned: detail?.rowsReturned,
+        },
+      })
+    } finally {
+      setAskingAiSavedQueryId(null)
+    }
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -418,7 +486,9 @@ export default function SavedQueriesPage() {
                 query={q}
                 onOpen={() => setSelectedQuery(q)}
                 onDelete={() => deleteMutation.mutate(q.id)}
-                onRename={(name) => queriesApi.renameSaved(q.id, name)}
+                onAskAi={() => void handleAskAi(q)}
+                isAskingAi={askingAiSavedQueryId === q.id}
+                canAskAi={adminByConnectionId.get(q.connectionId) === true}
               />
             ))}
           </div>

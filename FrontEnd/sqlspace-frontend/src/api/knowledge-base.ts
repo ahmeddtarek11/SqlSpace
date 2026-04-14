@@ -33,6 +33,13 @@ export const knowledgeBaseApi = {
     return data.data
   },
 
+  deleteDocument: async (connectionId: string, documentId: string): Promise<void> => {
+    const { data } = await apiClient.delete<ApiResponse<boolean>>(
+      `/api/connections/${connectionId}/knowledge/documents/${documentId}`
+    )
+    if (!data.success) throw new Error(data.errors?.[0]?.message ?? 'Delete failed')
+  },
+
   ask: async (
     connectionId: string,
     query: string,

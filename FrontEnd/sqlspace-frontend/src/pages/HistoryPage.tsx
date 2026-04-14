@@ -1,15 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQueries, useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Search, Filter, ChevronRight, ChevronLeft } from 'lucide-react'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { queriesApi } from '@/api/queries'
+import { accessApi } from '@/api/insights'
+import { AskAiButton } from '@/components/ui/ask-ai-button'
+import { truncate, formatSqlSingleLineForDisplay } from '@/lib/utils'
+import { ingestArtifactForAskAi, parseRowsFromResultsJson } from '@/lib/ask-ai'
 export default function HistoryPage() {
   const pageSize = 15
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedConnectionId, setSelectedConnectionId] = useState('all')
   const [pageNumber, setPageNumber] = useState(1)
+  const [askingAiQueryId, setAskingAiQueryId] = useState<string | null>(null)
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300)
@@ -73,6 +79,77 @@ export default function HistoryPage() {
   const startEntry = totalCount === 0 ? 0 : (pageNumber - 1) * pageSize + 1
   const endEntry = Math.min(pageNumber * pageSize, totalCount)
 
+  const connectionIdByName = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const connection of connections) {
+      map.set(connection.connectionName, connection.connectionId)
+    }
+    return map
+  }, [connections])
+
+  const pageConnectionIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const item of items) {
+      if (!item.connectionName) continue
+      const connectionId = connectionIdByName.get(item.connectionName)
+      if (connectionId) ids.add(connectionId)
+    }
+    return [...ids]
+  }, [items, connectionIdByName])
+
+  const adminQueryResults = useQueries({
+    queries: pageConnectionIds.map((connectionId) => ({
+      queryKey: ['connection-is-admin', connectionId],
+      queryFn: () => accessApi.isAdmin(connectionId),
+      staleTime: 60_000,
+      retry: false,
+    })),
+  })
+
+  const adminByConnectionId = useMemo(() => {
+    const map = new Map<string, boolean>()
+    pageConnectionIds.forEach((connectionId, index) => {
+      map.set(connectionId, adminQueryResults[index]?.data === true)
+    })
+    return map
+  }, [pageConnectionIds, adminQueryResults])
+
+  const resolveConnectionIdForItem = (itemConnectionName: string | null) => {
+    if (!itemConnectionName) return null
+    return connectionIdByName.get(itemConnectionName) ?? null
+  }
+
+  const handleAskAi = async (queryId: string) => {
+    if (askingAiQueryId) return
+
+    setAskingAiQueryId(queryId)
+    try {
+      const detail = await queriesApi.historyById(queryId)
+      if (!detail) {
+        toast.error('Unable to load full query details for Ask AI')
+        return
+      }
+
+      await ingestArtifactForAskAi({
+        source: 'query-history',
+        connectionId: detail.connectionId,
+        title: detail.userPrompt?.trim() || `Query ${detail.queryId}`,
+        prompt: detail.userPrompt,
+        sql: detail.generatedSql,
+        explanation: detail.llmResponse,
+        rows: parseRowsFromResultsJson(detail.resultsJson),
+        metadata: {
+          queryId: detail.queryId,
+          status: detail.status,
+          rowsReturned: detail.rowsReturned,
+          connectionName: detail.connectionName,
+        },
+      })
+    } finally {
+      setAskingAiQueryId(null)
+    }
+  }
+
   return (
     <div className="px-6 py-8 w-full h-full min-h-0 flex flex-col">
       <div className="mb-8">
@@ -118,6 +195,7 @@ export default function HistoryPage() {
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Rows</th>
                 <th className="px-6 py-4">Time</th>
+                <th className="px-6 py-4 text-center">Ask AI</th>
                 <th className="px-6 py-4 text-right">Date</th>
               </tr>
             </thead>
@@ -125,12 +203,12 @@ export default function HistoryPage() {
               {isLoading ? (
                 Array.from({ length: pageSize }).map((_, idx) => (
                   <tr key={idx}>
-                    <td className="px-6 py-4 text-zinc-500" colSpan={6}>Loading...</td>
+                    <td className="px-6 py-4 text-zinc-500" colSpan={7}>Loading...</td>
                   </tr>
                 ))
               ) : items.length === 0 ? (
                 <tr>
-                  <td className="px-6 py-8 text-zinc-500 text-center" colSpan={6}>No query history found.</td>
+                  <td className="px-6 py-8 text-zinc-500 text-center" colSpan={7}>No query history found.</td>
                 </tr>
               ) : (
                 items.map((item) => (
@@ -141,7 +219,7 @@ export default function HistoryPage() {
                           {item.userPrompt ?? '(No prompt)'}
                         </div>
                         <div className="font-mono text-xs text-zinc-500 truncate max-w-md">
-                          {item.generatedSql ? `${item.generatedSql.substring(0, 60)}...` : 'No SQL generated'}
+                          {item.generatedSql ? truncate(formatSqlSingleLineForDisplay(item.generatedSql), 60) : 'No SQL generated'}
                         </div>
                       </Link>
                     </td>
@@ -164,6 +242,23 @@ export default function HistoryPage() {
                     </td>
                     <td className="px-6 py-4 text-zinc-400 font-mono text-xs">
                       <Link to={`/history/${item.queryId}`} className="block">{item.executionTimeMs ?? 0}ms</Link>
+                    </td>
+                    <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                      {(() => {
+                        const connectionId = resolveConnectionIdForItem(item.connectionName)
+                        const canAskAi = connectionId ? adminByConnectionId.get(connectionId) === true : false
+                        if (!canAskAi) return null
+
+                        return (
+                          <AskAiButton
+                            size="pill"
+                            onClick={() => void handleAskAi(item.queryId)}
+                            loading={askingAiQueryId === item.queryId}
+                            ariaLabel="Ask AI about this query"
+                            className="h-7 px-2.5 text-[11px]"
+                          />
+                        )
+                      })()}
                     </td>
                     <td className="px-6 py-4 text-right text-zinc-400">
                       <Link to={`/history/${item.queryId}`} className="flex items-center justify-end gap-3">

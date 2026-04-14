@@ -2,11 +2,12 @@ import { useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   BookOpen, Upload, FileText, CheckCircle2,
-  XCircle, Clock, Loader2, ChevronDown, AlertCircle,
+  XCircle, Clock, Loader2, ChevronDown, AlertCircle, Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { connectionsApi } from '@/api/connections'
+import { accessApi } from '@/api/insights'
 import { knowledgeBaseApi } from '@/api/knowledge-base'
 import type { KnowledgeDocument } from '@/types'
 
@@ -29,7 +30,7 @@ export default function KnowledgeBasePage() {
   const [tab, setTab] = useState<Tab>('documents')
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>('')
 
-  const { data: connections = [], isLoading: loadingConnections } = useQuery({
+  const { data: connections = [] } = useQuery({
     queryKey: ['connections-for-kb'],
     queryFn: () => connectionsApi.list(),
   })
@@ -107,6 +108,9 @@ export default function KnowledgeBasePage() {
 // ── Documents Tab ──────────────────────────────────────────────────────────────
 
 function DocumentsTab({ connectionId }: { connectionId: string }) {
+  const qc = useQueryClient()
+  const [deletingDocumentId, setDeletingDocumentId] = useState<string | null>(null)
+
   const { data: docs = [], isLoading } = useQuery({
     queryKey: ['knowledge-docs', connectionId],
     queryFn: () => knowledgeBaseApi.listDocuments(connectionId),
@@ -115,6 +119,35 @@ function DocumentsTab({ connectionId }: { connectionId: string }) {
       return docs.some((d) => d.status === 'Processing' || d.status === 'Pending') ? 4000 : false
     },
   })
+
+  const { data: canManageDocuments = false } = useQuery({
+    queryKey: ['connection-is-admin', connectionId],
+    queryFn: () => accessApi.isAdmin(connectionId),
+    enabled: !!connectionId,
+    staleTime: 60_000,
+    retry: false,
+  })
+
+  const { mutate: deleteDocument } = useMutation({
+    mutationFn: (documentId: string) => knowledgeBaseApi.deleteDocument(connectionId, documentId),
+    onSuccess: () => {
+      toast.success('Document deleted')
+      void qc.invalidateQueries({ queryKey: ['knowledge-docs', connectionId] })
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  const handleDeleteDocument = (document: KnowledgeDocument) => {
+    if (deletingDocumentId) return
+
+    const confirmed = window.confirm(`Delete "${document.fileName}" from this knowledge base?`)
+    if (!confirmed) return
+
+    setDeletingDocumentId(document.documentId)
+    deleteDocument(document.documentId, {
+      onSettled: () => setDeletingDocumentId(null),
+    })
+  }
 
   if (isLoading) return <LoadingRows />
 
@@ -132,11 +165,14 @@ function DocumentsTab({ connectionId }: { connectionId: string }) {
     <div className="rounded-xl border border-white/10 overflow-hidden">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-white/10 bg-white/[0.02]">
+          <tr className="border-b border-white/10 bg-white/2">
             <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">File</th>
             <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Status</th>
             <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Chunks</th>
             <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Uploaded</th>
+            {canManageDocuments && (
+              <th className="text-right px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Actions</th>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-white/5">
@@ -144,7 +180,7 @@ function DocumentsTab({ connectionId }: { connectionId: string }) {
             const cfg = STATUS_CONFIG[doc.status]
             const Icon = cfg.icon
             return (
-              <tr key={doc.documentId} className="hover:bg-white/[0.02] transition-colors">
+              <tr key={doc.documentId} className="hover:bg-white/2 transition-colors">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <FileText className="w-4 h-4 text-zinc-500 shrink-0" />
@@ -166,6 +202,23 @@ function DocumentsTab({ connectionId }: { connectionId: string }) {
                 <td className="px-4 py-3 text-zinc-500 text-xs">
                   {new Date(doc.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                 </td>
+                {canManageDocuments && (
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteDocument(doc)}
+                      disabled={deletingDocumentId === doc.documentId}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/20 px-2.5 py-1 text-xs font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {deletingDocumentId === doc.documentId ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
+                      )}
+                      Delete
+                    </button>
+                  </td>
+                )}
               </tr>
             )
           })}
@@ -187,7 +240,11 @@ function UploadTab({ connectionId, onSuccess }: { connectionId: string; onSucces
   const { mutate: upload, isPending } = useMutation({
     mutationFn: () => knowledgeBaseApi.uploadDocument(connectionId, file!, allowedRoles),
     onSuccess: (result) => {
-      toast.success(`"${result.fileName}" queued — ${result.chunksCreated} chunks created.`)
+      if (result.status === 'already_indexed') {
+        toast.info(`"${result.fileName}" is already indexed. Duplicate content was skipped.`)
+      } else {
+        toast.success(`"${result.fileName}" queued — ${result.chunksCreated} chunks created.`)
+      }
       qc.invalidateQueries({ queryKey: ['knowledge-docs', connectionId] })
       setFile(null)
       onSuccess()
@@ -222,7 +279,7 @@ function UploadTab({ connectionId, onSuccess }: { connectionId: string; onSucces
             ? 'border-sky-500 bg-sky-500/5'
             : file
             ? 'border-green-500/40 bg-green-500/5'
-            : 'border-white/10 hover:border-white/20 hover:bg-white/[0.02]'
+            : 'border-white/10 hover:border-white/20 hover:bg-white/2'
         )}
       >
         <input

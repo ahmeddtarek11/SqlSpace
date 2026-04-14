@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { RefreshCw, Trash2, AlertCircle, Clock, Maximize2 } from 'lucide-react'
+import { AskAiButton } from '@/components/ui/ask-ai-button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartRenderer } from './ChartRenderer'
 import type { ChartType, ChartConfig, SavedChartDto } from '@/types'
@@ -14,11 +15,14 @@ interface ChartCardProps {
   onRefresh: (chartId: string) => void
   onDelete: (chartId: string) => void
   onExpand: (chartId: string) => void
+  onAskAi: (chartId: string) => void
+  isAskingAi?: boolean
+  canAskAi?: boolean
 }
 
 export function ChartCard({
   chart, data, loading, error, executionTimeMs,
-  onRefresh, onDelete, onExpand,
+  onRefresh, onDelete, onExpand, onAskAi, isAskingAi = false, canAskAi = false,
 }: ChartCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -58,6 +62,15 @@ export function ChartCard({
           >
             <Maximize2 className="w-3.5 h-3.5" />
           </button>
+          {canAskAi && (
+            <AskAiButton
+              size="icon"
+              onClick={() => onAskAi(chart.id)}
+              loading={isAskingAi}
+              ariaLabel="Ask AI about this chart"
+              className="h-8 w-8"
+            />
+          )}
           <button
             onClick={() => onRefresh(chart.id)}
             className="p-1.5 rounded-md text-zinc-500 hover:text-sky-400 hover:bg-sky-500/10 transition-colors"

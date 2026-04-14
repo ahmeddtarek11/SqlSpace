@@ -1,13 +1,16 @@
-import { useEffect } from 'react'
-import { FileText, AlertCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { FileText, AlertCircle, Info, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { accessApi } from '@/api/insights'
+import { ingestArtifactForAskAi, parseRowsFromResultsJson } from '@/lib/ask-ai'
 import { exportReportAsPdf } from '@/lib/report-export'
 import { useReportsStore, selectConnectionReports } from '@/stores/reports-store'
 import { ReportPromptInput } from './ReportPromptInput'
 import { ReportView } from './ReportView'
 import { ReportToolbar } from './ReportToolbar'
-import type { CreateReportRequest } from '@/types'
+import type { CreateReportRequest, ReportDraftDto, ReportDto } from '@/types'
 
 interface ReportsTabProps {
   connectionId: string
@@ -19,6 +22,8 @@ export function ReportsTab({ connectionId, hidePromptInput = false }: ReportsTab
   const {
     loadList,
     generateDraft,
+    hydrateDraft,
+    restoreSessionDraft,
     clearDraft,
     saveReport,
     openReport,
@@ -28,11 +33,58 @@ export function ReportsTab({ connectionId, hidePromptInput = false }: ReportsTab
   } = useReportsStore()
 
   useEffect(() => {
+    hydrateDraft(connectionId)
     void loadList(connectionId)
-  }, [connectionId, loadList])
+  }, [connectionId, hydrateDraft, loadList])
 
   const activeContent = store.draft ?? store.activeReport
   const isDraft = !!store.draft && !store.activeReport
+  const hasRecoverableSessionDraft = !store.draft && store.hasSessionDraft
+  const [isAskingActiveContent, setIsAskingActiveContent] = useState(false)
+
+  const { data: canAskAi = false } = useQuery({
+    queryKey: ['connection-is-admin', connectionId],
+    queryFn: () => accessApi.isAdmin(connectionId),
+    enabled: !!connectionId,
+    staleTime: 60_000,
+    retry: false,
+  })
+
+  const mapReportSectionsForAskAi = (report: ReportDraftDto | ReportDto) =>
+    report.sections.map((section) => ({
+      heading: section.heading,
+      narrative: section.narrativeText,
+      sql: section.sqlQuery,
+      rows: parseRowsFromResultsJson(section.resultsJson),
+      chartType: section.chartType,
+      executionSuccess: section.executionSuccess,
+      executionError: section.executionErrorMessage,
+    }))
+
+  const handleAskAiActiveContent = async () => {
+    if (!activeContent || isAskingActiveContent || !canAskAi) return
+
+    setIsAskingActiveContent(true)
+    try {
+      const savedReportId = 'reportId' in activeContent ? activeContent.reportId : null
+
+      await ingestArtifactForAskAi({
+        source: 'report',
+        connectionId,
+        title: activeContent.title,
+        prompt: activeContent.originalPrompt,
+        explanation: activeContent.summary,
+        sections: mapReportSectionsForAskAi(activeContent),
+        metadata: {
+          reportId: savedReportId,
+          sectionCount: activeContent.sections.length,
+          isDraft,
+        },
+      })
+    } finally {
+      setIsAskingActiveContent(false)
+    }
+  }
 
   const handleExportPdf = () => {
     if (!store.activeReport) return
@@ -99,7 +151,7 @@ export function ReportsTab({ connectionId, hidePromptInput = false }: ReportsTab
                 type="button"
                 onClick={() => void openReport(connectionId, header.reportId)}
                 className={cn(
-                  'w-full text-left px-3 py-2.5 mx-1 rounded-lg transition-colors',
+                  'mx-1 w-[calc(100%-0.5rem)] text-left px-3 py-2.5 rounded-lg transition-colors',
                   isActive
                     ? 'bg-sky-500/10 border border-sky-500/20'
                     : 'hover:bg-white/5 border border-transparent'
@@ -130,6 +182,36 @@ export function ReportsTab({ connectionId, hidePromptInput = false }: ReportsTab
           </div>
         )}
 
+        {isDraft && (
+          <div className="shrink-0 border-b border-amber-500/20 bg-amber-500/10 px-4 py-2">
+            <div className="flex items-center gap-2 text-xs text-amber-200">
+              <Info className="w-3.5 h-3.5 shrink-0" />
+              <span>
+                This report is only saved for this browser session. Save report to store it permanently in the database.
+              </span>
+            </div>
+          </div>
+        )}
+
+        {hasRecoverableSessionDraft && (
+          <div className="shrink-0 border-b border-sky-500/20 bg-sky-500/10 px-4 py-2">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-xs text-sky-200">
+                <Info className="w-3.5 h-3.5 shrink-0" />
+                <span>An unsaved draft is available in this session. Restore it and save to avoid losing it.</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => restoreSessionDraft(connectionId)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-sky-400/30 px-2.5 py-1 text-[11px] font-medium text-sky-100 hover:bg-sky-400/10 transition-colors"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Restore draft
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Toolbar — shown only when content is visible */}
         {activeContent && (
           <ReportToolbar
@@ -143,7 +225,7 @@ export function ReportsTab({ connectionId, hidePromptInput = false }: ReportsTab
             onSave={isDraft ? handleSave : undefined}
             onRefresh={
               !isDraft && store.activeReport
-                ? () => void refreshReport(connectionId, store.activeReport!.reportId)
+                ? () => void refreshReport(connectionId, store.activeReport!.reportId, true)
                 : undefined
             }
             onDelete={
@@ -152,6 +234,8 @@ export function ReportsTab({ connectionId, hidePromptInput = false }: ReportsTab
                 : undefined
             }
             onExportPdf={!isDraft && store.activeReport ? handleExportPdf : undefined}
+            onAskAi={canAskAi && activeContent ? () => void handleAskAiActiveContent() : undefined}
+            isAskingAi={isAskingActiveContent}
           />
         )}
 

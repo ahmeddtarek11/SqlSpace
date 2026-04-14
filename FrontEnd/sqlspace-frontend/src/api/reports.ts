@@ -47,7 +47,7 @@ export const reportsApi = {
   refresh: async (
     connectionId: string,
     reportId: string,
-    regenerateNarrative = false
+    regenerateNarrative = true
   ): Promise<ReportDto> => {
     const { data } = await apiClient.post<ApiResponse<ReportDto>>(
       `/api/connections/${connectionId}/reports/${reportId}/refresh`,

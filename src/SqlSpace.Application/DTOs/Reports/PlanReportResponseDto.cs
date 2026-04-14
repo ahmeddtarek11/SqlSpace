@@ -18,3 +18,22 @@ public class PlannedSectionDto
     public string? ChartType { get; set; }
     public string? ChartConfig { get; set; }
 }
+
+public class NarrateReportSectionInputDto
+{
+    public string Heading { get; set; } = string.Empty;
+    public string? Sql { get; set; }
+    public string? ChartType { get; set; }
+    public string? SampleRowsJson { get; set; }
+}
+
+public class NarratedSectionDto
+{
+    public string Heading { get; set; } = string.Empty;
+    public string Narrative { get; set; } = string.Empty;
+}
+
+public class NarrateReportResponseDto
+{
+    public IReadOnlyList<NarratedSectionDto> Sections { get; set; } = [];
+}

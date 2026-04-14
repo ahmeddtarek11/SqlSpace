@@ -48,7 +48,18 @@ public class KnowledgeBaseController(
         var result = await _knowledgeBaseService.IngestDocumentAsync(
             connectionId, userId, allowedRoles, fileDto, cancellationToken);
 
-        return ToApiResponse(result, StatusCodes.Status201Created, "Document uploaded and indexed.");
+        var wasDeduplicated = result.IsSuccess &&
+                              string.Equals(result.Value?.Status, "already_indexed", StringComparison.OrdinalIgnoreCase);
+
+        var successStatusCode = wasDeduplicated
+            ? StatusCodes.Status200OK
+            : StatusCodes.Status201Created;
+
+        var successMessage = wasDeduplicated
+            ? "Document already indexed; reused existing content."
+            : "Document uploaded and indexed.";
+
+        return ToApiResponse(result, successStatusCode, successMessage);
     }
 
     [HttpGet("documents")]
@@ -69,6 +80,31 @@ public class KnowledgeBaseController(
             connectionId, userId, cancellationToken);
 
         return ToApiResponse(result, StatusCodes.Status200OK, "Documents retrieved.");
+    }
+
+    [HttpDelete("documents/{documentId:guid}")]
+    [EndpointSummary("Delete an uploaded knowledge document")]
+    [EndpointDescription("Admin only. Deletes one knowledge document and removes its chunks from the Python RAG index.")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteDocument(
+        Guid connectionId,
+        Guid documentId,
+        CancellationToken cancellationToken)
+    {
+        var userId = _currentUserService.GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return UnauthorizedResponse<bool>();
+
+        var result = await _knowledgeBaseService.DeleteDocumentAsync(
+            connectionId,
+            userId,
+            documentId,
+            cancellationToken);
+
+        return ToApiResponse(result, StatusCodes.Status200OK, "Document deleted.");
     }
 
     [HttpPost("ask")]

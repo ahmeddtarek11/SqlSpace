@@ -6,9 +6,15 @@ import type { ChatMessage } from '@/types'
 
 interface RagChatPanelProps {
   connectionId: string | null
+  openTrigger?: boolean
+  defaultDraftOnOpen?: string
 }
 
-export function RagChatPanel({ connectionId }: RagChatPanelProps) {
+export function RagChatPanel({
+  connectionId,
+  openTrigger = false,
+  defaultDraftOnOpen,
+}: RagChatPanelProps) {
   const loadHistory = useRagChatStore((s) => s.loadHistory)
   const sendMessage = useRagChatStore((s) => s.sendMessage)
   const chat = useRagChatStore((s) =>
@@ -17,6 +23,7 @@ export function RagChatPanel({ connectionId }: RagChatPanelProps) {
 
   const [draft, setDraft] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
+  const wasOpenRef = useRef(false)
 
   useEffect(() => {
     if (connectionId) void loadHistory(connectionId)
@@ -27,6 +34,14 @@ export function RagChatPanel({ connectionId }: RagChatPanelProps) {
     if (!el) return
     el.scrollTop = el.scrollHeight
   }, [chat?.messages.length, chat?.isSending])
+
+  useEffect(() => {
+    const openedNow = openTrigger && !wasOpenRef.current
+    if (openedNow && defaultDraftOnOpen) {
+      setDraft((current) => (current.trim().length > 0 ? current : defaultDraftOnOpen))
+    }
+    wasOpenRef.current = openTrigger
+  }, [openTrigger, defaultDraftOnOpen])
 
   if (!connectionId) {
     return (

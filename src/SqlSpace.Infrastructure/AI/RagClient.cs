@@ -214,6 +214,62 @@ public class RagClient(HttpClient httpClient, IOptions<RagApiOptions> options, I
         }
     }
 
+    // ── Delete ───────────────────────────────────────────────────────────────
+
+    public async Task<Result<bool>> DeleteFileAsync(
+        string tenantId,
+        string fileId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId))
+            return Result<bool>.Failure(
+                new Error("rag.invalid_request", "tenantId cannot be empty.", nameof(tenantId)));
+
+        if (string.IsNullOrWhiteSpace(fileId))
+            return Result<bool>.Failure(
+                new Error("rag.invalid_request", "fileId cannot be empty.", nameof(fileId)));
+
+        var encodedFileId = Uri.EscapeDataString(fileId);
+        var encodedTenantId = Uri.EscapeDataString(tenantId);
+
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Delete,
+                $"/api/rag/files/{encodedFileId}?tenant_id={encodedTenantId}");
+
+            AddApiKeyHeader(request);
+
+            _logger.LogInformation(
+                "Sending delete request to RAG service. TenantId: {TenantId}, FileId: {FileId}",
+                tenantId, fileId);
+
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            _logger.LogDebug("RAG delete responded. StatusCode: {StatusCode}", response.StatusCode);
+
+            if (response.IsSuccessStatusCode)
+                return Result<bool>.Success(true);
+
+            if (string.IsNullOrWhiteSpace(body))
+                return Result<bool>.Failure(
+                    new Error("rag.empty_response", "RAG service returned an empty response."));
+
+            return ParseErrorResponse<bool>(body);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to call RAG delete endpoint.");
+            return Result<bool>.Failure(
+                new Error("rag.request_failed", $"Failed to reach RAG service: {ex.GetType().Name}"));
+        }
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void AddApiKeyHeader(HttpRequestMessage request)
