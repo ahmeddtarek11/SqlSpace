@@ -7,9 +7,10 @@ namespace SqlSpace.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(IAuthService authService) : ApiController
+public class AuthController(IAuthService authService, ICurrentUserService currentUserService) : ApiController
 {
     private readonly IAuthService _authService = authService;
+    private readonly ICurrentUserService _currentUserService = currentUserService;
 
     [HttpPost("register")]
     [ProducesResponseType(typeof(ApiResponse<RegisterResult>), StatusCodes.Status201Created)]
@@ -47,11 +48,17 @@ public class AuthController(IAuthService authService) : ApiController
     [HttpPost("logout")]
     [ProducesResponseType(typeof(ApiResponse<object?>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object?>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object?>), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ApiResponse<object?>>> Logout(
-        [FromBody] LogoutRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await _authService.LogoutAsync(request.UserId, cancellationToken);
+        var userId = _currentUserService.GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return UnauthorizedResponse<object?>();
+        }
+
+        var result = await _authService.LogoutAsync(userId, cancellationToken);
         return ToApiResponse(result, StatusCodes.Status200OK, "Logout completed.");
     }
 
@@ -63,9 +70,4 @@ public class AuthController(IAuthService authService) : ApiController
         public string RefreshToken { get; set; } = string.Empty;
     }
 
-    public sealed class LogoutRequest
-    {
-        [Required]
-        public string UserId { get; set; } = string.Empty;
-    }
 }
