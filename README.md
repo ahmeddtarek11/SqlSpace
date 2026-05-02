@@ -1,67 +1,124 @@
 # SqlSpace
 
-AI-powered business intelligence platform for small business owners. Connect your database or store, ask questions in plain language, and get insights, charts, and reports — no SQL knowledge required.
+> Natural-language analytics for small business owners — ask questions in plain English, get SQL-backed answers, charts, and auto-generated reports.
 
-> **⚠️ Work in Progress**: This project is **not finished**. It is under continuous development — many features are still being built, some functionality is incomplete, and there will be bugs. Expect breaking changes as the codebase evolves.
+[![.NET](https://img.shields.io/badge/.NET-10-512BD4)](https://dotnet.microsoft.com/)
+[![React](https://img.shields.io/badge/React-19-61DAFB)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/license-MIT-green)](#license)
 
-## What It Does
+> **Status:** under active development. Expect breaking changes as the codebase evolves.
 
-- **Natural Language Queries** — Ask business questions in plain English, get SQL-backed answers with AI explanations
-- **Auto Analytics** — Connects to your database schema and suggests relevant charts and insights automatically
-- **Multi-Database Support** — PostgreSQL, MySQL, SQL Server
-- **Role-Based Access Control** — Connection-scoped permissions with full audit logging
-- **Query History & Saved Queries** — Track and reuse past analyses
+---
 
-## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, TypeScript, Tailwind CSS, Chart.js |
-| Backend API | ASP.NET Core (.NET 10), Clean Architecture |
-| AI Service | Python, FastAPI, Google Gemini 2.5 Flash |
-| SQL Validation | sqlglot (parse, validate, and dialect-translate SQL) |
-| Database | PostgreSQL, EF Core |
-| Auth | JWT + Refresh Tokens |
 
-## Project Structure
+## The problem
 
+Small business owners and entrepreneurs sit on operational data in SQL databases but can't write SQL. SqlSpace lets them type plain-English questions and get back answers, charts, and full multi-section reports. It connects to their existing **PostgreSQL, MySQL, or SQL Server** database — no migration required.
+
+---
+
+## What's built today
+
+**Querying**
+
+- Natural-language → SQL execution against the user's connected database
+- Query history with search, pagination, and per-connection filtering
+- Saved queries for reuse
+- Multi-database support: PostgreSQL, MySQL, SQL Server
+
+**Visualization**
+
+- AI-suggested charts based on database schema analysis
+- Drag-to-arrange dashboard with persistent grid layouts
+- Chart types: line, bar, pie, treemap (Chart.js + Recharts)
+- Refresh, update, and delete individual charts
+
+**Reports**
+
+- Auto-generated multi-section reports from a single prompt
+- Stored as structured sections (SQL + narrative); refresh re-executes the SQL
+
+**Knowledge base (RAG)**
+
+- Upload PDF / DOCX / TXT documents
+- Chat-style Q&A grounded in uploaded documents, with persisted chat history
+
+**Auth & access control**
+
+- JWT authentication with refresh tokens (ASP.NET Core Identity)
+- Per-connection RBAC — users own connections and grant access to others
+- Full audit log of every query and connection access
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    FE["React (Vite)<br/>Frontend"]
+    API[".NET 10 API<br/>Clean Architecture<br/>JWT · EF Core · Serilog"]
+    AI["Python AI Service<br/>FastAPI<br/>Gemini · Qdrant"]
+    META[("PostgreSQL<br/>app metadata")]
+    USER[("User's database<br/>Postgres / MySQL / SQL Server")]
+
+    FE -- HTTPS --> API
+    API -- HTTP --> AI
+    API --> META
+    API --> USER
 ```
+
+The React frontend talks only to the .NET API. The API persists app metadata (users, connections, saved queries, reports, audit logs) in its own PostgreSQL database, and connects to the **user's** business database to execute their queries. For natural-language tasks it calls a separate Python AI microservice over HTTP (see [`AI-based_DSS/`](AI-based_DSS/)), which uses Google Gemini and Qdrant for text-to-SQL, RAG, and report generation.
+
+---
+
+## Tech stack
+
+| Layer | Tech |
+| --- | --- |
+| **Backend** | .NET 10, ASP.NET Core, EF Core 10, ASP.NET Identity, JWT, Serilog, Scalar / Swagger, xUnit |
+| **Database drivers** | Npgsql (PostgreSQL), MySqlConnector (MySQL), Microsoft.Data.SqlClient (SQL Server) |
+| **Frontend** | React 19, TypeScript, Vite 8, TanStack Query + Table, Zustand, React Router 7, Tailwind 4, Chart.js + Recharts, Monaco Editor, react-grid-layout, React-Hook-Form + Zod, Axios |
+| **External AI service** | FastAPI, Google Gemini 2.5 Flash, Qdrant, LangChain |
+
+---
+
+## Repo structure
+
+```text
 SqlSpace/
 ├── src/
-│   ├── SqlSpace.Api/              # REST API controllers, middleware, config
-│   ├── SqlSpace.Application/      # Business logic, services, DTOs
-│   ├── SqlSpace.Domain/           # Entities, enums, domain models
-│   └── SqlSpace.Infrastructure/   # EF Core, external service clients
+│   ├── SqlSpace.Api/             # Controllers, Program.cs
+│   ├── SqlSpace.Application/     # Services, abstractions
+│   ├── SqlSpace.Domain/          # Entities, domain logic
+│   └── SqlSpace.Infrastructure/  # EF Core, AI HTTP clients
 ├── tests/
 │   └── SqlSpace.Application.Tests/
-├── FrontEnd/
-│   └── sqlspace-frontend/         # React + TypeScript SPA
-├── AI-based_DSS/                  # Python AI microservice (gitignored — separate repo)
-│   └── ai_services/
-│       ├── txt_to_sql/            # Text-to-SQL generation + validation
-│       ├── schema_to_analytics/   # Auto chart suggestion engine
-│       └── rag/                   # RAG knowledge base (in progress)
-└── ROADMAP.md                     # Full product roadmap
+├── FrontEnd/sqlspace-frontend/   # React frontend
+└── AI-based_DSS/                 # Python AI service (separate component)
 ```
 
-## Getting Started
+---
 
-### Prerequisites
+## Run it locally
 
-- .NET 10 SDK
-- Node.js 18+
-- Python 3.11+
-- PostgreSQL 15+
+**Prerequisites**: .NET 10 SDK, Node.js 20+, PostgreSQL 14+, the AI service running on `http://localhost:8000` (see [`AI-based_DSS/README.md`](AI-based_DSS/README.md)).
 
-### Backend (.NET)
+**Backend**
 
 ```bash
 cd src/SqlSpace.Api
-# Configure appsettings.Development.json with your DB connection and JWT secret
+dotnet user-secrets init
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=SqlSpace;Username=postgres;Password=YOUR_PASSWORD"
+dotnet user-secrets set "JwtSettings:Secret" "YOUR_JWT_SECRET"
+dotnet ef database update --project ../SqlSpace.Infrastructure --startup-project .
 dotnet run
 ```
 
-### Frontend (React)
+API docs are available at `/scalar/v1` (Scalar) and `/swagger` (Swagger UI) in Development.
+
+**Frontend**
 
 ```bash
 cd FrontEnd/sqlspace-frontend
@@ -69,18 +126,20 @@ npm install
 npm run dev
 ```
 
+Frontend runs at `http://localhost:5173` — already whitelisted in the API's CORS config.
 
+---
 
 ## Configuration
 
-Copy the example configs and fill in your values:
+The API reads `src/SqlSpace.Api/appsettings.json`. Key sections:
 
-- **Backend**: `src/SqlSpace.Api/appsettings.Development.json` — DB connection string, JWT secret
-- **AI Service**: `AI-based_DSS/.env` — `GEMINI_API_KEY`
-- **Frontend**: `FrontEnd/sqlspace-frontend/.env` — API base URL
+| Key | Purpose |
+| --- | --- |
+| `ConnectionStrings:DefaultConnection` | PostgreSQL connection for app metadata |
+| `JwtSettings` | `Audience`, `Issuer`, `Secret`, `TokenExpirationInMinutes` |
+| `LlmApi` | Text-to-SQL endpoint: `BaseLink`, `ApiKey`, `TimeoutSeconds` |
+| `RagApi` | Knowledge-base endpoint: `BaseUrl`, `InternalApiKey`, `TimeoutSeconds`, `MaxUploadSizeMb`, `DefaultTopK`, `AllowedExtensions` |
+| `Serilog` | Console + rolling-file log sinks |
 
-
-
-
-
-
+---
