@@ -908,6 +908,53 @@ public class AccessControlService(IApplicationDbContext context,
         return db.DbAdminId == userId;
     }
 
+    public async Task<Result<PaginatedAuditLogs>> GetConnectionAuditLogsAsync(
+        Guid connectionId,
+        string adminUserId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        if (connectionId == Guid.Empty)
+        {
+            return AccessControlErrors.InvalidConnectionId(nameof(connectionId));
+        }
+
+        if (string.IsNullOrWhiteSpace(adminUserId))
+        {
+            return AccessControlErrors.InvalidAdminUserId(nameof(adminUserId));
+        }
+
+        try
+        {
+            var connection = await _context.ConnectedDatabases
+                .AsNoTracking()
+                .FirstOrDefaultAsync(db => db.ConnectionId == connectionId && !db.IsDeleted, cancellationToken);
+
+            if (connection is null)
+            {
+                return AccessControlErrors.ConnectionNotFound(nameof(connectionId));
+            }
+
+            if (!string.Equals(connection.DbAdminId, adminUserId, StringComparison.Ordinal))
+            {
+                return AccessControlErrors.AdminNotOwner(nameof(adminUserId));
+            }
+
+            return await _auditLog.GetConnectionAuditLogsAsync(connectionId, pageNumber, pageSize, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Failed to load audit logs. ConnectionId: {ConnectionId}, AdminUserId: {AdminUserId}",
+                connectionId,
+                adminUserId);
+
+            return AccessControlErrors.QueryFailed("Failed to load audit logs.", nameof(connectionId));
+        }
+    }
+
 }
 
 

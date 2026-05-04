@@ -259,6 +259,32 @@ export interface TableRestrictionInput {
   schema: string
 }
 
+// ── Audit Logs ───────────────────────────────────────────────
+export type AccessAuditLogAction =
+  | 'Granted_Access'
+  | 'Revoked_Access'
+  | 'PermissionsUpdated'
+  | 'OwnershipTransferred'
+
+export interface AuditLogDto {
+  auditLogId: string
+  actorUserEmail: string
+  actorUserName: string
+  targetUserEmail: string
+  targetUserName: string
+  action: AccessAuditLogAction
+  details: string | null
+  performedAt: string
+}
+
+export interface PaginatedAuditLogs {
+  items: AuditLogDto[]
+  totalCount: number
+  pageNumber: number
+  pageSize: number
+  totalPages: number
+}
+
 export interface GrantAccessRequest {
   targetUserEmail: string
   hasFullAccess: boolean

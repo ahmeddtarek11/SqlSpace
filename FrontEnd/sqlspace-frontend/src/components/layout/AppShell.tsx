@@ -11,6 +11,7 @@ import {
   Bookmark,
   LogOut,
   Shield,
+  ClipboardList,
   Settings,
   BookOpen,
   ChevronRight,
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { to: '/history',     label: 'History',        icon: History },
   { to: '/saved',       label: 'Saved Queries',  icon: Bookmark },
   { to: '/access',      label: 'Access Control', icon: Shield },
+  { to: '/audit-logs',  label: 'Audit Logs',     icon: ClipboardList },
   { to: '/knowledge',   label: 'Knowledge Base', icon: BookOpen },
 ]
 

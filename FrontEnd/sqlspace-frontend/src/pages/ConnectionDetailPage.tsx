@@ -13,6 +13,7 @@ import {
   Trash2,
   Database,
   Settings,
+  ClipboardList,
   Clock,
   Users,
 } from 'lucide-react'
@@ -167,7 +168,7 @@ export default function ConnectionDetailPage() {
         </div>
 
         {/* Quick Links */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Link
             to="/workspace"
             className="bg-[#111113] border border-white/5 hover:border-white/20 hover:bg-[#18181b] p-4 rounded-xl flex items-center gap-4 transition-all group"
@@ -206,6 +207,21 @@ export default function ConnectionDetailPage() {
               <div className="text-xs text-zinc-500">Manage permissions</div>
             </div>
           </Link>
+
+          {conn.isAdmin && (
+            <Link
+              to={`/audit-logs?connectionId=${conn.connectionId}`}
+              className="bg-[#111113] border border-white/5 hover:border-white/20 hover:bg-[#18181b] p-4 rounded-xl flex items-center gap-4 transition-all group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-colors shrink-0">
+                <ClipboardList className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-semibold text-white">Audit Logs</div>
+                <div className="text-xs text-zinc-500">Review access events</div>
+              </div>
+            </Link>
+          )}
         </div>
 
         {/* Main Grid */}

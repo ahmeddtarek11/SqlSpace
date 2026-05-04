@@ -5,6 +5,7 @@ import type {
   UserAccessSummary,
   GrantAccessRequest,
   UpdateAccessRestrictionsRequest,
+  PaginatedAuditLogs,
 } from '@/types'
 
 export const insightsApi = {
@@ -65,5 +66,16 @@ export const accessApi = {
     await apiClient.delete(
       `/api/AccessControl/connections/${connectionId}/users/${targetUserId}`
     )
+  },
+
+  getAuditLogs: async (
+    connectionId: string,
+    params?: { pageNumber?: number; pageSize?: number }
+  ): Promise<PaginatedAuditLogs> => {
+    const { data } = await apiClient.get<ApiResponse<PaginatedAuditLogs>>(
+      `/api/AccessControl/connections/${connectionId}/audit-logs`,
+      { params: { pageNumber: params?.pageNumber ?? 1, pageSize: params?.pageSize ?? 20 } }
+    )
+    return data.data
   },
 }

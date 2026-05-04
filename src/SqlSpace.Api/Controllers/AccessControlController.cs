@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SqlSpace.Api.Controllers.AccessControl.Dtos;
 using SqlSpace.Api.Responses;
 using SqlSpace.Application.Abstractions.Access;
+using SqlSpace.Application.Abstractions.Audit;
 using SqlSpace.Application.Abstractions.Auth;
 
 namespace SqlSpace.Api.Controllers;
@@ -123,6 +124,33 @@ public partial class AccessControlController(
             cancellationToken);
 
         return ToApiResponse(result, StatusCodes.Status200OK, "Connection users loaded.");
+    }
+
+    [HttpGet("connections/{connectionId:guid}/audit-logs")]
+    [EndpointSummary("Get access audit logs for a connection (admin only)")]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedAuditLogs>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedAuditLogs>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<PaginatedAuditLogs>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<PaginatedAuditLogs>>> GetConnectionAuditLogs(
+        Guid connectionId,
+        [FromQuery] int? pageNumber,
+        [FromQuery] int? pageSize,
+        CancellationToken cancellationToken)
+    {
+        var adminUserId = _currentUserService.GetUserId();
+        if (string.IsNullOrWhiteSpace(adminUserId))
+        {
+            return UnauthorizedResponse<PaginatedAuditLogs>();
+        }
+
+        var result = await _accessControlService.GetConnectionAuditLogsAsync(
+            connectionId,
+            adminUserId,
+            pageNumber ?? 1,
+            pageSize ?? 20,
+            cancellationToken);
+
+        return ToApiResponse(result, StatusCodes.Status200OK, "Connection audit logs loaded.");
     }
 
     [HttpGet("connections/{connectionId:guid}/has-access")]

@@ -1,3 +1,4 @@
+using SqlSpace.Application.Abstractions.Audit;
 using SqlSpace.Domain.Common.Results;
 using SqlSpace.Domain.Models;
 
@@ -201,7 +202,23 @@ public interface IAccessControlService
         string adminUserId,
         CancellationToken cancellationToken);
 
-        Task<Result<bool>> IsAdmin(Guid ConnectionId , string userId);
+    /// <summary>
+    /// Retrieves paginated access audit logs for a connection (admin-only).
+    /// </summary>
+    /// <param name="connectionId">Database connection identifier.</param>
+    /// <param name="adminUserId">Admin user identifier requesting logs (must be connection owner).</param>
+    /// <param name="pageNumber">Page number (1-based).</param>
+    /// <param name="pageSize">Number of records per page.</param>
+    /// <param name="cancellationToken">Cancellation token for query execution.</param>
+    /// <returns>Paginated audit log entries.</returns>
+    Task<Result<PaginatedAuditLogs>> GetConnectionAuditLogsAsync(
+        Guid connectionId,
+        string adminUserId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken);
+
+    Task<Result<bool>> IsAdmin(Guid ConnectionId , string userId);
 
     
 }
