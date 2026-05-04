@@ -88,22 +88,22 @@ public sealed class ReportsController(
         return ToApiResponse(result, StatusCodes.Status200OK, "Report loaded.");
     }
 
-    [HttpPost("{reportId:guid}/refresh")]
-    [EndpointSummary("Re-execute all sections' SQL and regenerate narrative")]
-    [ProducesResponseType(typeof(ApiResponse<ReportDto>), StatusCodes.Status200OK)]
+    [HttpPost("{reportId:guid}/snapshot")]
+    [EndpointSummary("Create a new report snapshot with fresh data")]
+    [EndpointDescription("Re-executes all SQL and regenerates narratives, then saves a new report. The source report is left unchanged. Fails cleanly if the AI service is unavailable — nothing is saved.")]
+    [ProducesResponseType(typeof(ApiResponse<ReportDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<ReportDto>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<ReportDto>>> Refresh(
+    public async Task<ActionResult<ApiResponse<ReportDto>>> Snapshot(
         Guid connectionId,
         Guid reportId,
-        [FromQuery] bool regenerateNarrative = true,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var userId = _currentUserService.GetUserId();
         if (string.IsNullOrWhiteSpace(userId))
             return UnauthorizedResponse<ReportDto>();
 
-        var result = await _reportService.RefreshAsync(connectionId, userId, reportId, regenerateNarrative, cancellationToken);
-        return ToApiResponse(result, StatusCodes.Status200OK, "Report refreshed.");
+        var result = await _reportService.SnapshotAsync(connectionId, userId, reportId, cancellationToken);
+        return ToApiResponse(result, StatusCodes.Status201Created, "Report snapshot created.");
     }
 
     [HttpDelete("{reportId:guid}")]

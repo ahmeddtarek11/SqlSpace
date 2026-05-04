@@ -9,7 +9,7 @@ interface ConnectionReportsState {
   activeReport: ReportDto | null
   isGenerating: boolean
   isSaving: boolean
-  isRefreshing: boolean
+  isSnapshotting: boolean
   isLoadingList: boolean
   error: string | null
 }
@@ -24,7 +24,7 @@ interface ReportsState {
   saveReport: (connectionId: string, request: CreateReportRequest) => Promise<ReportDto | null>
   openReport: (connectionId: string, reportId: string) => Promise<void>
   clearActiveReport: (connectionId: string) => void
-  refreshReport: (connectionId: string, reportId: string, regenerateNarrative?: boolean) => Promise<void>
+  snapshotReport: (connectionId: string, reportId: string) => Promise<void>
   deleteReport: (connectionId: string, reportId: string) => Promise<void>
 }
 
@@ -35,7 +35,7 @@ const emptyConnectionState: ConnectionReportsState = {
   activeReport: null,
   isGenerating: false,
   isSaving: false,
-  isRefreshing: false,
+  isSnapshotting: false,
   isLoadingList: false,
   error: null,
 }
@@ -273,18 +273,22 @@ export const useReportsStore = create<ReportsState>()((set, get) => ({
     set((s) => patch(s, connectionId, { activeReport: null, hasSessionDraft: hasSessionDraft(connectionId) }))
   },
 
-  refreshReport: async (connectionId, reportId, regenerateNarrative = true) => {
-    set((s) => patch(s, connectionId, { isRefreshing: true, error: null }))
+  snapshotReport: async (connectionId, reportId) => {
+    set((s) => patch(s, connectionId, { isSnapshotting: true, error: null }))
     try {
-      const report = await reportsApi.refresh(connectionId, reportId, regenerateNarrative)
-      set((s) => patch(s, connectionId, { isRefreshing: false, activeReport: report }))
-    } catch (err) {
+      const newReport = await reportsApi.snapshot(connectionId, reportId)
+      const list = await reportsApi.list(connectionId)
       set((s) =>
         patch(s, connectionId, {
-          isRefreshing: false,
-          error: err instanceof Error ? err.message : 'Failed to refresh report',
+          isSnapshotting: false,
+          activeReport: newReport,
+          list,
+          hasSessionDraft: hasSessionDraft(connectionId),
         })
       )
+    } catch (err) {
+      set((s) => patch(s, connectionId, { isSnapshotting: false }))
+      throw err instanceof Error ? err : new Error('Failed to create snapshot')
     }
   },
 

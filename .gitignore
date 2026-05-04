@@ -71,3 +71,4 @@ src\SqlSpace.Api\logs
 docs/
 FrontEnd/docs/
 tests
+.dotnet-home

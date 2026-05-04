@@ -44,20 +44,13 @@ export const reportsApi = {
     return data.data
   },
 
-  refresh: async (
-    connectionId: string,
-    reportId: string,
-    regenerateNarrative = true
-  ): Promise<ReportDto> => {
+  snapshot: async (connectionId: string, reportId: string): Promise<ReportDto> => {
     const { data } = await apiClient.post<ApiResponse<ReportDto>>(
-      `/api/connections/${connectionId}/reports/${reportId}/refresh`,
+      `/api/connections/${connectionId}/reports/${reportId}/snapshot`,
       null,
-      {
-        params: { regenerateNarrative },
-        timeout: regenerateNarrative ? REPORTS_LONG_OPERATION_TIMEOUT_MS : undefined,
-      }
+      { timeout: REPORTS_LONG_OPERATION_TIMEOUT_MS }
     )
-    if (!data.success) throw new Error(data.errors?.[0]?.message ?? 'Failed to refresh report')
+    if (!data.success) throw new Error(data.errors?.[0]?.message ?? 'Failed to create snapshot')
     return data.data
   },
 

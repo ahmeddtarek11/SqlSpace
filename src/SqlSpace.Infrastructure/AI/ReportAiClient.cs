@@ -215,7 +215,8 @@ public sealed class ReportAiClient(
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
 
             if (string.IsNullOrWhiteSpace(body))
-                return Result<IReadOnlyList<NarratedSectionDto>>.Success(BuildEmptyNarratives(sections));
+                return Result<IReadOnlyList<NarratedSectionDto>>.Failure(
+                    new Error("report_ai.empty_response", "AI service returned an empty response."));
 
             using var doc = JsonDocument.Parse(body);
             var root = doc.RootElement;
@@ -223,8 +224,10 @@ public sealed class ReportAiClient(
             var status = root.TryGetProperty("status", out var statusEl) ? statusEl.GetString() : null;
             if (!string.Equals(status, "success", StringComparison.OrdinalIgnoreCase))
             {
+                var msg = root.TryGetProperty("message", out var msgEl) ? msgEl.GetString() : null;
                 _logger.LogWarning("Narrate report returned non-success. Body: {Body}", body.Length > 300 ? body[..300] : body);
-                return Result<IReadOnlyList<NarratedSectionDto>>.Success(BuildEmptyNarratives(sections));
+                return Result<IReadOnlyList<NarratedSectionDto>>.Failure(
+                    new Error("report_ai.error", msg ?? "AI service returned an error."));
             }
 
             return Result<IReadOnlyList<NarratedSectionDto>>.Success(ParseNarratedSections(root, sections));
@@ -235,8 +238,9 @@ public sealed class ReportAiClient(
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to call narrate-report AI service. Falling back to empty narratives.");
-            return Result<IReadOnlyList<NarratedSectionDto>>.Success(BuildEmptyNarratives(sections));
+            _logger.LogWarning(ex, "Failed to call narrate-report AI service.");
+            return Result<IReadOnlyList<NarratedSectionDto>>.Failure(
+                new Error("report_ai.request_failed", $"Failed to call AI service: {ex.GetType().Name}"));
         }
     }
 

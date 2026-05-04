@@ -244,11 +244,10 @@ public sealed class ReportService(
         return reports;
     }
 
-    public async Task<Result<ReportDto>> RefreshAsync(
+    public async Task<Result<ReportDto>> SnapshotAsync(
         Guid connectionId,
         string userId,
-        Guid reportId,
-        bool regenerateNarrative,
+        Guid sourceReportId,
         CancellationToken cancellationToken)
     {
         var access = await _accessControlService.HasAccessToConnectionAsync(connectionId, userId, cancellationToken);
@@ -256,11 +255,12 @@ public sealed class ReportService(
         if (!access.Value)
             return Result<ReportDto>.Failure(new Error("reports.forbidden", "You do not have access to this connection."));
 
-        var report = await _dbContext.Reports
+        var source = await _dbContext.Reports
+            .AsNoTracking()
             .Include(r => r.Sections)
-            .FirstOrDefaultAsync(r => r.ReportId == reportId && r.ConnectionId == connectionId && r.UserId == userId && !r.IsDeleted, cancellationToken);
+            .FirstOrDefaultAsync(r => r.ReportId == sourceReportId && r.ConnectionId == connectionId && r.UserId == userId && !r.IsDeleted, cancellationToken);
 
-        if (report is null)
+        if (source is null)
             return Result<ReportDto>.Failure(new Error("reports.not_found", "Report not found."));
 
         var connection = await _dbContext.ConnectedDatabases
@@ -270,68 +270,105 @@ public sealed class ReportService(
         if (connection is null)
             return Result<ReportDto>.Failure(new Error("reports.connection_not_found", "Connection not found."));
 
-        var executedAt = DateTime.UtcNow;
+        var now = DateTime.UtcNow;
+        var dateSuffix = now.ToString("MMMM d, yyyy h:mm tt");
 
-        var sqlRefreshTasks = report.Sections
+        // Build section DTOs to hold fresh execution results
+        var sectionDtos = source.Sections
+            .OrderBy(s => s.SortOrder)
+            .Select(s => new ReportSectionDto
+            {
+                SectionId = Guid.NewGuid(),
+                SortOrder = s.SortOrder,
+                Heading = s.Heading,
+                ChartType = s.ChartType?.ToString()?.ToSnakeCase(),
+                ChartConfigJson = s.ChartConfigJson,
+                SqlQuery = s.SqlQuery,
+            })
+            .ToList();
+
+        // Execute SQL fresh in parallel
+        var sqlTasks = sectionDtos
             .Where(s => !string.IsNullOrWhiteSpace(s.SqlQuery))
             .Select(async section =>
             {
                 var queryResult = await _databaseExecutor.ExecuteQueryAsync(connection, section.SqlQuery!, cancellationToken);
-                section.CachedResultsJson = queryResult.ResultsJson;
-                section.CachedResultsRowsReturned = queryResult.RowsReturned;
-                section.CachedResultsExecutionTimeMs = queryResult.ExecutionTimeMs;
-                section.CachedResultsSuccess = queryResult.Success;
-                section.CachedResultsErrorMessage = queryResult.ErrorMessage;
-                section.CachedResultsExecutedAtUtc = executedAt;
+                section.ExecutionSuccess = queryResult.Success;
+                section.ResultsJson = queryResult.ResultsJson;
+                section.RowsReturned = queryResult.RowsReturned;
+                section.ExecutionTimeMs = queryResult.ExecutionTimeMs;
+                section.ExecutionErrorMessage = queryResult.ErrorMessage;
+                section.ExecutedAtUtc = now;
             });
 
-        await Task.WhenAll(sqlRefreshTasks);
+        await Task.WhenAll(sqlTasks);
 
-        if (regenerateNarrative)
+        // Narrate — fail cleanly if AI is unavailable so no partial report is saved
+        var narrateInputs = sectionDtos
+            .Select(s => new NarrateReportSectionInputDto
+            {
+                Heading = s.Heading,
+                Sql = s.SqlQuery,
+                ChartType = s.ChartType,
+                SampleRowsJson = ExtractSampleRows(s.ResultsJson, MaxRowsForNarrative),
+            })
+            .ToList();
+
+        var narrateResult = await _reportAiClient.NarrateReportAsync(
+            source.Title,
+            source.OriginalPrompt,
+            source.Summary,
+            narrateInputs,
+            cancellationToken);
+
+        if (narrateResult.IsFailure)
         {
-            var orderedSections = report.Sections.OrderBy(s => s.SortOrder).ToList();
-            var narrateInputs = orderedSections
-                .Select(s => new NarrateReportSectionInputDto
-                {
-                    Heading = s.Heading,
-                    Sql = s.SqlQuery,
-                    ChartType = s.ChartType?.ToString()?.ToSnakeCase(),
-                    SampleRowsJson = ExtractSampleRows(s.CachedResultsJson, MaxRowsForNarrative),
-                })
-                .ToList();
-
-            var narrateResult = await _reportAiClient.NarrateReportAsync(
-                report.Title,
-                report.OriginalPrompt,
-                report.Summary,
-                narrateInputs,
-                cancellationToken);
-
-            if (narrateResult.IsSuccess)
-            {
-                var narratives = narrateResult.Value ?? [];
-                for (var i = 0; i < orderedSections.Count; i++)
-                {
-                    orderedSections[i].NarrativeText = i < narratives.Count ? narratives[i].Narrative ?? string.Empty : string.Empty;
-                }
-            }
-            else
-            {
-                foreach (var section in orderedSections)
-                    section.NarrativeText = string.Empty;
-
-                _logger.LogWarning(
-                    "NarrateReportAsync failed during refresh. Cleared narratives to avoid stale text/data mismatch. ReportId: {ReportId}",
-                    reportId);
-            }
+            _logger.LogWarning("NarrateReportAsync failed during snapshot. Aborting — no new report saved. SourceReportId: {SourceId}", sourceReportId);
+            return Result<ReportDto>.Failure(new Error("reports.ai_unavailable", "Could not generate report narratives — AI service is currently unavailable. No snapshot was saved."));
         }
 
-        report.UpdatedAtUtc = executedAt;
+        var narratives = narrateResult.Value ?? [];
+        for (var i = 0; i < sectionDtos.Count; i++)
+            sectionDtos[i].NarrativeText = i < narratives.Count ? narratives[i].Narrative ?? string.Empty : string.Empty;
+
+        // Persist new report + sections
+        var newReport = new Report
+        {
+            ReportId = Guid.NewGuid(),
+            ConnectionId = connectionId,
+            UserId = userId,
+            Title = $"{source.Title} — {dateSuffix}",
+            OriginalPrompt = source.OriginalPrompt,
+            Summary = source.Summary,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now,
+        };
+
+        var newSections = sectionDtos.Select(s => new ReportSection
+        {
+            SectionId = s.SectionId,
+            ReportId = newReport.ReportId,
+            SortOrder = s.SortOrder,
+            Heading = s.Heading,
+            NarrativeText = s.NarrativeText ?? string.Empty,
+            ChartType = ParseChartType(s.ChartType),
+            ChartConfigJson = s.ChartConfigJson,
+            SqlQuery = s.SqlQuery?.Trim(),
+            CachedResultsJson = s.ResultsJson,
+            CachedResultsRowsReturned = s.RowsReturned,
+            CachedResultsExecutionTimeMs = s.ExecutionTimeMs,
+            CachedResultsSuccess = s.ExecutionSuccess,
+            CachedResultsErrorMessage = s.ExecutionErrorMessage,
+            CachedResultsExecutedAtUtc = now,
+        }).ToList();
+
+        _dbContext.Reports.Add(newReport);
+        _dbContext.ReportSections.AddRange(newSections);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Report refreshed. ReportId: {ReportId}, RegenerateNarrative: {Regen}", reportId, regenerateNarrative);
+        _logger.LogInformation("Report snapshot created. SourceReportId: {SourceId}, NewReportId: {NewId}", sourceReportId, newReport.ReportId);
 
-        return ToDto(report, report.Sections.OrderBy(s => s.SortOrder).ToList());
+        return ToDto(newReport, newSections);
     }
 
     public async Task<Result<bool>> DeleteAsync(

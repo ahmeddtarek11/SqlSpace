@@ -96,9 +96,12 @@ public static class DependencyInjection
                 client.BaseAddress = baseUri;
             }
 
-            if (llmOptions.TimeoutSeconds > 0)
+            var reportTimeoutSeconds = llmOptions.ReportTimeoutSeconds > 0
+                ? llmOptions.ReportTimeoutSeconds
+                : llmOptions.TimeoutSeconds;
+            if (reportTimeoutSeconds > 0)
             {
-                client.Timeout = TimeSpan.FromSeconds(llmOptions.TimeoutSeconds);
+                client.Timeout = TimeSpan.FromSeconds(reportTimeoutSeconds);
             }
         });
         services.AddAuthentication(options =>

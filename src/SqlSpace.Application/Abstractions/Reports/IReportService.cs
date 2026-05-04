@@ -41,13 +41,13 @@ public interface IReportService
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// Re-executes every section's SQL and optionally regenerates narrative text.
+    /// Creates a new report with fresh SQL results and regenerated narratives from an existing one.
+    /// The source report is left unchanged. Fails cleanly if the AI service is unavailable — nothing is saved.
     /// </summary>
-    Task<Result<ReportDto>> RefreshAsync(
+    Task<Result<ReportDto>> SnapshotAsync(
         Guid connectionId,
         string userId,
-        Guid reportId,
-        bool regenerateNarrative,
+        Guid sourceReportId,
         CancellationToken cancellationToken);
 
     /// <summary>

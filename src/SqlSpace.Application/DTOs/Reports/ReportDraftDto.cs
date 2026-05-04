@@ -8,5 +8,6 @@ public class ReportDraftDto
     public string Title { get; set; } = string.Empty;
     public string? Summary { get; set; }
     public string OriginalPrompt { get; set; } = string.Empty;
+    public DateTime GeneratedAtUtc { get; set; }
     public IReadOnlyList<ReportSectionDto> Sections { get; set; } = [];
 }

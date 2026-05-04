@@ -93,9 +93,27 @@ function formatCellValue(value: unknown): string {
   }
 }
 
+function formatReportTimestamp(timestamp: string | null | undefined): string {
+  if (!timestamp) return ''
+  const parsed = new Date(timestamp)
+  if (Number.isNaN(parsed.getTime())) return ''
+
+  return parsed.toLocaleString(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  })
+}
+
 export function ReportView({ report }: ReportViewProps) {
   const title = report.title
   const summary = report.summary
+  const generatedAtUtc = 'generatedAtUtc' in report ? report.generatedAtUtc : report.createdAtUtc
+  const generatedLabel = formatReportTimestamp(generatedAtUtc)
+  const updatedLabel = 'updatedAtUtc' in report ? formatReportTimestamp(report.updatedAtUtc) : ''
+  const showUpdatedLabel =
+    !!updatedLabel &&
+    'updatedAtUtc' in report &&
+    report.updatedAtUtc !== report.createdAtUtc
 
   return (
     <div className="h-full overflow-y-auto" data-report-view-root="true">
@@ -103,6 +121,12 @@ export function ReportView({ report }: ReportViewProps) {
         {/* Report header */}
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">{title}</h1>
+          {generatedLabel && (
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
+              <span>Generated: {generatedLabel}</span>
+              {showUpdatedLabel && <span>Updated: {updatedLabel}</span>}
+            </div>
+          )}
           {summary && (
             <p className="mt-2 text-zinc-400 text-sm leading-relaxed">{summary}</p>
           )}

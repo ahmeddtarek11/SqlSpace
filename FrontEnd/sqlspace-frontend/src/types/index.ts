@@ -433,6 +433,7 @@ export interface ReportDraftDto {
   title: string
   summary: string | null
   originalPrompt: string
+  generatedAtUtc: string
   sections: ReportSectionDto[]
 }
 

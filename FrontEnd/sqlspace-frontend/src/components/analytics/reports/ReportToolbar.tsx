@@ -1,19 +1,19 @@
 import {
   Save,
-  RefreshCw,
   Trash2,
   Plus,
   Download,
   Loader2,
+  Copy,
 } from 'lucide-react'
 import { AskAiButton } from '@/components/ui/ask-ai-button'
 
 interface ReportToolbarProps {
   isDraft: boolean
   isSaving: boolean
-  isRefreshing: boolean
+  isSnapshotting: boolean
   onSave?: () => void
-  onRefresh?: () => void
+  onSnapshot?: () => void
   onDelete?: () => void
   onExportPdf?: () => void
   onAskAi?: () => void
@@ -24,9 +24,9 @@ interface ReportToolbarProps {
 export function ReportToolbar({
   isDraft,
   isSaving,
-  isRefreshing,
+  isSnapshotting,
   onSave,
-  onRefresh,
+  onSnapshot,
   onDelete,
   onExportPdf,
   onAskAi,
@@ -77,15 +77,16 @@ export function ReportToolbar({
           </button>
         )}
 
-        {!isDraft && onRefresh && (
+        {!isDraft && onSnapshot && (
           <button
             type="button"
-            onClick={onRefresh}
-            disabled={isRefreshing}
+            onClick={onSnapshot}
+            disabled={isSnapshotting}
+            title="Re-runs all queries with live data and regenerates the AI analysis. Saves as a new report with today's date — the original stays untouched."
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 disabled:opacity-40 text-zinc-300 text-xs font-medium transition-colors"
           >
-            {isRefreshing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-            Refresh
+            {isSnapshotting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
+            New snapshot
           </button>
         )}
 

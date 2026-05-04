@@ -28,7 +28,7 @@ export function ReportsTab({ connectionId, hidePromptInput = false }: ReportsTab
     saveReport,
     openReport,
     clearActiveReport,
-    refreshReport,
+    snapshotReport,
     deleteReport,
   } = useReportsStore()
 
@@ -93,6 +93,16 @@ export function ReportsTab({ connectionId, hidePromptInput = false }: ReportsTab
       toast.success('Report PDF downloaded')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to download report PDF')
+    }
+  }
+
+  const handleSnapshot = async () => {
+    if (!store.activeReport) return
+    try {
+      await snapshotReport(connectionId, store.activeReport.reportId)
+      toast.success('New snapshot created with fresh data')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create snapshot')
     }
   }
 
@@ -217,17 +227,13 @@ export function ReportsTab({ connectionId, hidePromptInput = false }: ReportsTab
           <ReportToolbar
             isDraft={isDraft}
             isSaving={store.isSaving}
-            isRefreshing={store.isRefreshing}
+            isSnapshotting={store.isSnapshotting}
             onNewReport={() => {
               clearDraft(connectionId)
               clearActiveReport(connectionId)
             }}
             onSave={isDraft ? handleSave : undefined}
-            onRefresh={
-              !isDraft && store.activeReport
-                ? () => void refreshReport(connectionId, store.activeReport!.reportId, true)
-                : undefined
-            }
+            onSnapshot={!isDraft && store.activeReport ? () => void handleSnapshot() : undefined}
             onDelete={
               !isDraft && store.activeReport
                 ? () => void deleteReport(connectionId, store.activeReport!.reportId)

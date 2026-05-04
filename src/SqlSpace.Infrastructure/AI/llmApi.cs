@@ -10,4 +10,5 @@ public class llmApi
     public string BaseLink { get; set; } = string.Empty;
     public string? ApiKey { get; set; }
     public int TimeoutSeconds { get; set; } = 30;
+    public int ReportTimeoutSeconds { get; set; } = 180;
 }
