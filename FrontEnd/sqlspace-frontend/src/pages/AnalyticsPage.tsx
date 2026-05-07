@@ -7,8 +7,6 @@ import { ExpandedChartDialog } from '@/components/analytics/ExpandedChartDialog'
 import { ReportsTab } from '@/components/analytics/reports/ReportsTab'
 import { analyticsApi } from '@/api/analytics'
 import { connectionsApi } from '@/api/connections'
-import { accessApi } from '@/api/insights'
-import { ingestArtifactForAskAi } from '@/lib/ask-ai'
 import { useConnectionStore } from '@/stores/connection-store'
 import { useReportsStore, selectConnectionReports } from '@/stores/reports-store'
 import type { ChartDataResult, SaveChartRequest } from '@/types'
@@ -73,7 +71,6 @@ function AnalyticsPageInner() {
   const [prompt, setPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [expandedChartId, setExpandedChartId] = useState<string | null>(null)
-  const [askingAiChartId, setAskingAiChartId] = useState<string | null>(null)
 
   const { data: connections = [], isLoading: connectionsLoading } = useQuery({
     queryKey: ['connections'],
@@ -90,14 +87,6 @@ function AnalyticsPageInner() {
     queryFn: () => analyticsApi.getCharts(selectedId),
     enabled: !!selectedId,
     refetchOnMount: 'always' as const,
-  })
-
-  const { data: canAskAi = false } = useQuery({
-    queryKey: ['connection-is-admin', selectedId],
-    queryFn: () => accessApi.isAdmin(selectedId),
-    enabled: !!selectedId,
-    staleTime: 60_000,
-    retry: false,
   })
 
   // Expanded chart derived state
@@ -224,37 +213,6 @@ function AnalyticsPageInner() {
       }))
     }
   }, [selectedId])
-
-  const handleAskAiChart = useCallback(async (chartId: string) => {
-    if (!selectedId || askingAiChartId || !canAskAi) return
-
-    const chart = charts.find((item) => item.id === chartId)
-    if (!chart) return
-
-    const chartData = chartDataMap[chartId]
-
-    setAskingAiChartId(chartId)
-    try {
-      await ingestArtifactForAskAi({
-        source: 'quick-insight',
-        connectionId: selectedId,
-        title: chart.title,
-        prompt: chart.originalPrompt,
-        sql: chart.sqlQuery,
-        explanation: chart.description,
-        insight: chart.insight,
-        rows: chartData?.data ?? [],
-        metadata: {
-          chartId: chart.id,
-          chartType: chart.chartType,
-          connectionName: chart.connectionName,
-          rowCount: chartData?.data?.length ?? 0,
-        },
-      })
-    } finally {
-      setAskingAiChartId(null)
-    }
-  }, [selectedId, askingAiChartId, canAskAi, charts, chartDataMap])
 
   // Loading state
   if (connectionsLoading) {
@@ -424,9 +382,6 @@ function AnalyticsPageInner() {
                         onRefresh={handleRefreshOne}
                         onDelete={(id) => deleteMutation.mutate(id)}
                         onExpand={setExpandedChartId}
-                        onAskAi={(id) => void handleAskAiChart(id)}
-                        isAskingAi={askingAiChartId === chart.id}
-                        canAskAi={canAskAi}
                       />
                     </div>
                   )

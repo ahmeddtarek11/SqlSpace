@@ -180,11 +180,6 @@ function AssistantMessage({ message }: { message: ChatMessage }) {
           ) : (
             message.content
           )}
-          {message.tokensUsed != null && !hasError && (
-            <div className="mt-2 text-[10px] text-zinc-600 uppercase tracking-wider">
-              {message.tokensUsed} tokens
-            </div>
-          )}
         </div>
 
         {sources.length > 0 && (
