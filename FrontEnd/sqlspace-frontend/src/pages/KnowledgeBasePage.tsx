@@ -168,7 +168,6 @@ function DocumentsTab({ connectionId }: { connectionId: string }) {
           <tr className="border-b border-white/10 bg-white/2">
             <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">File</th>
             <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Status</th>
-            <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Chunks</th>
             <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Uploaded</th>
             {canManageDocuments && (
               <th className="text-right px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Actions</th>
@@ -195,9 +194,6 @@ function DocumentsTab({ connectionId }: { connectionId: string }) {
                     <Icon className={cn('w-3 h-3', doc.status === 'Processing' && 'animate-spin')} />
                     {cfg.label}
                   </span>
-                </td>
-                <td className="px-4 py-3 text-zinc-400">
-                  {doc.status === 'Indexed' ? doc.chunksCreated : '—'}
                 </td>
                 <td className="px-4 py-3 text-zinc-500 text-xs">
                   {new Date(doc.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
