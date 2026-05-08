@@ -1,0 +1,32 @@
+#stage A psotgres and qdrant 
+
+services:
+  #postgres
+  postgres:
+    image: postgres:16
+    container_name: sql-space-postgres
+    restart: unless-stopped
+    environment:
+       POSTGRES_USER: ${POSTGRES_USER}
+       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+       POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"  #host:container
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: sqlspace_qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333" # REST API
+      - "6334:6334" #gRPC API
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+
+volumes:
+  postgres_data:
+  qdrant_data:
